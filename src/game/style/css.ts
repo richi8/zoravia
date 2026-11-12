@@ -20,6 +20,7 @@ export function tokensToCssVars(t: Tokens = tokens): Record<string, string> {
 
   colors('ink', t.ink);
   colors('brand', t.brand);
+  colors('logo', t.logoColors);
   colors('semantic', t.semantic);
   colors('surface', t.surface);
   colors('light', t.lightSurface);

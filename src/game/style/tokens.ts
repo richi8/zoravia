@@ -40,6 +40,25 @@ export const brand = {
   logoBottom: 0xff8a4c,
 } as const;
 
+/**
+ * Logo palette (dragon crest). It is also the fixed palette of the logo's pixel-art version,
+ * so every pixel snaps to one of these.
+ */
+export const logoColors = {
+  navy: 0x141a3c,
+  rustLight: 0xe8842c,
+  rust: 0xc9541c,
+  rustDark: 0x8e3512,
+  tealLight: 0x3cc4ae,
+  teal: 0x1f9a8a,
+  tealDark: 0x14705f,
+  goldLight: 0xf3cc55,
+  gold: 0xe0aa22,
+  goldDark: 0x9a6a10,
+  cream: 0xf3dcb0,
+  white: 0xffffff,
+} as const;
+
 /** Meaning-carrying colors. Never rely on color alone — pair with text/icons. */
 export const semantic = {
   success: 0x5bd17d,
@@ -240,6 +259,7 @@ export const motion = {
 export const tokens = {
   ink,
   brand,
+  logoColors,
   semantic,
   surface,
   lightSurface,

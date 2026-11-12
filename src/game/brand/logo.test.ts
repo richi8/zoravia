@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { emblemSvg, logoSize, logoSvg, svgDataUrl } from './logo';
+import { toCss } from '@engine/core/color';
+import { logoColors } from '../style/tokens';
+import { LOGO_PIXEL_OPTIONS, logoSize, logoSvg, svgDataUrl } from './logo';
 
 /** Minimal well-formedness check: every opened tag is closed in order. */
 function balanced(svg: string): boolean {
@@ -15,40 +17,55 @@ function balanced(svg: string): boolean {
 }
 
 describe('logo', () => {
-  it('is deterministic and well-formed in both variants', () => {
-    for (const variant of ['dark', 'light'] as const) {
-      const a = logoSvg({ variant });
-      expect(logoSvg({ variant })).toBe(a);
+  it('is deterministic and well-formed (full crest and emblem crop)', () => {
+    for (const crop of ['full', 'emblem'] as const) {
+      const a = logoSvg({ crop });
+      expect(logoSvg({ crop })).toBe(a);
       expect(a.startsWith('<svg xmlns="http://www.w3.org/2000/svg"')).toBe(true);
       expect(balanced(a)).toBe(true);
-      expect(a).not.toMatch(/NaN|undefined/);
+      expect(a).not.toMatch(/NaN|undefined|Infinity/);
       expect(a).toContain('aria-label="Zoravia"');
     }
-    expect(logoSvg({ variant: 'dark' })).not.toBe(logoSvg({ variant: 'light' }));
   });
 
-  it('uses variant-specific gradient ids (two logos can share a page)', () => {
-    expect(logoSvg({ variant: 'dark' })).toContain('url(#zoravia-logo-dark-fill)');
-    expect(logoSvg({ variant: 'light' })).toContain('url(#zoravia-logo-light-fill)');
+  it('draws only geometry (no text/fonts, no external refs)', () => {
+    expect(logoSvg()).not.toMatch(/<text|font-family|href="http/);
+  });
+
+  it('uses only logo palette colors', () => {
+    const allowed = new Set(Object.values(logoColors).map(toCss));
+    const used = new Set(logoSvg().match(/#[0-9a-f]{6}/g));
+    for (const color of used) expect(allowed.has(color), color).toBe(true);
+  });
+
+  it('prefixes internal ids so several logos can share a page', () => {
+    const a = logoSvg({ id: 'one' });
+    const b = logoSvg({ id: 'two' });
+    const ids = (s: string): string[] => [...s.matchAll(/id="([^"]+)"/g)].map((m) => m[1] ?? '');
+    expect(ids(a).length).toBeGreaterThan(10);
+    expect(ids(a).every((id) => id.startsWith('one-'))).toBe(true);
+    expect(ids(a).filter((id) => ids(b).includes(id))).toEqual([]);
+    // every url(#…) reference points at an id in the same document
+    for (const [, ref] of a.matchAll(/url\(#([^)]+)\)/g)) expect(ids(a)).toContain(ref);
   });
 
   it('sizes to a requested height keeping the aspect ratio', () => {
     const { width, height } = logoSize();
-    expect(width / height).toBeGreaterThan(3);
-    const svg = logoSvg({ height: 60 });
-    expect(svg).toContain(`width="${Math.round((60 * width) / height)}" height="60"`);
+    expect(width / height).toBeGreaterThan(1.5);
+    expect(logoSvg({ height: 60 })).toContain(
+      `width="${Math.round((60 * width) / height)}" height="60"`,
+    );
+    expect(logoSize('emblem').width).toBe(logoSize('emblem').height);
   });
 
-  it('draws only geometry (no text/fonts, no external refs)', () => {
-    for (const svg of [logoSvg(), emblemSvg()]) {
-      expect(svg).not.toMatch(/<text|font-family|href="http/);
-    }
+  it('pixel options snap to the logo palette and texture the body', () => {
+    expect(new Set(LOGO_PIXEL_OPTIONS.palette)).toEqual(new Set(Object.values(logoColors)));
+    expect(LOGO_PIXEL_OPTIONS.texture?.[logoColors.rust]).toBe(logoColors.rustDark);
   });
 
-  it('emblem is square and encodes as a data URL', () => {
-    const svg = emblemSvg({ size: 32 });
-    expect(svg).toContain('width="32" height="32"');
-    expect(balanced(svg)).toBe(true);
-    expect(svgDataUrl(svg)).toMatch(/^data:image\/svg\+xml;charset=utf-8,%3Csvg/);
+  it('encodes as a data URL', () => {
+    expect(svgDataUrl(logoSvg({ crop: 'emblem' }))).toMatch(
+      /^data:image\/svg\+xml;charset=utf-8,%3Csvg/,
+    );
   });
 });

@@ -42,7 +42,7 @@ a {
   border-bottom: 1px solid var(--z-surface-border);
 }
 .lab-logo svg {
-  height: 40px;
+  height: 60px;
   width: auto;
   display: block;
 }
@@ -195,6 +195,19 @@ a {
 .emblem svg {
   display: block;
   margin: 0 auto;
+}
+
+.logo-card.pixel canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  image-rendering: pixelated;
+}
+.logo-card.emblem-px {
+  padding: var(--z-space-md);
+}
+.logo-card.emblem-px canvas {
+  width: 64px;
 }
 
 /* Palette */

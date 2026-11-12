@@ -75,3 +75,40 @@ Zoravia now has a visual identity in code: one token file (colors incl. the 8 ty
 - Call `await loadFonts()` before creating Pixi `Text` in any new entry point (Pixi measures on creation).
 - Color math: `import { mix, lighten, darken, contrastRatio, deltaE } from '@engine/core/color'`.
 - Lab: `npm run dev` → `http://localhost:5173/lab/`. A Pixi section can follow `sections/ui-theme.ts` (own `Engine` in a fixed-height div).
+
+---
+
+## Addendum — logo iteration & pixel-art direction (review, 2026-11-12)
+
+### Summary
+The user reviewed the first logo and asked for iterations. Twelve rounds of previews were made **outside the repo** (session scratchpad + a private preview page republished each round), so no prototype code landed in the game. Directions tried: matured/metallic versions of the original, box-art treatments with world elements, single-color deck-box foil stamps, a world/forest line, full-color scenes, front-facing and profile dragons, and finally a dragon crest after reference esports-style logos. The user then sketched a concept with Nano Banana; it was rebuilt in code (one dragon, the sketch had two) and accepted as the current logo, to be revisited later.
+
+### What changed in the repo
+- `src/game/brand/logo.ts` — rewritten: dragon crest (`logoSvg({ crop: 'full' | 'emblem', height, id })`), `LOGO_PIXEL_OPTIONS`, `installFavicon` (head crop). Each call takes an `id` prefix so several logos can share a page (clip paths).
+- `src/game/brand/glyphs.ts` — small stroke-letter kit (`UPPER`, `layoutWord`, `piecePaths`) used by the name.
+- `src/engine/render/pixelate.ts` — generic vector → pixel-art step: `quantizePixels` (pure: snap to palette, alpha threshold, pattern texture) and `pixelateSvg` (browser canvas). Tests in `pixelate.test.ts`.
+- `src/game/style/tokens.ts` — `logoColors` (navy, rust ×3, teal ×3, gold ×3, cream, white): the logo's colors and the fixed palette of its pixel version; exported as `--z-logo-*` CSS variables.
+- Lab "Brand & logo" shows the pixel logo (400 / 260 px wide, night + light), the smooth source, and the favicon crop; the lab header uses the new logo.
+- `DESIGN.md` — Presentation now says **pixel art**; base resolution added to Open. `IMPLEMENTATION_PLAN.md` C08 deliverable updated accordingly.
+
+### Decisions
+- **Decision:** The game's look is pixel art (user, after the Zorling style test: smooth vs pixel at 64/48/32 px and battle mocks at 240×160 / 480×270).
+  - **Why:** the user preferred it. Generating shapes in code and pixelating them keeps the "all graphics generated in code" rule and lets one source produce every size.
+  - **Open:** base resolution / sprite size — must be decided before C08.
+- **Decision:** Logo concept from the user's AI sketch, but rebuilt as code geometry, not imported as an image.
+  - **Why:** `CLAUDE.md` requires code-generated graphics; the code version is recolorable, scalable and produces the favicon and pixel versions from one source.
+  - **Trade-off:** less organic than the sketch (geometric head and pose, procedural scale texture). The user accepted it as a first version.
+- **Decision:** Exploration happens as image previews before touching the repo (user request).
+
+### Issues & known limitations
+- The previous logo, its light/dark variants and `emblemSvg` were removed; the logo no longer uses the Fredoka/Nunito-era brand colors (it has its own `logoColors`). UI tokens/theme are unchanged and may need a pixel-art pass (fonts, palette) once the resolution is fixed.
+- Scale texture also lands on the rust wing bones (same palette color) — acceptable for now.
+- At 16 px the favicon is mostly the head's silhouette.
+
+### Verification
+- `npm run check` — typecheck, lint, format, 175 tests: all pass.
+- Browser (headless Chrome, dev server): lab Brand section renders 4 pixel canvases (400×235, 400×235, 260×153, 32×32) plus smooth/emblem SVGs; game favicon is the head crop (decodes 150×150); no console errors.
+
+### Follow-ups
+- Before C08: pick base resolution + sprite size; consider a pixel font for UI (C10).
+- Later: revisit the logo (more organic head/pose, hand-tuned pixels), title-screen usage (C33).

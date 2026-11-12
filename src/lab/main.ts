@@ -57,7 +57,7 @@ async function main(): Promise<void> {
       h(
         'a',
         { href: '#brand', class: 'lab-logo', 'aria-label': 'Zoravia' },
-        svg(logoSvg({ variant: 'dark' })),
+        svg(logoSvg({ id: 'lab-header' })),
       ),
       h('span', { class: 'lab-title' }, 'Style lab'),
       h('a', { href: '../', class: 'lab-game-link' }, 'Open game →'),
