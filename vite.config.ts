@@ -15,6 +15,10 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: true,
+    rollupOptions: {
+      // Two pages: the game and the style lab (/lab/).
+      input: { main: dir('./index.html'), lab: dir('./lab/index.html') },
+    },
   },
   test: {
     include: ['src/**/*.test.ts', 'packs/**/*.test.ts', 'tools/**/*.test.ts', 'tests/**/*.test.ts'],

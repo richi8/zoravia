@@ -10,7 +10,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C04 | Rendering, game loop, scenes | ✅ | [log](logs/C04-rendering-loop-scenes.md) |
 | C05 | Input system | ✅ | [log](logs/C05-input-system.md) |
 | C06 | UI framework | ✅ | [log](logs/C06-ui-framework.md) |
-| C07 | Design tokens & brand | ⬜ | |
+| C07 | Design tokens & brand | ✅ | [log](logs/C07-design-tokens-brand.md) |
 | C08 | Zorling genome & sprite generator v1 | ⬜ | |
 | C09 | Zorling rig & animation, variants | ⬜ | |
 | C10 | UI kit & battle mock | ⬜ | |

@@ -1,9 +1,14 @@
 import { attachDomInput } from '@engine/input';
 import { Engine } from '@engine/render/engine';
 import { uiInputFrom } from '@engine/ui';
+import { installFavicon } from '@game/brand/logo';
 import { GAME_TITLE } from '@game/index';
 import { createInput } from '@game/input/actions';
 import { UiDemoScene } from '@game/scenes/ui-demo-scene';
+import { installCssVars } from '@game/style/css';
+import { loadFonts } from '@game/style/fonts';
+import { ZORAVIA_THEME } from '@game/style/theme';
+import { surface } from '@game/style/tokens';
 
 document.title = GAME_TITLE;
 
@@ -11,9 +16,14 @@ async function main(): Promise<void> {
   const root = document.getElementById('app');
   if (!root) throw new Error('#app element missing');
 
+  installCssVars();
+  installFavicon();
+  await loadFonts(); // Pixi measures text on creation: fonts must be ready first.
+
   const params = new URLSearchParams(window.location.search);
   const engine = await Engine.create({
     parent: root,
+    background: surface.background,
     debug: params.has('debug'),
   });
 
@@ -35,7 +45,7 @@ async function main(): Promise<void> {
   });
 
   // Until the real start flow exists (C33), the app opens the UI framework demo (C06).
-  const demo = new UiDemoScene(engine, ui);
+  const demo = new UiDemoScene(engine, ui, ZORAVIA_THEME);
   await engine.scenes.replace(demo);
   engine.start();
 

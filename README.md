@@ -11,7 +11,7 @@ Node.js 22+ (developed on Node 24).
 | Command | What it does |
 |---|---|
 | `npm install` | Install dependencies |
-| `npm run dev` | Start the Vite dev server |
+| `npm run dev` | Start the Vite dev server (game at `/`, style lab at `/lab/`) |
 | `npm run build` | Typecheck, then build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm test` | Run unit tests once (Vitest) |
@@ -25,7 +25,7 @@ Node.js 22+ (developed on Node 24).
 ```
 src/engine/   generic, content-free engine systems
 src/game/     Zoravia-specific wiring on top of the engine
-src/lab/      style lab (/lab route, Phase 1)
+src/lab/      style lab (/lab/ page, Phase 1) — entry: lab/index.html
 packs/core/   the core content pack (the engine holds no content)
 tools/        offline scripts (world generator, ...)
 logs/         per-chunk work logs
