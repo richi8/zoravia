@@ -12,12 +12,6 @@ const upcoming = (id: string, title: string, chunk: string, what: string): LabSe
 
 export const upcomingSections: LabSection[] = [
   upcoming(
-    'animation',
-    'Rig & animation',
-    'C09',
-    'idle/attack/hurt/faint, 3-stage lines, Titan and shiny variants.',
-  ),
-  upcoming(
     'ui-kit',
     'UI kit & battle mock',
     'C10',

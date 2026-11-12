@@ -17,6 +17,7 @@ import { conditionsSection, typesSection } from './sections/types';
 import { typographySection } from './sections/typography';
 import { uiThemeSection } from './sections/ui-theme';
 import { upcomingSections } from './sections/upcoming';
+import { animationSection } from './sections/animation';
 import { zorlingsSection } from './sections/zorlings';
 
 const SECTIONS: LabSection[] = [
@@ -29,6 +30,7 @@ const SECTIONS: LabSection[] = [
   motionSection,
   uiThemeSection,
   zorlingsSection,
+  animationSection,
   ...upcomingSections,
 ];
 

@@ -73,6 +73,11 @@ const GLOW: { readonly [T in TypeId]: number } = {
   metal: 0xff4a5a,
 };
 
+/** The bright glow color of a type (dark Zorlings' eyes, Titan auras). */
+export function glowColor(type: TypeId): number {
+  return GLOW[type];
+}
+
 /** Rolls a palette from the type colors in `tokens.ts`, shaped by mood and body plan. */
 export function generatePalette(
   rng: Rng,

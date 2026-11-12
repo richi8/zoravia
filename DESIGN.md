@@ -58,7 +58,7 @@ Each region has its own lore, a legendary, a trial/badge, and **its own 3 starte
   - 3-stage: ~300 → ~410 → ~520 (starters, rares)
   - Captured Titan: its stage +5%
   - Legendary: ~575, never evolves
-- Shiny variants (alternate procedural palette).
+- No shiny variants (dropped 2026-11-12, C09 review: a recolored Zorling can be mistaken for another type, since type identity is carried by color).
 - Nicknames.
 
 ## Types (8)
@@ -155,7 +155,7 @@ The player has **one movement speed** (no running / running shoes), **3.75 tiles
 **Primary switching:** `1 2 3` switch directly to that hotbar creature whenever it's the player's turn (costs the turn). Optional confirm prompt, toggleable in settings. Moves have no letter hotkeys because `W` is used for navigation.
 
 ## Feature plan
-**V1 (core):** evolution, trials/badges, rival across regions, regional legendaries, shinies, team-wide shared XP, hidden items/secrets, autosave, fast travel, nicknames, traits, move relearner.
+**V1 (core):** evolution, trials/badges, rival across regions, regional legendaries, team-wide shared XP, hidden items/secrets, autosave, fast travel, nicknames, traits, move relearner.
 
 **Later:** day/night spawns, fishing, following creature, league endgame, held items, safari-style zone, condition flasks (shop items applying conditions), item-based evolution.
 

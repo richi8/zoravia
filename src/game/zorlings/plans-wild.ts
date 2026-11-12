@@ -42,10 +42,23 @@ interface WingOptions {
   readonly side: 1 | -1;
   readonly z: number;
   readonly far?: boolean;
+  /** Rig bone (default: `wingFar` when `far`, else `wingNear`). */
+  readonly bone?: 'wingFar' | 'wingNear';
+}
+
+/** Runs `draw` on the wing's bone (pivot at the shoulder), then restores the bone. */
+function onWingBone(b: Builder, w: WingOptions, draw: () => void): void {
+  const prev = b.setBone(w.bone ?? (w.far ? 'wingFar' : 'wingNear'), [w.x, w.y]);
+  draw();
+  b.bone = prev;
 }
 
 /** Bat/dragon wing: arm and finger bones with a scalloped membrane between them. */
 export function membraneWing(b: Builder, w: WingOptions): void {
+  onWingBone(b, w, () => membraneShapes(b, w));
+}
+
+function membraneShapes(b: Builder, w: WingOptions): void {
   const { x: sx, y: sy, span, arm, side } = w;
   const m = ([px, py]: Pt): Pt => [sx + (px - sx) * side, py];
   const W = dirPt(sx, sy, arm, span * 0.42);
@@ -81,6 +94,10 @@ export function membraneWing(b: Builder, w: WingOptions): void {
 
 /** Spread bird wing: covert feathers on the arm, long primaries fanning from the wrist. */
 export function featherWing(b: Builder, w: WingOptions): void {
+  onWingBone(b, w, () => featherShapes(b, w));
+}
+
+function featherShapes(b: Builder, w: WingOptions): void {
   const { x: sx, y: sy, span, arm, side } = w;
   const m = ([px, py]: Pt): Pt => [sx + (px - sx) * side, py];
   const W = dirPt(sx, sy, arm, span * 0.45);
@@ -185,6 +202,7 @@ function lithe(b: Builder, canine: boolean): void {
     });
   }
 
+  b.setBone('head', [hx - r * 0.5, hy + r * 0.6]);
   const eye: EyeSpec = { x: hx + r * 0.32, y: hy - r * 0.12, r: r * (canine ? 0.24 : 0.28) };
   b.add(
     ellipse(hx, hy, r * 1.02, r * 0.9),
@@ -226,15 +244,18 @@ function lithe(b: Builder, canine: boolean): void {
 
   addEars(b, parts.ears, hx + r * 0.1, hy + r * 0.05, r * (canine ? 1.1 : 1.2));
   addHorns(b, parts.horns, hx, hy, r);
+  b.bone = 'body';
   const tx = -rx * 0.95;
   const ty = cy - ry * 0.25;
   if (parts.tail === 'thin') {
+    b.setBone('tail', [tx, ty]);
     const len = 22 + 10 * body.length;
     const c = curve(tx, ty, deg(-172), deg(80), len, legR * 0.75, legR * 0.5, 5);
     b.add(c.prim, b.skin({ belly: false, spots: false }), 6);
     if (parts.markings === 'tip') {
       b.add(circle(c.end[0], c.end[1], legR * 0.75), R.secondary, 6.1, { lines: false });
     }
+    b.bone = 'body';
   } else addTail(b, parts.tail, tx, ty, deg(-160), 16 + 10 * body.length, legR * 1.5);
   addBack(b, parts.back, ellipseRidge(0, cy, rx, ry, -0.4, 0.55, 4), 6 + 3 * body.bulk);
 }
@@ -322,6 +343,7 @@ function dragon(b: Builder): void {
     }
   }
 
+  b.setBone('head', [nx, ny]);
   const eye: EyeSpec = { x: hx + r * 0.1, y: hy - r * 0.28, r: r * 0.26 };
   b.add(ellipse(hx, hy, r * 1.1, r * 0.82, deg(6)), R.primary, 12, { group: G.head });
   const long = parts.snout === 'long';
@@ -355,6 +377,7 @@ function dragon(b: Builder): void {
     hy + r * 0.05,
     r * 1.1,
   );
+  b.bone = 'body';
   addBack(b, parts.back, ellipseRidge(0, cy, rx, ry, -0.85, 0.4, 5), 6 + 3 * body.bulk);
 
   // Tail tip.
@@ -465,6 +488,7 @@ function bat(b: Builder): void {
       arm: deg(-30),
       side: s,
       z: 5,
+      bone: s < 0 ? 'wingFar' : 'wingNear',
     });
   }
 }
@@ -562,7 +586,9 @@ function raptor(b: Builder): void {
     const [ex, ey] = dirPt(tx, ty, deg(125 + i * 14), 14 + 6 * body.length);
     fan.push(lens(tx, ty, ex, ey, 4.5));
   }
+  b.setBone('tail', [tx, ty]);
   b.add(union(fan, 1), parts.tail === 'flame' ? R.flame : R.secondary, 6);
+  b.bone = 'body';
 
   const span = 36 + 14 * body.limbs;
   featherWing(b, {
@@ -613,6 +639,7 @@ function insect(b: Builder): void {
 
   b.add(ellipse(ax, cy, ra, rb, deg(-6)), b.skin({ belly: false }), 10, { group: G.body });
   b.add(ellipse(tx, cy - 1, tr, tr * 0.95), R.primary, 10.5, { group: 25 });
+  b.setBone('head', [hx - r * 0.8, hy + r * 0.2]);
   const eye: EyeSpec = { x: hx + r * 0.25, y: hy - r * 0.2, r: r * 0.42 };
   b.add(circle(hx, hy, r), R.primary, 11, { group: G.head });
   b.eyes.push(eye);
@@ -665,10 +692,12 @@ function insect(b: Builder): void {
     );
   }
 
+  b.bone = 'body';
   if (parts.wings !== 'none') {
     // Raised translucent-looking wings (light ramp).
     for (const far of [true, false]) {
       const [wx, wy] = [tx - 1 - (far ? 2 : 0), cy - tr * 0.8];
+      b.setBone(far ? 'wingFar' : 'wingNear', [wx, wy]);
       const [ex, ey] = dirPt(wx, wy, deg(far ? -140 : -125), 20 + 8 * body.limbs);
       b.add(
         lens(wx, wy, ex, ey, 7 + 2 * body.bulk),
@@ -677,6 +706,7 @@ function insect(b: Builder): void {
         far ? { depth: 1 } : {},
       );
     }
+    b.bone = 'body';
   }
   addBack(b, parts.back, ellipseRidge(ax, cy, ra, rb, -0.5, 0.3, 3), 4 + 2 * body.bulk);
 }
@@ -703,6 +733,7 @@ function fish(b: Builder): void {
   );
   const tx = -rx * 1.05;
   const L = ry * 1.25;
+  b.setBone('tail', [tx + 2, cy]);
   b.add(
     polygon(
       [
@@ -716,6 +747,7 @@ function fish(b: Builder): void {
     R.secondary,
     6,
   );
+  b.bone = 'body';
   if (parts.back === 'none' || parts.back === 'leaves' || parts.back === 'mane') {
     b.add(
       polygon(
@@ -813,6 +845,7 @@ function golem(b: Builder): void {
   const r = (6 + 2 * body.head) * hs;
   const hx = rx * 0.4;
   const hy = cy - ry * 0.95;
+  b.setBone('head', [hx, hy + r * 0.7]);
   b.add(
     polygon(
       [
@@ -833,6 +866,7 @@ function golem(b: Builder): void {
   );
   if (parts.mouth !== 'none') b.mouth = { x: hx + r * 0.3, y: hy + r * 0.45 };
   addHorns(b, parts.horns, hx, hy + r * 0.2, r);
+  b.bone = 'body';
 
   // Arms ending in boulder fists.
   const armR = 4 + 2 * body.bulk;

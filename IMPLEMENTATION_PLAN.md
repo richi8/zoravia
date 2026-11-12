@@ -78,8 +78,8 @@ Source of truth for *what* the game is: `DESIGN.md`. This file says *in what ord
 
 ### C09 · Zorling rig & animation, variants
 - **Goal:** Zorlings feel alive.
-- **Deliverables:** part-based rig, animations (idle breathe/blink, attack lunge, hurt, faint), evolution stages from one genome (1/2/3-stage), Titan variant (bigger, glow), shiny palette.
-- **Done when:** lab shows a full 3-stage line animated, plus Titan and shiny versions.
+- **Deliverables:** part-based rig, animations (idle breathe/blink, attack lunge, hurt, faint), evolution stages from one genome (1/2/3-stage), Titan variant (bigger, glow). *(Shiny palette dropped at C09 review, see `DESIGN.md` Creatures.)*
+- **Done when:** lab shows a full 3-stage line animated, plus the Titan version.
 - **Depends:** C08
 
 ### C10 · UI kit & battle mock
@@ -109,7 +109,7 @@ User reviews `/lab`. Feedback becomes tweak chunks before Phase 2. Log the decis
 
 ### C13 · Zorling instances & progression
 - **Goal:** Individual Zorlings that grow.
-- **Deliverables:** stat formula, XP curve, team-wide shared XP, badge-based soft level cap, learning moves (3 slots, replace or skip), level-based evolution, nicknames, shiny roll, Titan mark.
+- **Deliverables:** stat formula, XP curve, team-wide shared XP, badge-based soft level cap, learning moves (3 slots, replace or skip), level-based evolution, nicknames, Titan mark.
 - **Done when:** tests cover leveling, cap slowdown, move replacement, evolution.
 - **Depends:** C12
 

@@ -506,3 +506,23 @@ a {
   border: 1px solid var(--z-surface-border);
   border-radius: var(--z-radius-md);
 }
+
+/* Rig & animation (C09) */
+.za-stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--z-space-md);
+  padding: var(--z-space-lg);
+  border-radius: var(--z-radius-xl);
+  background: radial-gradient(circle at 50% 30%, var(--z-ink-700), var(--z-ink-900));
+  overflow-x: auto;
+}
+.za-stage figure {
+  margin: 0;
+  text-align: center;
+}
+.za-stage figcaption {
+  font-size: var(--z-text-xs);
+  color: var(--z-surface-text-dim);
+}

@@ -219,6 +219,8 @@ export interface Shape {
   readonly thin?: boolean;
   /** Flat: no shading, always the given tone index. */
   readonly flatTone?: number;
+  /** Rig bone this shape moves with (see `rig.ts`). Ignored by `rasterize`. */
+  readonly bone?: string;
 }
 
 /** A pixel stamp drawn after shading (eyes, mouths): pixel coordinates relative to `x, y`. */
@@ -450,6 +452,74 @@ export function flipX(sprite: PixelSprite): PixelSprite {
   }
   return { width: W, height: H, data: out };
 }
+
+/** Every opaque pixel in one color (hit flash, shadows). */
+export function silhouette(sprite: PixelSprite, color: number): PixelSprite {
+  const out = new Uint8ClampedArray(sprite.data.length);
+  for (let i = 0; i < out.length; i += 4) {
+    if (!sprite.data[i + 3]) continue;
+    out[i] = (color >> 16) & 255;
+    out[i + 1] = (color >> 8) & 255;
+    out[i + 2] = color & 255;
+    out[i + 3] = 255;
+  }
+  return { width: sprite.width, height: sprite.height, data: out };
+}
+
+export interface AuraRing {
+  readonly color: number;
+  /** Checkerboard: only every other pixel (a soft, pixel-art falloff). */
+  readonly dither?: boolean;
+}
+
+/**
+ * Rings of pixels around the figure (glow / aura), from the inside out, 1 px each, drawn in
+ * transparent pixels only. `parity` flips the checkerboard of dithered rings (pulse frames).
+ */
+export function aura(sprite: PixelSprite, rings: readonly AuraRing[], parity = 0): PixelSprite {
+  const { width: W, height: H } = sprite;
+  const data = new Uint8ClampedArray(sprite.data);
+  let filled = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) filled[i] = data[i * 4 + 3] ? 1 : 0;
+  for (const ring of rings) {
+    const next = new Uint8Array(filled);
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const i = y * W + x;
+        if (filled[i]) continue;
+        let near = false;
+        for (const [dx, dy] of NEIGHBORS8) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx >= 0 && ny >= 0 && nx < W && ny < H && filled[ny * W + nx]) {
+            near = true;
+            break;
+          }
+        }
+        if (!near) continue;
+        next[i] = 1;
+        if (ring.dither && (x + y + parity) % 2 === 1) continue;
+        data[i * 4] = (ring.color >> 16) & 255;
+        data[i * 4 + 1] = (ring.color >> 8) & 255;
+        data[i * 4 + 2] = ring.color & 255;
+        data[i * 4 + 3] = 255;
+      }
+    }
+    filled = next;
+  }
+  return { width: W, height: H, data };
+}
+
+const NEIGHBORS8: readonly (readonly [number, number])[] = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+  [1, 1],
+  [1, -1],
+  [-1, 1],
+  [-1, -1],
+];
 
 /** FNV-1a hash of the pixels — a cheap fingerprint for "renders identically" checks. */
 export function spriteHash(sprite: PixelSprite): string {

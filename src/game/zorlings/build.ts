@@ -77,6 +77,7 @@ function quadruped(b: Builder): void {
     );
   }
 
+  b.setBone('head', [hx - r * 0.45, hy + r * 0.55]);
   const eye: EyeSpec = { x: hx + r * 0.32, y: hy - r * 0.12, r: r * 0.27 };
   b.add(circle(hx, hy, r), b.skin({ belly: false, stripes: false, spots: false, mask: eye }), 12, {
     group: G.head,
@@ -95,6 +96,7 @@ function quadruped(b: Builder): void {
 
   addEars(b, parts.ears, hx, hy, r);
   addHorns(b, parts.horns, hx, hy, r);
+  b.bone = 'body';
   addTail(b, parts.tail, -rx * 0.88, cy - ry * 0.3, deg(-155), 14 + 10 * body.length, legR);
   addBack(b, parts.back, ellipseRidge(0, cy, rx, ry, -0.6, 0.25, 4), 7 + 3 * body.bulk);
   addWings(b, parts.wings, rx * 0.05, cy - ry * 0.6, 16 + 6 * body.limbs);
@@ -135,6 +137,7 @@ function serpent(b: Builder): void {
   const r = 7 + 5 * body.head;
   const hx = nx + r * 0.55;
   const hy = ny - r * 0.35;
+  b.setBone('head', [hx - r * 0.6, hy + r * 0.4]);
   const eye: EyeSpec = { x: hx + r * 0.2, y: hy - r * 0.25, r: r * 0.28 };
   b.add(
     ellipse(hx, hy, r * 1.2, r * 0.9, deg(-8)),
@@ -157,6 +160,7 @@ function serpent(b: Builder): void {
 
   addEars(b, parts.ears, hx - r * 0.35, hy, r);
   addHorns(b, parts.horns, hx - r * 0.15, hy + r * 0.05, r);
+  b.bone = 'body';
   const [tx, ty] = pts[0] ?? [0, 0];
   if (parts.tail !== 'thin')
     addTail(b, parts.tail, tx + 2, ty, deg(-160), 10 + 4 * body.length, 2.6);
@@ -216,12 +220,14 @@ function avian(b: Builder): void {
   const tx = -rx * 0.85;
   const ty = cy + ry * 0.15;
   if (parts.tail === 'fluffy' || parts.tail === 'thin' || parts.tail === 'fin') {
+    b.setBone('tail', [tx, ty]);
     const fan: Primitive[] = [];
     for (let i = 0; i < 3; i++) {
       const [ex, ey] = dirPt(tx, ty, deg(170 + i * 16), 12 + 6 * body.length - i * 2);
       fan.push(capsule(tx, ty, ex, ey, 3, 2.2));
     }
     b.add(union(fan, 2), R.secondary, 6);
+    b.bone = 'body';
   } else addTail(b, parts.tail, tx, ty, deg(175), 10 + 6 * body.length, 3);
   addBack(b, parts.back, ellipseRidge(0, cy, rx, ry, -0.7, -0.1, 3), 5 + 2 * body.bulk);
   addWings(b, 'feather', -2, cy - ry * 0.15, 15 + 8 * body.limbs);
@@ -325,6 +331,7 @@ function biped(b: Builder): void {
     );
   }
 
+  b.setBone('head', [hx, hy + r * 0.8]);
   const eyes: EyeSpec[] = [
     { x: hx + r * 0.0, y: hy + r * 0.02, r: r * 0.2, far: true },
     { x: hx + r * 0.5, y: hy + r * 0.02, r: r * 0.23 },
@@ -352,6 +359,7 @@ function biped(b: Builder): void {
 
   addEars(b, parts.ears, hx, hy, r);
   addHorns(b, parts.horns, hx, hy, r);
+  b.bone = 'body';
   addTail(b, parts.tail, -rx * 0.8, cy + ry * 0.45, deg(-170), 12 + 8 * body.length, legR * 0.9);
   const ridge: [number, number, number][] = [0, 1, 2].map((i) => {
     const t = deg(115 + i * 25);

@@ -9,6 +9,7 @@
  */
 
 import { hashString } from '@engine/core';
+import type { Bone, Rig } from '@engine/render/rig';
 import {
   capsule,
   circle,
@@ -44,16 +45,28 @@ export interface EyeSpec {
   readonly r: number;
   /** The far eye in a 3/4 view: drawn narrower. */
   readonly far?: boolean;
+  /** Rig bone the eye moves with (set by `Builder.model`). */
+  readonly bone?: string;
 }
 
 export interface MouthSpec {
   readonly x: number;
   readonly y: number;
+  readonly bone?: string;
 }
+
+/**
+ * Rig bones a Zorling can have. `body` is the root (pivot on the ground under the body);
+ * the others are children of `body` and exist only when the plan has that part as a
+ * separate shape (e.g. heads merged into the body blob have no `head` bone).
+ */
+export const BONES = ['body', 'head', 'tail', 'wingFar', 'wingNear'] as const;
+export type BoneId = (typeof BONES)[number];
 
 export interface ZorlingModel extends SpriteModel {
   readonly eyes: readonly EyeSpec[];
   readonly mouth: MouthSpec | null;
+  readonly rig: Rig;
 }
 
 export type RampSel = number | ((p: SurfacePoint) => number);
@@ -73,11 +86,28 @@ export class Builder {
   readonly shapes: Shape[] = [];
   readonly eyes: EyeSpec[] = [];
   mouth: MouthSpec | null = null;
+  /** Bone that `add` tags new shapes with. */
+  bone: BoneId = 'body';
+  readonly bones: Partial<Record<BoneId, Bone>> = { body: { pivot: [0, 0] } };
 
   constructor(readonly g: ZorlingGenome) {}
 
   add(prim: Primitive, ramp: RampSel, z: number, o: AddOptions = {}): void {
-    this.shapes.push({ prim, ramp, z, ...o });
+    this.shapes.push({ prim, ramp, z, bone: this.bone, ...o });
+  }
+
+  /**
+   * Switches the current bone (registering it as a child of `body` with `pivot` the first
+   * time) and returns the previous one, so part helpers can restore it.
+   */
+  setBone(id: BoneId, pivot?: Pt): BoneId {
+    const prev = this.bone;
+    if (!this.bones[id]) {
+      if (!pivot) throw new Error(`Builder: bone "${id}" needs a pivot`);
+      this.bones[id] = { parent: 'body', pivot: [pivot[0], pivot[1]] };
+    }
+    this.bone = id;
+    return prev;
   }
 
   /** Per-pixel material for body surfaces: base color plus belly and markings. */
@@ -121,7 +151,15 @@ export class Builder {
     ramps[R.dark] = FIXED.dark;
     ramps[R.flame] = FIXED.flame;
     ramps[R.flameCore] = FIXED.flameCore;
-    return { shapes: this.shapes, ramps, eyes: this.eyes, mouth: this.mouth };
+    // Eyes and mouth live on the head when the plan has a separate head.
+    const face: BoneId = this.bones.head ? 'head' : 'body';
+    return {
+      shapes: this.shapes,
+      ramps,
+      eyes: this.eyes.map((e) => ({ ...e, bone: face })),
+      mouth: this.mouth ? { ...this.mouth, bone: face } : null,
+      rig: this.bones as Rig,
+    };
   }
 }
 
@@ -397,6 +435,20 @@ export function addTail(
   r: number,
 ): void {
   if (kind === 'none') return;
+  const prev = b.setBone('tail', [x, y]);
+  addTailShapes(b, kind, x, y, angle, len, r);
+  b.bone = prev;
+}
+
+function addTailShapes(
+  b: Builder,
+  kind: Exclude<PartKind<'tail'>, 'none'>,
+  x: number,
+  y: number,
+  angle: number,
+  len: number,
+  r: number,
+): void {
   const tip = b.g.parts.markings === 'tip' ? R.secondary : R.primary;
   const z = 6;
   const stripes = b.skin({ belly: false, spots: false });
@@ -564,9 +616,11 @@ export function addWings(
   zFront = 14,
 ): void {
   if (kind === 'none') return;
+  const prev = b.bone;
   for (const far of [true, false]) {
     const ox = far ? x + size * 0.12 : x;
     const oy = far ? y - size * 0.08 : y;
+    b.setBone(far ? 'wingFar' : 'wingNear', [ox, oy]);
     const z = far ? 2 : zFront;
     const o = far ? { depth: 1 } : {};
     const tilt = far ? deg(-12) : 0;
@@ -599,6 +653,7 @@ export function addWings(
       });
     }
   }
+  b.bone = prev;
 }
 
 /** Upper outline of an ellipse as ridge points between `from` and `to` (fraction of rx). */

@@ -76,7 +76,6 @@ export const semantic = {
   hpMid: 0xffc94a,
   hpLow: 0xff5c6c,
   xp: 0x5ab0ff,
-  shiny: 0xffe27a,
   /** Titan mark glow / boss aura. */
   titan: 0xffa53d,
   bossAura: 0xff4f7b,
