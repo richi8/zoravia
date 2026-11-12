@@ -28,15 +28,14 @@ A keyboard-first, context-sensitive input system. The engine provides a bindings
   - **Why:** deterministic, testable, and frame-rate independent; sub-frame taps are not lost.
 - **Decision:** `KeyboardEvent.code` (physical keys).
   - **Why:** WASD keeps its shape on AZERTY/QWERTZ; letter shortcuts (I, M, …) can be rebound.
-- **Decision:** `run` action bound to Shift.
-  - **Why:** DESIGN.md lists running shoes but no key; Shift is the convention. Not added to DESIGN.md's key table yet — confirm at G1/C33.
+- **Decision (revised after review):** no `run` action. The first version bound `run` to Shift for DESIGN.md's "running shoes"; the user decided there is only one movement speed, so the action was removed and running shoes were dropped from `DESIGN.md` (V1 feature list; one-speed note under Controls) and from C20 in `IMPLEMENTATION_PLAN.md`.
 - **Decision:** `Esc` is `pause` in the overworld and `back` in menus (no conflict since they never share a context), per DESIGN.md.
 - **Decision:** Mouse buttons are bindable codes (`Mouse0`…); pointer position tracked for C06/C20.
   - **Why:** mouse stays optional and goes through the same machinery.
 
 ## Deviations from plan / design
-- Added the `run` action (Shift) — implied by "running shoes", key not in DESIGN.md.
 - Added a `dialog` context (`confirm`, `back`) for text boxes.
+- `DESIGN.md` updated: running shoes removed, one movement speed (user decision after C05; see Decisions).
 
 ## Issues & known limitations
 - No persistence of the profile yet (settings storage arrives with saves/settings, C23/C33).
@@ -53,9 +52,8 @@ A keyboard-first, context-sensitive input system. The engine provides a bindings
 
 ## Follow-ups
 - C06: menus should read `repeated(nav_*)`, `pressed(confirm/back)`, and use pointer position + `rawPressed('Mouse0')` (or Pixi pointer events) for mouse.
-- C20: overworld movement via `input.direction(MOVE_DIRECTIONS)` and `held('run')`.
+- C20: overworld movement via `input.direction(MOVE_DIRECTIONS)` (single speed, no running).
 - C23/C33: persist `bindings.toProfile()`; rebinding UI can use `rebind(..., 'swap')` and `keyLabel`.
-- G1/C33: confirm Shift for running and add it to DESIGN.md's controls table.
 
 ## Notes for the next chunk
 - Create with `createInput()` from `@game/input/actions`, attach with `attachDomInput(input, { pointerTarget: engine.app.canvas })`, and call `input.update(dt)` in `engine.addPreUpdate` before reading it.

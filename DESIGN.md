@@ -132,6 +132,8 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 
 Input is context-sensitive: `WASD`/arrows move the player in the overworld; while any menu is open (including the battle action menu) they navigate that menu instead. Every menu is a focusable list/grid with a clearly highlighted cursor. Cursor wraps around at the ends.
 
+The player has **one movement speed** (no running / running shoes).
+
 ### Overworld
 `I` inventory, `M` map, `P` party, `B` dex, `J` quests, `Esc` pause menu.
 
@@ -147,7 +149,7 @@ Input is context-sensitive: `WASD`/arrows move the player in the overworld; whil
 **Primary switching:** `1 2 3` switch directly to that hotbar creature whenever it's the player's turn (costs the turn). Optional confirm prompt, toggleable in settings. Moves have no letter hotkeys because `W` is used for navigation.
 
 ## Feature plan
-**V1 (core):** evolution, trials/badges, rival across regions, regional legendaries, shinies, team-wide shared XP, hidden items/secrets, running shoes, autosave, fast travel, nicknames, traits, move relearner.
+**V1 (core):** evolution, trials/badges, rival across regions, regional legendaries, shinies, team-wide shared XP, hidden items/secrets, autosave, fast travel, nicknames, traits, move relearner.
 
 **Later:** day/night spawns, fishing, following creature, league endgame, held items, safari-style zone, condition flasks (shop items applying conditions), item-based evolution.
 
