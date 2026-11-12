@@ -14,7 +14,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C08 | Zorling genome & sprite generator v1 | ✅ | [log](logs/C08-zorling-generator.md) |
 | C08b | Virtual screen (480×270) | ✅ | [log](logs/C08b-virtual-screen.md) |
 | C09 | Zorling rig & animation, variants | ✅ | [log](logs/C09-rig-animation.md) |
-| C10 | UI kit & battle mock | ⬜ | |
+| C10 | UI kit & battle mock | ✅ | [log](logs/C10-ui-kit-battle-mock.md) |
 | C11 | Biome tiles & weather | ⬜ | |
 | G1 | 🚦 Art direction review | ⬜ | |
 | C12 | Core schemas & core pack v0 | ⬜ | |

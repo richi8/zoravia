@@ -23,6 +23,7 @@ export function tokensToCssVars(t: Tokens = tokens): Record<string, string> {
   colors('logo', t.logoColors);
   colors('semantic', t.semantic);
   colors('surface', t.surface);
+  colors('paper', t.paper);
   colors('light', t.lightSurface);
   for (const [id, c] of Object.entries(t.typeColors)) {
     vars[`--z-type-${id}`] = toCss(c.base);

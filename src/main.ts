@@ -7,7 +7,7 @@ import { createInput } from '@game/input/actions';
 import { UiDemoScene } from '@game/scenes/ui-demo-scene';
 import { installCssVars } from '@game/style/css';
 import { loadFonts } from '@game/style/fonts';
-import { ZORAVIA_PIXEL_THEME } from '@game/style/theme';
+import { ZORAVIA_SCREEN_THEME } from '@game/style/theme';
 import { SCREEN, surface } from '@game/style/tokens';
 
 document.title = GAME_TITLE;
@@ -49,7 +49,7 @@ async function main(): Promise<void> {
   });
 
   // Until the real start flow exists (C33), the app opens the UI framework demo (C06).
-  const demo = new UiDemoScene(engine, ui, ZORAVIA_PIXEL_THEME);
+  const demo = new UiDemoScene(engine, ui, ZORAVIA_SCREEN_THEME);
   await engine.scenes.replace(demo);
   engine.start();
 

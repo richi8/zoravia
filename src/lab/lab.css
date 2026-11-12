@@ -403,6 +403,14 @@ a {
 .pixi-stage canvas {
   display: block;
 }
+/* Game-screen preview: 16:9 so a 960-wide stage shows exactly 480×270 at ×2. */
+.game-stage {
+  box-sizing: content-box;
+  width: min(960px, calc(100% - 4px));
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--z-radius-md);
+}
 
 @media (max-width: 800px) {
   .lab-body {

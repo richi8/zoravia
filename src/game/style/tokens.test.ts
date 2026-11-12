@@ -10,6 +10,7 @@ import {
   conditionColors,
   lightSurface,
   motion,
+  paper,
   surface,
   typeColors,
 } from './tokens';
@@ -72,6 +73,22 @@ describe('design tokens', () => {
     );
   });
 
+  it('storybook paper UI text is readable', () => {
+    for (const bg of [paper.base, paper.well]) {
+      expect(contrastRatio(paper.ink, bg)).toBeGreaterThanOrEqual(7);
+      expect(contrastRatio(paper.inkDim, bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(paper.title, bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(paper.warn, bg)).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(contrastRatio(paper.ink, paper.cursor)).toBeGreaterThanOrEqual(7);
+    expect(contrastRatio(paper.keyInk, paper.key)).toBeGreaterThanOrEqual(4.5);
+    // Disabled text is decorative but must still be visibly lighter than normal text.
+    expect(contrastRatio(paper.inkDisabled, paper.base)).toBeLessThan(
+      contrastRatio(paper.inkDim, paper.base),
+    );
+    expect(contrastRatio(paper.inkDisabled, paper.base)).toBeGreaterThanOrEqual(1.8);
+  });
+
   it('motion easings name real easing functions; durations fit the design', () => {
     for (const name of Object.values(motion.easing)) expect(EASINGS[name]).toBeTypeOf('function');
     expect(motion.duration.battleActionMax).toBeLessThanOrEqual(1.5);
@@ -88,6 +105,15 @@ describe('derived outputs', () => {
     expect(theme.motion.textSpeed).toBe(motion.text.charsPerSecond);
   });
 
+  it('builds the storybook game-screen theme', () => {
+    const theme = createUiTheme({ screen: true });
+    expect(theme.colors.panel).toBe(paper.base);
+    expect(theme.colors.text).toBe(paper.ink);
+    expect(theme.colors.cursorBg).toBe(paper.cursor);
+    expect(theme.skin).toBeDefined();
+    expect(theme.font.size).toBeLessThanOrEqual(12);
+  });
+
   it('exposes tokens as CSS variables', () => {
     const vars = tokensToCssVars();
     expect(vars['--z-ink-900']).toBe('#14172e');
@@ -95,6 +121,7 @@ describe('derived outputs', () => {
     expect(vars['--z-cond-wet']).toBe('#4fb3ff');
     expect(vars['--z-surface-text-dim']).toBe('#a3a9c8');
     expect(vars['--z-space-md']).toBe('12px');
+    expect(vars['--z-paper-base']).toBe('#f6ead0');
     expect(vars['--z-text-2xl']).toBe('32px');
     expect(vars['--z-duration-hit-stop']).toBe('60ms');
     expect(vars['--z-font-display']).toContain('Fredoka');

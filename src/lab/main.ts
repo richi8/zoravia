@@ -18,6 +18,7 @@ import { typographySection } from './sections/typography';
 import { uiThemeSection } from './sections/ui-theme';
 import { upcomingSections } from './sections/upcoming';
 import { animationSection } from './sections/animation';
+import { battleMockSection } from './sections/battle-mock';
 import { zorlingsSection } from './sections/zorlings';
 
 const SECTIONS: LabSection[] = [
@@ -31,6 +32,7 @@ const SECTIONS: LabSection[] = [
   uiThemeSection,
   zorlingsSection,
   animationSection,
+  battleMockSection,
   ...upcomingSections,
 ];
 

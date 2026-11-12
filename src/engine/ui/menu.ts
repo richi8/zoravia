@@ -18,6 +18,10 @@ import type { UiInput } from './ui-input';
 export interface MenuItem {
   readonly label: string;
   readonly disabled?: boolean;
+  /** Small graphic drawn before the label (e.g. a type icon); called on every rebuild. */
+  readonly icon?: () => Container;
+  /** Dim text right-aligned in the row (e.g. a key hint). */
+  readonly hint?: string;
 }
 
 export interface MenuOptions {
@@ -36,6 +40,7 @@ interface Row {
   readonly view: Container;
   readonly bg: Graphics;
   readonly text: Text;
+  readonly hint: Text | undefined;
 }
 
 export class Menu implements Widget<Container> {
@@ -171,13 +176,29 @@ export class Menu implements Widget<Container> {
       (item) =>
         new Text({ text: item.label, style: this.style(theme.colors.text, theme.font.size) }),
     );
-    const widest = Math.max(0, ...texts.map((t) => t.width));
+    const icons = this.items.map((item) => item.icon?.());
+    const hints = this.items.map((item) =>
+      item.hint
+        ? new Text({
+            text: item.hint,
+            style: this.style(theme.colors.textDim, theme.font.titleSize, '700'),
+          })
+        : undefined,
+    );
+    const iconW = (i: number): number => {
+      const icon = icons[i];
+      return icon ? Math.ceil(icon.width) + 3 : 0;
+    };
+    const widest = Math.max(
+      0,
+      ...texts.map((t, i) => t.width + iconW(i) + (hints[i] ? hints[i].width + 8 : 0)),
+    );
     this.cellH = theme.font.lineHeight + theme.spacing.item * 2;
-    const titleH = this.titleText ? this.titleText.height + theme.spacing.item : 0;
+    const titleH = this.titleText ? Math.ceil(this.titleText.height) + theme.spacing.item : 0;
     const gap = theme.spacing.column;
     const naturalCell = marker + widest + theme.spacing.item * 2;
     const outerW = this.options.width ?? Math.ceil(pad * 2 + naturalCell * cols + gap * (cols - 1));
-    this.cellW = (outerW - pad * 2 - gap * (cols - 1)) / cols;
+    this.cellW = Math.floor((outerW - pad * 2 - gap * (cols - 1)) / cols);
 
     texts.forEach((text, i) => {
       const col = i % cols;
@@ -185,8 +206,22 @@ export class Menu implements Widget<Container> {
       const view = new Container();
       view.position.set(pad + col * (this.cellW + gap), pad + titleH + row * this.cellH);
       const bg = new Graphics();
-      text.position.set(theme.spacing.item + marker, (this.cellH - text.height) / 2);
+      const icon = icons[i];
+      const x0 = theme.spacing.item + marker;
+      text.position.set(x0 + iconW(i), Math.round((this.cellH - text.height) / 2));
       view.addChild(bg, text);
+      if (icon) {
+        icon.position.set(x0, Math.round((this.cellH - icon.height) / 2));
+        view.addChild(icon);
+      }
+      const hint = hints[i];
+      if (hint) {
+        hint.position.set(
+          Math.round(this.cellW - theme.spacing.item - 4 - hint.width),
+          Math.round((this.cellH - hint.height) / 2),
+        );
+        view.addChild(hint);
+      }
       view.eventMode = 'static';
       view.cursor = 'pointer';
       view.hitArea = new Rectangle(0, 0, this.cellW, this.cellH);
@@ -197,7 +232,7 @@ export class Menu implements Widget<Container> {
         if (this.focused && e.button === 0) this.pendingClick = i;
       });
       this.rowsLayer.addChild(view);
-      this.rows.push({ view, bg, text });
+      this.rows.push({ view, bg, text, hint });
     });
 
     this.titleText?.position.set(pad + theme.spacing.item, pad - 2);
@@ -212,7 +247,10 @@ export class Menu implements Widget<Container> {
       const item = this.items[i];
       const selected = i === this.cursor.index;
       row.bg.clear();
-      if (selected) {
+      const skin = this.options.theme.skin;
+      if (selected && skin?.cursor) {
+        skin.cursor(row.bg, this.cellW, this.cellH, this.focused);
+      } else if (selected) {
         row.bg
           .roundRect(0, 0, this.cellW, this.cellH, Math.max(2, radius - 2))
           .fill({ color: colors.cursorBg, alpha: this.focused ? 1 : 0.45 });

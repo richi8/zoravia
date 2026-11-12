@@ -22,6 +22,8 @@ export const ACTIONS = [
   'hotbar1',
   'hotbar2',
   'hotbar3',
+  /** Keyboard tooltips: put a cursor on icons and badges to read what they mean. */
+  'inspect',
   'inventory',
   'map',
   'party',
@@ -53,6 +55,7 @@ export const DEFAULT_BINDINGS: BindingTable<Action> = {
   hotbar1: ['Digit1', 'Numpad1'],
   hotbar2: ['Digit2', 'Numpad2'],
   hotbar3: ['Digit3', 'Numpad3'],
+  inspect: ['KeyF'],
   inventory: ['KeyI'],
   map: ['KeyM'],
   party: ['KeyP'],
@@ -81,9 +84,9 @@ export const CONTEXTS = [
       'pause',
     ],
   },
-  { id: 'menu', actions: NAV },
-  /** Battle menus: navigation plus `1 2 3` direct switching. */
-  { id: 'battle', actions: [...NAV, 'hotbar1', 'hotbar2', 'hotbar3'] },
+  { id: 'menu', actions: [...NAV, 'inspect'] },
+  /** Battle menus: navigation plus `1 2 3` direct switching and `F` inspect. */
+  { id: 'battle', actions: [...NAV, 'hotbar1', 'hotbar2', 'hotbar3', 'inspect'] },
   /** Dialogue/battle text: `E` advances (hold to speed up), `Q` skips/closes. */
   { id: 'dialog', actions: ['confirm', 'back'] },
 ] as const satisfies readonly InputContextDef<Action>[];

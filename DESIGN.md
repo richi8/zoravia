@@ -114,7 +114,9 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 
 ## Presentation
 - **Pixel art** (decided 2026-11-12, C07 review): everything is generated in code as shapes, then rendered small, snapped to a limited palette and scaled up with crisp, nearest-neighbor pixels. Dark outlines, flat shading bands, optional pixel textures (e.g. scales).
-- **Base resolution 480×270** ("modern pixel", decided 2026-11-12): everything is drawn in game pixels, shown at a whole-number scale (×2, ×3, ×4, … ×8 for 4K) so pixels stay crisp. 480×270 is the **minimum** visible area: the game always fills the whole window, and windows of other shapes or sizes show more game pixels (e.g. 480×300 on a 16:10 laptop at ×3). No stretching, no letterbox bars. UI, Zorlings and tiles keep their size in game pixels; the world and battle backgrounds extend to fill, and UI anchors to screen edges. UI text is drawn at this resolution too.
+- **Base resolution 480×270** ("modern pixel", decided 2026-11-12): everything is drawn in game pixels, shown at a whole-number scale (×2, ×3, ×4, … ×8 for 4K) so pixels stay crisp. 480×270 is the **minimum** visible area: the game always fills the whole window, and windows of other shapes or sizes show more game pixels (e.g. 480×300 on a 16:10 laptop at ×3). No stretching, no letterbox bars. UI, Zorlings and tiles keep their size in game pixels; the world and battle backgrounds extend to fill, and UI anchors to screen edges.
+- **UI style** (decided 2026-11-12, C10 review): "storybook" — cream paper panels with brown ink borders and a gold cursor, drawn as pixel art in game pixels. **UI text is smooth** (not pixelated): it is laid out in game pixels but rendered at the screen's native resolution on a UI layer above the pixel screen (Nunito for text, Fredoka for names and callouts). Icons, badges and bars stay pixel art.
+- **Tooltips** explain icons and badges (types, conditions, team slots): on mouse hover, and by keyboard via inspect mode (`F`).
 - Starting sizes (tunable in playtesting):
   - World tiles **16×16** (≈ 30×17 tiles on screen); player and NPCs about 16×24.
   - Overworld (roaming) Zorlings fit 32×32.
@@ -135,6 +137,7 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 | Move (overworld) / navigate (when a menu is open) | `W A S D` or arrows |
 | Confirm / interact | `E` (also `Enter`, `Space`) |
 | Back / cancel | `Q` (also `Esc`, `Backspace`) |
+| Inspect (tooltips for icons/badges on screen; directions move between them) | `F` |
 
 Input is context-sensitive: `WASD`/arrows move the player in the overworld; while any menu is open (including the battle action menu) they navigate that menu instead. Every menu is a focusable list/grid with a clearly highlighted cursor. Cursor wraps around at the ends.
 

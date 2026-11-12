@@ -73,16 +73,22 @@ export class DialogBox implements Widget<Container> {
         },
       });
       const tag = new Panel(theme);
-      tag.resize(name.width + pad, name.height + 8);
+      const tagPad = Math.max(2, Math.round(pad / 2));
+      tag.resize(Math.ceil(name.width) + tagPad * 2, Math.ceil(name.height) + tagPad);
       tag.view.position.set(pad, -tag.height + theme.borderWidth);
-      name.position.set(pad / 2, 4);
+      name.position.set(tagPad, Math.round(tagPad / 2));
       tag.view.addChild(name);
       this.view.addChild(tag.view);
     }
 
-    const s = theme.font.size * 0.3;
-    this.more.poly([-s, -s * 0.6, s, -s * 0.6, 0, s * 0.6]).fill({ color: theme.colors.accent });
-    this.more.position.set(width - pad, this.panel.height - pad * 0.9);
+    if (theme.skin?.more) {
+      theme.skin.more(this.more);
+      this.more.position.set(width - pad, this.panel.height - pad);
+    } else {
+      const s = theme.font.size * 0.3;
+      this.more.poly([-s, -s * 0.6, s, -s * 0.6, 0, s * 0.6]).fill({ color: theme.colors.accent });
+      this.more.position.set(width - pad, this.panel.height - pad * 0.9);
+    }
     this.more.visible = false;
 
     this.view.eventMode = 'static';

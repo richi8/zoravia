@@ -145,3 +145,32 @@ describe('SceneManager transitions', () => {
     expect(manager.top?.id).toBe('a');
   });
 });
+
+describe('scene UI views', () => {
+  it('attaches a scene ui view through attachUi and detaches it on removal', async () => {
+    const world: string[] = [];
+    const ui: string[] = [];
+    const manager = new SceneManager<FakeView>({
+      attach: (v) => world.push(v.name),
+      detach: (v) => world.splice(world.indexOf(v.name), 1),
+      attachUi: (v) => ui.push(v.name),
+      detachUi: (v) => ui.splice(ui.indexOf(v.name), 1),
+    });
+    await manager.push({ id: 'a', view: { name: 'a' }, ui: { name: 'a-ui' } });
+    await manager.push({ id: 'b', view: { name: 'b' } });
+    expect(world).toEqual(['a', 'b']);
+    expect(ui).toEqual(['a-ui']);
+    await manager.pop();
+    await manager.pop();
+    expect(world).toEqual([]);
+    expect(ui).toEqual([]);
+  });
+
+  it('falls back to attach when the host has no UI layer', async () => {
+    const { manager, attached } = setup();
+    await manager.push({ id: 'a', view: { name: 'a' }, ui: { name: 'a-ui' } });
+    expect(attached).toEqual(['a', 'a-ui']);
+    await manager.pop();
+    expect(attached).toEqual([]);
+  });
+});

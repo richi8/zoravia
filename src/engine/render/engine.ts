@@ -16,9 +16,15 @@
  * size; wider/taller windows get a larger game screen (see `virtual-screen.ts`), so scenes
  * must lay out for `engine.width/height` in `resize`. Pixi pointer events and
  * `engine.toScreen()` report game pixels; the debug overlay stays at native resolution.
+ *
+ * UI layer: a scene's optional `ui` view (and the transitions) are drawn straight to the
+ * canvas, scaled to the game screen, instead of into the pixel texture. Coordinates are the
+ * same game pixels, but text is rendered at device resolution (smooth, not pixelated);
+ * shapes and nearest-filtered textures at whole game-pixel positions still look like pixel
+ * art. Every `Text` in the UI layer gets `resolution = fit.scale` automatically.
  */
 
-import { Application, Container, RenderTexture, Sprite } from 'pixi.js';
+import { AbstractText, Application, Container, Matrix, RenderTexture, Sprite } from 'pixi.js';
 import { EventBus } from '../core/events';
 import { createLogger } from '../core/logger';
 import { FpsCounter } from '../debug/fps-counter';
@@ -61,6 +67,8 @@ export class Engine {
   /** Layers, bottom to top. */
   readonly layers = {
     scenes: new Container({ label: 'scenes' }),
+    /** Scene UI views (native-resolution text in virtual mode). */
+    ui: new Container({ label: 'ui' }),
     transitions: new Container({ label: 'transitions' }),
     debug: new Container({ label: 'debug' }),
   };
@@ -69,8 +77,13 @@ export class Engine {
   private readonly overlay: FpsOverlay;
   private readonly disposers: (() => void)[] = [];
   private readonly preUpdate: ((dt: number) => void)[] = [];
-  /** Everything that belongs to the game screen (scenes + transitions). */
+  /** Event root of the game screen: the pixel world + the UI layer, both in game pixels. */
   private readonly screenRoot = new Container({ label: 'screen' });
+  /** Pixel layer (rendered into `screenTexture` in virtual mode). */
+  private readonly worldRoot = new Container({ label: 'world' });
+  /** UI layer + transitions (rendered to the canvas at native resolution in virtual mode). */
+  private readonly uiRoot = new Container({ label: 'ui-root' });
+  private readonly uiTransform = new Matrix();
   private readonly virtual: VirtualSize | undefined;
   private readonly screenTexture: RenderTexture | undefined;
   private readonly screenSprite: Sprite | undefined;
@@ -82,7 +95,9 @@ export class Engine {
     options: EngineOptions,
   ) {
     this.virtual = options.virtual;
-    this.screenRoot.addChild(this.layers.scenes, this.layers.transitions);
+    this.worldRoot.addChild(this.layers.scenes);
+    this.uiRoot.addChild(this.layers.ui, this.layers.transitions);
+    this.screenRoot.addChild(this.worldRoot, this.uiRoot);
     if (this.virtual) {
       this.screenTexture = RenderTexture.create({
         width: this.virtual.width,
@@ -92,7 +107,7 @@ export class Engine {
         scaleMode: 'nearest',
       });
       this.screenSprite = new Sprite({ texture: this.screenTexture, label: 'screen-view' });
-      app.stage.addChild(this.screenSprite, this.layers.debug);
+      app.stage.addChild(this.screenSprite);
       this.routePointerEvents();
     } else {
       app.stage.addChild(this.screenRoot, this.layers.debug);
@@ -101,6 +116,8 @@ export class Engine {
     this.scenes = new SceneManager<Container>({
       attach: (view) => this.layers.scenes.addChild(view),
       detach: (view) => this.layers.scenes.removeChild(view),
+      attachUi: (view) => this.layers.ui.addChild(view),
+      detachUi: (view) => this.layers.ui.removeChild(view),
     });
 
     this.overlay = new FpsOverlay(this.fps);
@@ -115,15 +132,27 @@ export class Engine {
       },
       render: (alpha) => {
         this.scenes.render(alpha);
-        if (this.screenTexture) {
+        if (this.screenTexture && this.currentFit) {
           app.renderer.render({
-            container: this.screenRoot,
+            container: this.worldRoot,
             target: this.screenTexture,
             clear: true,
             clearColor: options.background ?? 0x0f1115,
           });
+          app.render(); // the scaled pixel screen
+          syncTextResolution(this.uiRoot, this.currentFit.scale);
+          app.renderer.render({
+            container: this.uiRoot,
+            transform: this.uiTransform,
+            clear: false,
+          });
+          // Pixi leaves the render transform in the group's world transform; reset it so hit
+          // tests and bounds stay in game pixels (pointer events are mapped to game pixels).
+          this.uiRoot.renderGroup?.worldTransform.identity();
+          app.renderer.render({ container: this.layers.debug, clear: false });
+        } else {
+          app.render();
         }
-        app.render();
       },
     });
 
@@ -259,6 +288,7 @@ export class Engine {
         this.currentFit = fit;
         this.screenTexture?.resize(fit.width, fit.height);
         this.screenSprite.scale.set(fit.cssScale);
+        this.uiTransform.set(fit.cssScale, 0, 0, fit.cssScale, 0, 0);
       }
       this.scenes.resize(this.width, this.height);
       this.events.emit('resize', {
@@ -289,4 +319,17 @@ export class Engine {
 
     apply();
   }
+}
+
+/**
+ * Gives every text in the UI layer the device resolution of one game pixel, so it is drawn
+ * smooth at native resolution. Only changed texts are re-rasterized.
+ */
+function syncTextResolution(root: Container, resolution: number): void {
+  const visit = (c: Container): void => {
+    if (!c.visible) return;
+    if (c instanceof AbstractText && c.resolution !== resolution) c.resolution = resolution;
+    for (const child of c.children) visit(child);
+  };
+  visit(root);
 }

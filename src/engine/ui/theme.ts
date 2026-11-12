@@ -3,6 +3,21 @@
  * C07 provides the real design tokens; until then `DEFAULT_THEME` is a neutral placeholder.
  */
 
+import type { Graphics } from 'pixi.js';
+
+/**
+ * Optional custom drawing for a theme (e.g. pixel-art panels). Coordinates are theme units
+ * with the origin at the element's top-left corner.
+ */
+export interface UiSkin {
+  /** Panel background and border, `w × h`. */
+  panel(g: Graphics, w: number, h: number): void;
+  /** Highlight behind the selected menu item, including any cursor marker. */
+  cursor?(g: Graphics, w: number, h: number, focused: boolean): void;
+  /** "More text" marker of a dialog, drawn around (0, 0) = its bottom-right anchor. */
+  more?(g: Graphics): void;
+}
+
 export interface UiTheme {
   readonly colors: {
     readonly panel: number;
@@ -32,6 +47,8 @@ export interface UiTheme {
   };
   readonly radius: number;
   readonly borderWidth: number;
+  /** Custom drawing; without it widgets draw plain rounded rects. */
+  readonly skin?: UiSkin;
   readonly motion: {
     /** Characters per second for dialog text. */
     readonly textSpeed: number;
@@ -71,6 +88,7 @@ export function extendTheme(base: UiTheme, overrides: DeepPartial<UiTheme>): UiT
     spacing: { ...base.spacing, ...overrides.spacing },
     radius: overrides.radius ?? base.radius,
     borderWidth: overrides.borderWidth ?? base.borderWidth,
+    ...(overrides.skin || base.skin ? { skin: (overrides.skin ?? base.skin) as UiSkin } : {}),
     motion: { ...base.motion, ...overrides.motion },
   };
 }

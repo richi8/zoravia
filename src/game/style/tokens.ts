@@ -99,6 +99,38 @@ export const surface = {
   focusRing: brand.lagoon,
 } as const;
 
+/**
+ * Storybook UI (C10, user pick): cream paper panels with brown ink and a gold cursor. Used
+ * by every in-game panel on the game screen; text stays smooth (native resolution).
+ */
+export const paper = {
+  base: 0xf6ead0,
+  /** Top highlight line inside a panel. */
+  light: 0xfffaf0,
+  /** Bottom shade line, dividers, inset wells. */
+  shade: 0xdcc8a0,
+  well: 0xeddcb8,
+  /** Outer border. */
+  edge: 0x4a3426,
+  ink: 0x3a281c,
+  inkDim: 0x765640,
+  /** Disabled items (decorative, not required to meet text contrast). */
+  inkDisabled: 0xb49c7c,
+  cursor: 0xf0c869,
+  /** Cursor marker, accents. */
+  accent: 0xc9541c,
+  title: 0xa3441a,
+  /** Warnings on paper (e.g. "FULL"). */
+  warn: 0xa82a1c,
+  /** Key caps in key hints. */
+  key: 0x765640,
+  keyInk: 0xf6ead0,
+  /** Bar tracks. */
+  track: 0x3a281c,
+  /** Dimming veil behind modal panels. */
+  veil: 0x1d1408,
+} as const;
+
 /** Light surfaces — for the light logo variant and any light-background presentation. */
 export const lightSurface = {
   background: ink[50],
@@ -268,6 +300,7 @@ export const tokens = {
   logoColors,
   semantic,
   surface,
+  paper,
   lightSurface,
   typeColors,
   conditionColors,

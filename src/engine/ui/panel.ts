@@ -32,10 +32,14 @@ export class Panel {
   }
 
   private draw(): void {
-    const { colors, radius, borderWidth } = this.theme;
+    const { colors, radius, borderWidth, skin } = this.theme;
+    this.bg.clear();
+    if (skin) {
+      skin.panel(this.bg, this.w, this.h);
+      return;
+    }
     const inset = borderWidth / 2;
     this.bg
-      .clear()
       .roundRect(inset, inset, this.w - borderWidth, this.h - borderWidth, radius)
       .fill({ color: colors.panel, alpha: colors.panelAlpha })
       .stroke({ color: colors.border, width: borderWidth });

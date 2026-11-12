@@ -12,12 +12,6 @@ const upcoming = (id: string, title: string, chunk: string, what: string): LabSe
 
 export const upcomingSections: LabSection[] = [
   upcoming(
-    'ui-kit',
-    'UI kit & battle mock',
-    'C10',
-    'HP/XP bars, type badges, condition icons, hotbar, menus, battle mock screen.',
-  ),
-  upcoming(
     'biomes',
     'Biome tiles & weather',
     'C11',

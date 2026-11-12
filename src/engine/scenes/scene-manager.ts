@@ -19,6 +19,11 @@ import { EventBus } from '../core/events';
 export interface Scene<V = unknown> {
   readonly id: string;
   readonly view: V;
+  /**
+   * Optional UI view drawn above all scene views at native resolution (smooth text), in the
+   * same coordinates as `view`. Hosts without a separate UI layer attach it after `view`.
+   */
+  readonly ui?: V;
   /** Keep updating while another scene is on top. Default false. */
   readonly updateWhenCovered?: boolean;
   enter?(): void;
@@ -35,6 +40,9 @@ export interface Scene<V = unknown> {
 export interface SceneHost<V> {
   attach(view: V): void;
   detach(view: V): void;
+  /** Attaches a scene's `ui` view. Default: `attach`. */
+  attachUi?(view: V): void;
+  detachUi?(view: V): void;
 }
 
 /** Visual transition. The manager drives `setCover(0..1)`; 1 = scene fully hidden. */
@@ -226,12 +234,20 @@ export class SceneManager<V = unknown> {
     assert(!this.scenes.includes(scene), `Scene "${scene.id}" is already on the stack`);
     this.scenes.push(scene);
     this.host.attach(scene.view);
+    if (scene.ui !== undefined) {
+      if (this.host.attachUi) this.host.attachUi(scene.ui);
+      else this.host.attach(scene.ui);
+    }
     scene.enter?.();
     scene.resize?.(this.size.width, this.size.height);
   }
 
   private remove(scene: Scene<V>): void {
     scene.exit?.();
+    if (scene.ui !== undefined) {
+      if (this.host.detachUi) this.host.detachUi(scene.ui);
+      else this.host.detach(scene.ui);
+    }
     this.host.detach(scene.view);
   }
 }

@@ -26,6 +26,8 @@ const BASE_FONT = 20;
 export class UiDemoScene implements Scene<Container> {
   readonly id = 'ui-demo';
   readonly view = new Container({ label: 'scene:ui-demo' });
+  /** Everything here is UI: drawn in the native-resolution UI layer. */
+  readonly ui = new Container({ label: 'ui:ui-demo' });
   private readonly layer = new Container();
   private readonly stack: FocusStack<Container>;
   private readonly layouts = new Map<Widget<Container>, () => void>();
@@ -38,7 +40,7 @@ export class UiDemoScene implements Scene<Container> {
 
   constructor(
     private readonly engine: Engine,
-    private readonly ui: UiInput,
+    private readonly input: UiInput,
     private readonly theme: UiTheme = DEFAULT_THEME,
   ) {
     const font = theme.font.family;
@@ -59,11 +61,11 @@ export class UiDemoScene implements Scene<Container> {
       text: 'Ready.',
       style: { fontFamily: font, fontSize: Math.max(8, u(14)), fill: theme.colors.accent },
     });
-    this.view.addChild(this.header, this.layer, this.status);
+    this.ui.addChild(this.header, this.layer, this.status);
 
     this.stack = new FocusStack<Container>(
       { attach: (v) => this.layer.addChild(v), detach: (v) => this.layer.removeChild(v) },
-      ui,
+      input,
     );
 
     this.root = new Menu({
@@ -211,7 +213,7 @@ export class UiDemoScene implements Scene<Container> {
       background: 0x1f2a4d,
       accent: 0x8fb4ff,
       hint: 'E / Q / click — go back',
-      input: this.ui,
+      input: this.input,
       onLeave: () => void this.engine.scenes.pop({ transition: this.engine.fade() }),
     });
     void this.engine.scenes.push(scene, { transition: this.engine.fade() });
