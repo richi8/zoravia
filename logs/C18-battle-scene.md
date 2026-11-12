@@ -54,6 +54,7 @@ Battles are now playable and animated on the game page. A `BattleScene` puts the
 - The move-offer prompt (replace a move or skip) and the evolution prompt are not in this chunk's scope. The battle shows them as text ("…wants to learn X, but already knows 3 moves.", "…is ready to evolve…"), and `onEnd` gets the `BattleResult` with the progress events.
 
 ## Issues & known limitations
+- Fixed after review (user screenshot): the first Zorling sent out floated above its platform on screens that aren't 480×270. The scene enters, and its send-out animation starts, before it gets its real size; the animation kept the stale ground point. The switch-in and switch-out animations now read the ground point every frame.
 - Fixed after review (user screenshot): on windows that aren't exactly 480×270 game pixels, the pixel layer only showed its first 480×270 pixels, so backdrops did not span the screen. The bug dates from C08b: Pixi keeps a render texture's GPU target at its first size after `resize`. The engine now makes a new screen texture when the game-screen size changes (`src/engine/render/engine.ts`). Checked at 500×300 and 650×320. Earlier checks all ran at exactly 480×270, which hid it.
 - Placeholder backdrop (the C10 forest) for every battle. Biome backdrops come with the world.
 - Caught Zorlings and battle results are not kept: the launcher starts fresh teams for each battle (storage, C22; saves, C23).

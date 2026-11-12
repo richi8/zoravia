@@ -614,10 +614,11 @@ export class BattleScene implements Scene<Container> {
   private appear(side: SideId): Promise<void> {
     const fa = this.onField[side];
     if (!fa) return Promise.resolve();
-    const base = fa.actor.y;
+    // Read the ground point every frame: the first send-out starts before the scene gets
+    // its real screen size, and a resize may come in mid-animation.
     return this.tween(0.3, (k) => {
       fa.actor.alpha = Math.round(k * 4) / 4;
-      fa.actor.y = Math.round(base - 6 * (1 - k));
+      fa.actor.y = Math.round(this.groundOf(side).y - 6 * (1 - k));
     });
   }
 
@@ -625,13 +626,12 @@ export class BattleScene implements Scene<Container> {
   private async dissolve(side: SideId): Promise<void> {
     const fa = this.onField[side];
     if (!fa) return;
-    const base = fa.actor.y;
     await this.tween(0.3, (k) => {
       fa.actor.alpha = Math.round((1 - k) * 4) / 4;
-      fa.actor.y = Math.round(base + 4 * k);
+      fa.actor.y = Math.round(this.groundOf(side).y + 4 * k);
     });
     fa.actor.visible = false;
-    fa.actor.y = base;
+    fa.actor.y = this.groundOf(side).y;
     this.onField[side] = undefined;
   }
 
