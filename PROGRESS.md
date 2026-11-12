@@ -15,7 +15,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C08b | Virtual screen (480×270) | ✅ | [log](logs/C08b-virtual-screen.md) |
 | C09 | Zorling rig & animation, variants | ✅ | [log](logs/C09-rig-animation.md) |
 | C10 | UI kit & battle mock | ✅ | [log](logs/C10-ui-kit-battle-mock.md) |
-| C11 | Biome tiles & weather | ⬜ | |
+| C11 | Biome tiles & weather | ✅ | [log](logs/C11-biome-tiles-weather.md) |
 | G1 | 🚦 Art direction review | ⬜ | |
 | C12 | Core schemas & core pack v0 | ⬜ | |
 | C13 | Zorling instances & progression | ⬜ | |
