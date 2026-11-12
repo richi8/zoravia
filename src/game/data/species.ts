@@ -33,6 +33,8 @@ export const speciesSchema = z.strictObject({
   evolution: z.strictObject({ into: ref, level: level.min(2) }).optional(),
   /** Regional legendary: ~575 stat total, never evolves. */
   legendary: z.boolean().default(false),
+  /** XP base for defeating it. Defaults to stat total / 5 (see `@game/progression`). */
+  xpYield: z.number().int().min(1).max(1000).optional(),
 });
 
 export type Species = EntryOf<typeof species>;

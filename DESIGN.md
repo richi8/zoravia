@@ -31,7 +31,7 @@ All graphics and audio are code-generated. Built from day one for expansion via 
   - T3 (Lv 30–45): region boss, legendary, rare species
   - Cross-region danger zones (Lv 45–60) for endgame
 - Wild/zone levels fixed. Only campaign story bosses scale lightly (~+4 Lv per badge held).
-- Badge-based soft level cap: XP gain sharply reduced above cap.
+- Badge-based soft level cap: XP gain sharply reduced above cap. Starting values (C13, tuned in C31): cap Lv 30 / 45 / 52 / 60 for 0 / 1 / 2 / 3 badges (+5 per further badge); XP at or above the cap ×0.1.
 
 ### Launch regions
 1. **Temperate forest & lakes** — Nature / Water / Wind. Gentlest start.
@@ -60,7 +60,9 @@ Each region has its own lore, a legendary, a trial/badge, and **its own 3 starte
   - Captured Titan: its stage +5%
   - Legendary: ~575, never evolves
 - No shiny variants (dropped 2026-11-12, C09 review: a recolored Zorling can be mistaken for another type, since type identity is carried by color).
-- Nicknames.
+- Nicknames (up to 12 characters).
+- **Team-wide shared XP**: every team member that has not fainted gets the full XP of a win (decided 2026-11-12, C13).
+- Evolution is offered on reaching the level; the player may wait, and it is offered again on later level-ups.
 
 ## Types (8)
 Fire, Water, Nature, Electric, Ice, Earth, Wind, Metal (tank: high HP/DEF, low SPD).
