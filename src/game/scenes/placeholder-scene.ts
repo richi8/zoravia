@@ -36,7 +36,7 @@ export class PlaceholderScene implements Scene<Container> {
       },
     });
     this.hint = new Text({
-      text: 'Space / Enter / click — switch scene    F3 — FPS overlay',
+      text: 'E / Enter / Space / click — switch scene    F3 — FPS overlay',
       style: { fontFamily: 'system-ui, sans-serif', fontSize: 16, fill: 0xffffff },
     });
     this.hint.alpha = 0.7;

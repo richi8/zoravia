@@ -8,7 +8,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C02 | Core utilities | ✅ | [log](logs/C02-core-utilities.md) |
 | C03 | Content pack system | ✅ | [log](logs/C03-content-packs.md) |
 | C04 | Rendering, game loop, scenes | ✅ | [log](logs/C04-rendering-loop-scenes.md) |
-| C05 | Input system | ⬜ | |
+| C05 | Input system | ✅ | [log](logs/C05-input-system.md) |
 | C06 | UI framework | ⬜ | |
 | C07 | Design tokens & brand | ⬜ | |
 | C08 | Zorling genome & sprite generator v1 | ⬜ | |

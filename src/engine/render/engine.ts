@@ -29,7 +29,7 @@ export interface EngineOptions {
   readonly background?: number;
   /** Fixed updates per second. Default 60. */
   readonly stepHz?: number;
-  /** Show the FPS overlay at start. Toggle with F3 at runtime. Default false. */
+  /** Show the FPS overlay at start (toggle via `debugVisible`). Default false. */
   readonly debug?: boolean;
 }
 
@@ -51,6 +51,7 @@ export class Engine {
   private readonly driver: FrameDriver;
   private readonly overlay: FpsOverlay;
   private readonly disposers: (() => void)[] = [];
+  private readonly preUpdate: ((dt: number) => void)[] = [];
 
   private constructor(
     readonly app: Application,
@@ -70,7 +71,10 @@ export class Engine {
 
     this.loop = new FixedStepLoop({
       stepHz: options.stepHz ?? 60,
-      update: (dt) => this.scenes.update(dt),
+      update: (dt) => {
+        for (const hook of this.preUpdate) hook(dt);
+        this.scenes.update(dt);
+      },
       render: (alpha) => {
         this.scenes.render(alpha);
         app.render();
@@ -87,7 +91,6 @@ export class Engine {
     });
 
     this.watchResize();
-    this.watchDebugKey();
   }
 
   static async create(options: EngineOptions): Promise<Engine> {
@@ -130,6 +133,18 @@ export class Engine {
       () => ({ width: this.width, height: this.height }),
       options,
     );
+  }
+
+  /**
+   * Runs `fn(dt)` every fixed step before scenes update (e.g. sampling input).
+   * Returns a function that removes it.
+   */
+  addPreUpdate(fn: (dt: number) => void): () => void {
+    this.preUpdate.push(fn);
+    return () => {
+      const i = this.preUpdate.indexOf(fn);
+      if (i >= 0) this.preUpdate.splice(i, 1);
+    };
   }
 
   start(): void {
@@ -177,17 +192,5 @@ export class Engine {
     this.disposers.push(() => mql?.removeEventListener('change', onDpr));
 
     apply();
-  }
-
-  private watchDebugKey(): void {
-    // Temporary raw key handler; C05's input system will own debug bindings.
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.code === 'F3') {
-        e.preventDefault();
-        this.debugVisible = !this.debugVisible;
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    this.disposers.push(() => window.removeEventListener('keydown', onKey));
   }
 }

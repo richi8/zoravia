@@ -1,5 +1,7 @@
+import { attachDomInput } from '@engine/input';
 import { Engine } from '@engine/render/engine';
 import { GAME_TITLE } from '@game/index';
+import { createInput } from '@game/input/actions';
 import { PlaceholderScene } from '@game/scenes/placeholder-scene';
 
 document.title = GAME_TITLE;
@@ -13,6 +15,10 @@ async function main(): Promise<void> {
     parent: root,
     debug: params.has('debug') || import.meta.env.DEV,
   });
+
+  const input = createInput();
+  attachDomInput(input, { pointerTarget: engine.app.canvas });
+  input.setContexts(['menu']);
 
   // Placeholder scenes (C04). Replaced by the real title/start flow later.
   const sceneA = new PlaceholderScene({
@@ -28,25 +34,23 @@ async function main(): Promise<void> {
     accent: 0x8fb4ff,
   });
 
-  await engine.scenes.replace(sceneA);
-  engine.start();
-
   const toggle = (): void => {
     if (engine.scenes.isTransitioning) return;
     const next = engine.scenes.top === sceneA ? sceneB : sceneA;
     void engine.scenes.replace(next, { transition: engine.fade() });
   };
-  // Temporary raw input; C05 replaces this with the action map.
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyE') {
-      e.preventDefault();
-      toggle();
-    }
+
+  engine.addPreUpdate((dt) => {
+    input.update(dt);
+    if (input.pressed('debug_overlay')) engine.debugVisible = !engine.debugVisible;
+    if (input.pressed('confirm') || input.rawPressed('Mouse0')) toggle();
   });
-  engine.app.canvas.addEventListener('pointerdown', toggle);
+
+  await engine.scenes.replace(sceneA);
+  engine.start();
 
   if (import.meta.env.DEV) {
-    (window as unknown as { __zoravia?: unknown }).__zoravia = { engine, toggle };
+    (window as unknown as { __zoravia?: unknown }).__zoravia = { engine, input, toggle };
   }
 }
 
