@@ -33,6 +33,7 @@
     "node": ">=22"
   },
   "dependencies": {
+    "pixi.js": "^8.23.0",
     "zod": "^4.6.7"
   }
 }
