@@ -414,3 +414,95 @@ a {
     flex-wrap: wrap;
   }
 }
+
+/* Zorling generator (C08) */
+.zl-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--z-space-md);
+  margin-bottom: var(--z-space-lg);
+}
+.zl-field {
+  display: grid;
+  gap: var(--z-space-3xs);
+  font-size: var(--z-text-xs);
+  color: var(--z-surface-text-dim);
+}
+.zl-field input,
+.zl-field select,
+.zl-button {
+  font: inherit;
+  font-size: var(--z-text-sm);
+  color: var(--z-surface-text);
+  background: var(--z-surface-raised);
+  border: 1px solid var(--z-surface-border);
+  border-radius: var(--z-radius-md);
+  padding: var(--z-space-xs) var(--z-space-sm);
+}
+.zl-button {
+  cursor: pointer;
+  font-weight: 700;
+  background: var(--z-surface-cursor-bg);
+}
+.zl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(204px, 1fr));
+  gap: var(--z-space-sm);
+}
+.zl-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--z-space-2xs);
+  padding: var(--z-space-sm);
+  font: inherit;
+  color: var(--z-surface-text-dim);
+  background: radial-gradient(circle at 50% 35%, var(--z-ink-700), var(--z-ink-900));
+  border: 1px solid var(--z-surface-border);
+  border-radius: var(--z-radius-lg);
+  cursor: pointer;
+}
+.zl-card:hover,
+.zl-card.selected {
+  border-color: var(--z-surface-focus-ring);
+}
+.zl-small {
+  position: absolute;
+  top: var(--z-space-xs);
+  left: var(--z-space-xs);
+  opacity: 0.9;
+}
+.zl-label {
+  font-size: var(--z-text-xs);
+}
+.zl-detail {
+  margin-top: var(--z-space-xl);
+}
+.zl-stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--z-space-xl);
+  padding: var(--z-space-xl);
+  border-radius: var(--z-radius-xl);
+  background: var(--z-light-background);
+}
+.zl-stage figure {
+  margin: 0;
+  text-align: center;
+}
+.zl-stage figcaption {
+  font-size: var(--z-text-xs);
+  color: var(--z-ink-900);
+}
+.zl-json {
+  max-height: 320px;
+  overflow: auto;
+  padding: var(--z-space-md);
+  font-family: var(--z-font-mono);
+  font-size: var(--z-text-xs);
+  background: var(--z-surface-base);
+  border: 1px solid var(--z-surface-border);
+  border-radius: var(--z-radius-md);
+}

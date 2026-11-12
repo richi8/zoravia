@@ -17,6 +17,7 @@ import { conditionsSection, typesSection } from './sections/types';
 import { typographySection } from './sections/typography';
 import { uiThemeSection } from './sections/ui-theme';
 import { upcomingSections } from './sections/upcoming';
+import { zorlingsSection } from './sections/zorlings';
 
 const SECTIONS: LabSection[] = [
   brandSection,
@@ -27,6 +28,7 @@ const SECTIONS: LabSection[] = [
   layoutSection,
   motionSection,
   uiThemeSection,
+  zorlingsSection,
   ...upcomingSections,
 ];
 

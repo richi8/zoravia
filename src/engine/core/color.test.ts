@@ -37,3 +37,19 @@ describe('color', () => {
     expect(c.deltaE(0xff0000, 0xfe0000)).toBeLessThan(1);
   });
 });
+
+describe('hsl', () => {
+  it('round-trips colors through HSL', () => {
+    for (const col of [0xff6b3d, 0x3d8bff, 0x4cbf56, 0x808080, 0x000000, 0xffffff, 0xffd23f]) {
+      expect(c.deltaE(c.fromHsl(c.toHsl(col)), col)).toBeLessThan(1);
+    }
+    expect(c.toHsl(0xff0000)).toEqual({ h: 0, s: 1, l: 0.5 });
+    expect(c.fromHsl({ h: 240, s: 1, l: 0.5 })).toBe(0x0000ff);
+  });
+
+  it('rotates hue along the shorter arc, capped', () => {
+    expect(c.rotateHueToward(50, 250, 10)).toBe(40);
+    expect(c.rotateHueToward(200, 250, 10)).toBe(210);
+    expect(c.rotateHueToward(355, 10, 30)).toBe(10);
+  });
+});

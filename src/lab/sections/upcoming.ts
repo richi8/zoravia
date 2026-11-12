@@ -12,12 +12,6 @@ const upcoming = (id: string, title: string, chunk: string, what: string): LabSe
 
 export const upcomingSections: LabSection[] = [
   upcoming(
-    'zorlings',
-    'Zorling generator',
-    'C08',
-    'genome, 5 body plans, part library, 24-Zorling grid with seed/type/body controls.',
-  ),
-  upcoming(
     'animation',
     'Rig & animation',
     'C09',
