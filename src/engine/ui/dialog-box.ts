@@ -1,6 +1,8 @@
 /**
  * Dialog box with typewriter text, an optional speaker name, and a blinking "more" marker.
- * `E` advances (hold to speed up), `Q` finishes the current page, click = `E` press.
+ * `E` advances (hold to speed up), `Q` finishes the current page.
+ * A left click anywhere on screen while the dialog is focused works like `Q` while the page
+ * is typing and like `E` once it is finished — so click once to show the page, again to go on.
  * Pages are word-wrapped up front so words never jump lines while typing.
  */
 
@@ -29,7 +31,6 @@ export class DialogBox implements Widget<Container> {
   private readonly more = new Graphics();
   private readonly wrapped: string[];
   private blinkTime = 0;
-  private pendingTap = false;
   private doneFired = false;
   /** Confirm held during the last input step (speeds up typing). */
   private held = false;
@@ -86,9 +87,6 @@ export class DialogBox implements Widget<Container> {
 
     this.view.eventMode = 'static';
     this.view.cursor = 'pointer';
-    this.view.on('pointertap', (e) => {
-      if (e.button === 0) this.pendingTap = true;
-    });
   }
 
   get width(): number {
@@ -105,16 +103,16 @@ export class DialogBox implements Widget<Container> {
 
   blur(): void {
     this.held = false;
-    this.pendingTap = false;
   }
 
   handleInput(input: UiInput): void {
-    const tap = this.pendingTap;
-    this.pendingTap = false;
+    // Clicks are taken from anywhere on screen (the dialog is modal while focused).
+    const click = input.pointerPressed() !== undefined;
+    const typing = !this.typewriter.pageComplete;
     const changed = this.typewriter.update(0, {
-      confirmPressed: input.confirmPressed() || tap,
+      confirmPressed: input.confirmPressed() || (click && !typing),
       confirmHeld: false,
-      backPressed: input.backPressed(),
+      backPressed: input.backPressed() || (click && typing),
     });
     this.held = input.confirmHeld(); // applied as speed-up in update()
     if (changed) this.refresh();

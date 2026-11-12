@@ -13,7 +13,7 @@ A reusable, keyboard-first UI layer: a focus stack for nested menus/dialogs, lis
 - `src/engine/ui/focus-stack.ts` — `FocusStack` + `Widget` interface (renderer-agnostic): only the top gets input, all update, focus/blur, held-key suppression on open/close, `remove` closes everything above, `onEmpty`.
 - `src/engine/ui/ui-input.ts` — `UiInput` interface + `uiInputFrom(inputManager, actionMap)`, so engine UI never names game actions.
 - `src/engine/ui/theme.ts` — `UiTheme` (colors, font, spacing, radius, border, motion), `DEFAULT_THEME` placeholder, `extendTheme`.
-- `src/engine/ui/panel.ts`, `menu.ts` (`Menu`: title, columns, fixed/auto width, `setItems`, `setLabel`, `onSelect/onBack/onHighlight`), `dialog-box.ts` (`DialogBox`: speaker tag, pre-wrapped pages, blinking "more" marker, click = confirm).
+- `src/engine/ui/panel.ts`, `menu.ts` (`Menu`: title, columns, fixed/auto width, `setItems`, `setLabel`, `onSelect/onBack/onHighlight`), `dialog-box.ts` (`DialogBox`: speaker tag, pre-wrapped pages, blinking "more" marker, click = reveal page, then next).
 - `src/engine/input/input-manager.ts` — `suppressHeld()` is now public (used by the focus stack).
 - `src/game/input/actions.ts` — `back` also bound to `Mouse2` (right click).
 - `src/game/scenes/ui-demo-scene.ts` — demo: root menu → Party (list) → actions submenu → Summary dialog; Bag (3-column grid with a disabled cell); Talk (3-page dialog with speaker); Settings (toggles that relabel items; text speed applies to dialogs); Fade test (pushes a scene with a fade, any key/click returns); a disabled root item.
@@ -23,6 +23,8 @@ A reusable, keyboard-first UI layer: a focus stack for nested menus/dialogs, lis
 ## Decisions
 - **Decision:** Dialog controls: a confirm *press* only advances a finished page; while typing, holding confirm speeds up (×5) and `Q` completes the page.
   - **Why:** DESIGN.md says "advances with E; holding E speeds it up". Not letting a press skip a typing page means mashing E can't skip text unread; `Q` covers "show it all now". Holding E through a dialog still flows fast: each new press advances and the hold speeds the next page.
+- **Decision:** Mouse in dialogs (changed after user feedback): a left click anywhere on screen while a dialog is focused acts like `Q` while the page is typing (show it all) and like `E` once it is finished (next page / close). So: click once to reveal, click again to continue.
+  - **Why:** the user asked for it; quick to read through with the mouse, and a single click still can't skip a page unseen.
 - **Decision:** Pages are word-wrapped up front with Pixi's text metrics, then revealed.
   - **Why:** with live word-wrap, half-typed words jump to the next line.
 - **Decision:** Pointer events are queued and applied inside the fixed step (`handleInput`).
@@ -51,7 +53,8 @@ A reusable, keyboard-first UI layer: a focus stack for nested menus/dialogs, lis
 - Browser walkthrough (headless Chrome, real keyboard/mouse events, scripted outside the repo) — **36/36 steps passed**:
   - Keyboard only: navigate root (W/S, arrows), wrap past the disabled item; open Bag grid, move with D/↓/A incl. row wrap that skips the disabled cell; select → dialog → E closes; Q / Esc / Backspace close menus; 4-deep nesting (root → Party → actions → Summary dialog); Settings toggles relabel items; Talk dialog: normal speed, hold E = fast, E → next page, Q completes page, finish; Fade test pushes a scene and Q returns.
   - Mouse only: hover highlights, click opens Bag, click on disabled cell ignored, click item → dialog, click closes dialog, right-click back; Party → Gustling → Summary by clicks; click while typing doesn't skip; click through 3 pages; Fade test and click to return.
-  - Click outside (8 more steps, all passed): empty space closes a 3-deep stack back to the root; click on the parent menu closes only the submenu; click on a root item while a submenu is open closes the submenu; click on a menu's own padding keeps it open; click outside a dialog doesn't close it; click outside the root keeps it.
+  - Dialog clicks (6 steps, all passed): 1st click while typing shows the whole page, 2nd goes to the next page; works on the box and anywhere else on screen; last page closes after reveal + next.
+  - Click outside (8 more steps, all passed): empty space closes a 3-deep stack back to the root; click on the parent menu closes only the submenu; click on a root item while a submenu is open closes the submenu; click on a menu's own padding keeps it open; click outside a dialog doesn't close it (it reveals the page instead); click outside the root keeps it.
   - No page errors (only the known favicon 404).
 - Screenshots checked: nested menus with dimmed parent cursors and speaker dialog; grid menu with disabled cell.
 - Done when:
