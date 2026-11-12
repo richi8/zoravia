@@ -109,11 +109,13 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 
 ## Combat
 - 1v1 turn-based, menu-driven (see Controls). Switch costs the turn (shortcut `1 2 3`); free after a faint.
-- Turn order: running first, then switches, then moves by Speed (a tie is a coin flip). A Zorling that faints before acting loses its move.
+- Turn order: running first, then switches and items, then moves by Speed (a tie is a coin flip). A Zorling that faints before acting loses its move.
 - Damage (starting values, C14; tuned in C31): ((2·Lv/5 + 2) · power · ATK/DEF) / 50 + 2, × type effectiveness, × a random roll 0.85–1. At least 1. No critical hits. No same-type bonus (dropped 2026-11-12: it would weaken the off-type moves that combos rely on; revisit in C31 only if everyone ends up using the same few moves).
 - Run (wild battles only): always works when at least as fast as the foe; otherwise 50%, +25% per failed attempt. A failed attempt costs the turn.
-- The XP of a win is the sum over every opposing Zorling, awarded when the battle is won (none for running or losing).
-- Potion use costs the turn.
+- The XP of a win is the sum over every opposing Zorling, awarded when the battle is won or the wild Zorling is caught (none for running or losing).
+- Potion use costs the turn. A potion can go on any team member that has not fainted and is not at full HP (no revives).
+- Capture (wild battles; C16 starting values, tuned in C31): a capture item costs the turn and is used up. Chance = (0.1 + 0.75 × missing HP fraction) × item strength × species catch rate (default 1), ×1.2 if the Zorling has a condition. So ~10% at full HP, ~85% at 1 HP. A catch ends the battle at once.
+- Opponents (wild and trainers) do not use items for now. Wild Zorlings pick a random move; trainers pick by expected damage, reactions and condition setup, and switch to a teammate that can exploit a condition on the foe.
 - Visible overworld encounters (no random grass battles).
 
 ## Bosses

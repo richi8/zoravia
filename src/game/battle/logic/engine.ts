@@ -5,10 +5,13 @@
  */
 
 import { Rng, type Seed } from '@engine/core';
-import type { GameContent, Reaction } from '@game/data';
+import type { GameContent, Item, Reaction } from '@game/data';
+import { takeFromBag, type Bag } from '@game/inventory';
 import { statsOf, type Zorling } from '@game/progression';
 import {
   ACTION_RANK,
+  captureChance,
+  captureWobbles,
   computeDamage,
   DAMAGE_ROLL_MIN,
   hitChance,
@@ -52,12 +55,16 @@ interface DraftSide {
   team: DraftCombatant[];
   active: number;
 }
-type Draft = Omit<BattleState, 'turn' | 'phase' | 'outcome' | 'runAttempts' | 'sides' | 'rng'> & {
+type Draft = Omit<
+  BattleState,
+  'turn' | 'phase' | 'outcome' | 'runAttempts' | 'sides' | 'bag' | 'rng'
+> & {
   turn: number;
   phase: BattleState['phase'];
   outcome: BattleState['outcome'];
   runAttempts: number;
   sides: [DraftSide, DraftSide];
+  bag: Bag;
   rng: BattleState['rng'];
 };
 
@@ -83,6 +90,8 @@ export interface BattleSetup {
    * Traits can block them as usual.
    */
   readonly weather?: readonly string[];
+  /** The player's bag (items usable in battle). Default: empty. */
+  readonly bag?: Bag;
 }
 
 /** Starts a battle: each side sends out its first Zorling that has not fainted. */
@@ -99,6 +108,11 @@ export function createBattle(content: GameContent, setup: BattleSetup): StepResu
   if (setup.kind === 'wild' && opponent.team.length !== 1) {
     throw new Error('A wild battle has exactly one opposing Zorling');
   }
+  const bag = setup.bag ?? {};
+  for (const [item, count] of Object.entries(bag)) {
+    content.items.require(item);
+    if (!Number.isInteger(count) || count < 0) throw new Error(`Bad count for "${item}"`);
+  }
   const state: BattleState = {
     kind: setup.kind,
     turn: 1,
@@ -106,6 +120,7 @@ export function createBattle(content: GameContent, setup: BattleSetup): StepResu
     outcome: null,
     runAttempts: 0,
     sides: [player, opponent],
+    bag,
     rng: new Rng(setup.seed).getState(),
   };
   const ctx: Ctx = {
@@ -139,7 +154,8 @@ function toCombatant(content: GameContent, z: Zorling): Combatant {
 
 /**
  * Every choice a side may make this turn (phase `'choose'`). A trapped Zorling (Rooted)
- * cannot switch out.
+ * cannot switch out. The player may also use items: a potion on any team member that has not
+ * fainted and is not at full HP, a capture item in a wild battle.
  */
 export function legalChoices(content: GameContent, state: BattleState, side: SideId): Choice[] {
   if (state.phase !== 'choose') return [];
@@ -151,8 +167,39 @@ export function legalChoices(content: GameContent, state: BattleState, side: Sid
       if (to !== s.active && c.hp > 0) out.push({ kind: 'switch', to });
     });
   }
+  if (side === PLAYER) out.push(...itemChoices(content, state));
   if (side === PLAYER && state.kind === 'wild') out.push({ kind: 'run' });
   return out;
+}
+
+function itemChoices(content: GameContent, state: BattleState): Choice[] {
+  const out: Choice[] = [];
+  for (const [id, count] of Object.entries(state.bag)) {
+    if (count <= 0) continue;
+    const item = content.items.require(id);
+    if (item.effect.kind === 'heal') {
+      state.sides[PLAYER].team.forEach((c, target) => {
+        if (c.hp > 0 && c.hp < c.stats.hp) out.push({ kind: 'item', item: item.id, target });
+      });
+    } else if (state.kind === 'wild') {
+      out.push({ kind: 'item', item: item.id });
+    }
+  }
+  return out;
+}
+
+/** Whether two choices are the same. */
+export function sameChoice(a: Choice, b: Choice): boolean {
+  switch (a.kind) {
+    case 'move':
+      return b.kind === 'move' && a.slot === b.slot;
+    case 'switch':
+      return b.kind === 'switch' && a.to === b.to;
+    case 'run':
+      return b.kind === 'run';
+    case 'item':
+      return b.kind === 'item' && a.item === b.item && a.target === b.target;
+  }
 }
 
 /** Slots a side may send in during phase `'replace'`. */
@@ -216,9 +263,14 @@ function playTurn(
   // Only the player can choose to run (checked above).
   if (player.kind === 'run') tryRun(ctx);
   if (ctx.draft.phase !== 'ended') {
+    // Switches and items, player first. A catch ends the battle at once.
     for (const q of ranked(ACTION_RANK.switch)) {
+      if (isOver(ctx)) break;
       if (q.choice.kind === 'switch') doSwitch(ctx, q.side, q.choice.to);
+      if (q.choice.kind === 'item') useItem(ctx, q.side, q.choice.item, q.choice.target);
     }
+  }
+  if (ctx.draft.phase !== 'ended') {
     for (const q of moveOrder(ctx, ranked(ACTION_RANK.move))) {
       if (q.choice.kind === 'move') useMove(ctx, q.side, q.choice.slot);
     }
@@ -230,12 +282,7 @@ function playTurn(
 }
 
 function checkChoice(content: GameContent, state: BattleState, side: SideId, choice: Choice) {
-  const ok = legalChoices(content, state, side).some(
-    (c) =>
-      c.kind === choice.kind &&
-      (c.kind !== 'move' || (choice.kind === 'move' && c.slot === choice.slot)) &&
-      (c.kind !== 'switch' || (choice.kind === 'switch' && c.to === choice.to)),
-  );
+  const ok = legalChoices(content, state, side).some((c) => sameChoice(c, choice));
   if (!ok) throw new Error(`Side ${side} cannot choose ${JSON.stringify(choice)} now`);
 }
 
@@ -266,6 +313,43 @@ function tryRun(ctx: Ctx): void {
     ctx.draft.runAttempts += 1;
     ctx.events.push({ kind: 'runFailed' });
   }
+}
+
+/** Takes the item from the bag and uses it: a potion heals, a capture item is thrown. */
+function useItem(ctx: Ctx, side: SideId, id: string, target: number | undefined): void {
+  const item = ctx.content.items.require(id);
+  ctx.draft.bag = takeFromBag(ctx.draft.bag, item.id);
+  ctx.events.push({ kind: 'itemUsed', side, item: item.id, slot: target ?? null });
+  if (item.effect.kind === 'heal') {
+    const slot = target ?? -1;
+    const c = ctx.draft.sides[side].team[slot];
+    if (!c) throw new Error(`No Zorling in slot ${slot}`);
+    const amount = item.effect.amount === 'full' ? c.stats.hp : item.effect.amount;
+    heal(ctx, side, amount, slot);
+  } else {
+    throwCapture(ctx, item, item.effect.strength);
+  }
+}
+
+/** One roll decides the catch; how close it came sets the wobbles. */
+function throwCapture(ctx: Ctx, item: Item, strength: number): void {
+  const wild = active(ctx, OPPONENT);
+  const chance = captureChance({
+    hp: wild.hp,
+    maxHp: wild.stats.hp,
+    strength,
+    catchRate: ctx.content.species.require(wild.zorling.species).catchRate,
+    hasCondition: wild.statuses.some((s) => s.origin === 'condition'),
+  });
+  const roll = ctx.rng.next();
+  const success = roll < chance;
+  ctx.events.push({
+    kind: 'capture',
+    item: item.id,
+    success,
+    wobbles: captureWobbles(chance, roll),
+  });
+  if (success) finish(ctx, 'caught');
 }
 
 /** Switching out clears the Zorling's conditions and lingering effects. */
@@ -425,7 +509,9 @@ function tickStatuses(ctx: Ctx): void {
         const amount = Math.min(loss, holder.hp);
         holder.hp -= amount;
         ctx.events.push({ kind: 'statusDamage', side, status: status.id, amount, hp: holder.hp });
-        if (effect.toSource && status.source !== null) heal(ctx, status.source, amount);
+        if (effect.toSource && status.source !== null) {
+          heal(ctx, status.source, amount, ctx.draft.sides[status.source].active);
+        }
       }
       status.ticks += 1;
       status.turnsLeft -= 1;
@@ -438,14 +524,14 @@ function tickStatuses(ctx: Ctx): void {
   }
 }
 
-/** Heals `side`'s active Zorling (if it is still up), never above max HP. */
-function heal(ctx: Ctx, side: SideId, amount: number): void {
-  const c = active(ctx, side);
-  if (c.hp <= 0) return;
+/** Heals the Zorling in `slot` of `side` (if it is still up), never above max HP. */
+function heal(ctx: Ctx, side: SideId, amount: number, slot: number): void {
+  const c = ctx.draft.sides[side].team[slot];
+  if (!c || c.hp <= 0) return;
   const healed = Math.min(amount, c.stats.hp - c.hp);
   if (healed <= 0) return;
   c.hp += healed;
-  ctx.events.push({ kind: 'heal', side, amount: healed, hp: c.hp });
+  ctx.events.push({ kind: 'heal', side, slot, amount: healed, hp: c.hp });
 }
 
 function faint(ctx: Ctx, side: SideId): void {
@@ -468,6 +554,11 @@ function endTurn(ctx: Ctx): void {
     draft.phase = 'replace';
     events.push({ kind: 'replaceNeeded', sides: waiting });
   }
+}
+
+/** Read through a function so TypeScript does not narrow `phase` across calls that set it. */
+function isOver(ctx: Ctx): boolean {
+  return ctx.draft.phase === 'ended';
 }
 
 function finish(ctx: Ctx, outcome: NonNullable<BattleState['outcome']>): void {

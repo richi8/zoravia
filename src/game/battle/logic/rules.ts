@@ -10,8 +10,52 @@ export const DAMAGE_ROLL_MIN = 0.85;
 export const RUN_BASE_CHANCE = 0.5;
 export const RUN_CHANCE_STEP = 0.25;
 
-/** Action order within a turn: running first, then switches, then moves by speed. */
-export const ACTION_RANK = { run: 0, switch: 1, move: 2 } as const;
+/** Action order within a turn: running first, then switches and items, then moves by speed. */
+export const ACTION_RANK = { run: 0, switch: 1, item: 1, move: 2 } as const;
+
+/** Capture chance at full HP, and how much the missing HP fraction adds on top. */
+export const CAPTURE_BASE = 0.1;
+export const CAPTURE_HP_WEIGHT = 0.75;
+/** Capture chance multiplier while the target has at least one condition. */
+export const CAPTURE_CONDITION_BONUS = 1.2;
+/** Wobbles shown for a successful capture; a failed one shows fewer. */
+export const CAPTURE_WOBBLES = 3;
+
+export interface CaptureInput {
+  readonly hp: number;
+  readonly maxHp: number;
+  /** The capture item's strength (Zorb: 1). */
+  readonly strength: number;
+  /** The species' catch rate (default 1). */
+  readonly catchRate: number;
+  /** Whether the target has a condition (Burning, Wet, …). */
+  readonly hasCondition: boolean;
+}
+
+/**
+ * Chance (0–1) that a capture item catches a wild Zorling: (base + weight × missing HP
+ * fraction) × strength × catch rate, ×1.2 with a condition. A Zorb on a full-HP Zorling with
+ * catch rate 1 is 10%; at 1 HP about 85%, ~100% with a condition.
+ */
+export function captureChance(c: CaptureInput): number {
+  const missing = 1 - Math.min(1, Math.max(0, c.hp / c.maxHp));
+  const bonus = c.hasCondition ? CAPTURE_CONDITION_BONUS : 1;
+  const p = (CAPTURE_BASE + CAPTURE_HP_WEIGHT * missing) * c.strength * c.catchRate * bonus;
+  return Math.min(1, Math.max(0, p));
+}
+
+/**
+ * Wobbles before a capture breaks free: the closer the roll was to succeeding, the more
+ * (0 to CAPTURE_WOBBLES − 1). A success shows CAPTURE_WOBBLES.
+ */
+export function captureWobbles(chance: number, roll: number): number {
+  if (roll < chance) return CAPTURE_WOBBLES;
+  if (roll <= 0) return 0;
+  return Math.min(CAPTURE_WOBBLES - 1, Math.floor((chance / roll) * CAPTURE_WOBBLES));
+}
+
+/** Expected value of the damage roll, used by the AI to estimate damage. */
+export const DAMAGE_ROLL_MEAN = (DAMAGE_ROLL_MIN + 1) / 2;
 
 export interface DamageInput {
   readonly level: number;

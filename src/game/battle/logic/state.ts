@@ -6,6 +6,7 @@
 
 import type { RngState } from '@engine/core';
 import type { BaseStats } from '@game/data';
+import type { Bag } from '@game/inventory';
 import type { Zorling } from '@game/progression';
 
 /** Side 0 is the player, side 1 the opponent (a wild Zorling or a trainer). */
@@ -15,7 +16,8 @@ export const OPPONENT: SideId = 1;
 
 export type BattleKind = 'wild' | 'trainer';
 export type BattlePhase = 'choose' | 'replace' | 'ended';
-export type BattleOutcome = 'win' | 'lose' | 'ran';
+/** `caught`: the player caught the wild Zorling (counts as a win for XP). */
+export type BattleOutcome = 'win' | 'lose' | 'ran' | 'caught';
 
 /** Where a status comes from: a condition, or the lingering effect a reaction left. */
 export type StatusOrigin = 'condition' | 'reaction';
@@ -70,6 +72,8 @@ export interface BattleState {
   /** Failed run attempts so far (each one makes the next more likely). */
   readonly runAttempts: number;
   readonly sides: readonly [BattleSide, BattleSide];
+  /** The player's bag; items used in battle are taken from it. Opponents carry no items. */
+  readonly bag: Bag;
   readonly rng: RngState;
 }
 
@@ -79,7 +83,12 @@ export type Choice =
   /** Switching costs the turn. */
   | { readonly kind: 'switch'; readonly to: number }
   /** Player only, wild battles only. A failed attempt costs the turn. */
-  | { readonly kind: 'run' };
+  | { readonly kind: 'run' }
+  /**
+   * Player only. Uses an item from the bag; costs the turn. A potion needs `target` (a team
+   * slot that has not fainted); a capture item needs none (it is thrown at the wild foe).
+   */
+  | { readonly kind: 'item'; readonly item: string; readonly target?: number };
 
 export type BattleAction =
   /** Both sides' choices for the current turn (phase `'choose'`). */
@@ -141,8 +150,28 @@ export type BattleEvent =
       readonly amount: number;
       readonly hp: number;
     }
-  /** A drain healed `side`. */
-  | { readonly kind: 'heal'; readonly side: SideId; readonly amount: number; readonly hp: number }
+  /** A drain or a potion healed the Zorling in `slot` of `side`. */
+  | {
+      readonly kind: 'heal';
+      readonly side: SideId;
+      readonly slot: number;
+      readonly amount: number;
+      readonly hp: number;
+    }
+  /** An item was taken from the bag and used (`slot`: the potion's target). */
+  | {
+      readonly kind: 'itemUsed';
+      readonly side: SideId;
+      readonly item: string;
+      readonly slot: number | null;
+    }
+  /** A capture item was thrown. `wobbles` is 3 for a catch, fewer when it broke free. */
+  | {
+      readonly kind: 'capture';
+      readonly item: string;
+      readonly success: boolean;
+      readonly wobbles: number;
+    }
   /** A status ran out. */
   | {
       readonly kind: 'statusEnded';

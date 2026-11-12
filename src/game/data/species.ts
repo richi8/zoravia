@@ -35,6 +35,8 @@ export const speciesSchema = z.strictObject({
   legendary: z.boolean().default(false),
   /** XP base for defeating it. Defaults to stat total / 5 (see `@game/progression`). */
   xpYield: z.number().int().min(1).max(1000).optional(),
+  /** Multiplies the capture chance: below 1 is harder to catch, above 1 easier. */
+  catchRate: z.number().positive().max(3).default(1),
 });
 
 export type Species = EntryOf<typeof species>;

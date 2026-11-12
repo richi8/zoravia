@@ -21,7 +21,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C13 | Zorling instances & progression | ✅ | [log](logs/C13-progression.md) |
 | C14 | Battle engine core | ✅ | [log](logs/C14-battle-engine.md) |
 | C15 | Conditions & reactions | ✅ | [log](logs/C15-conditions-reactions.md) |
-| C16 | Items, capture, AI | ⬜ | |
+| C16 | Items, capture, AI | ✅ | [log](logs/C16-items-capture-ai.md) |
 | C17 | Bosses | ⬜ | |
 | C18 | Battle scene | ⬜ | |
 | C19 | Map format & world tool | ⬜ | |
