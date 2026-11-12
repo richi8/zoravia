@@ -11,23 +11,28 @@ import { packColor } from '@engine/render/pixel-buffer';
 import { rampIndex } from '@engine/render/ramp';
 import { TILE_STYLE, type Biome, type Material } from './biomes';
 
-export type PropKind =
-  | 'tree'
-  | 'pine'
-  | 'cactus'
-  | 'rock'
-  | 'snowrock'
-  | 'bush'
-  | 'crystal'
-  | 'shrub'
-  | 'flowers'
-  | 'pad'
-  | 'floe'
-  | 'vent';
+export const PROP_KINDS = [
+  'tree',
+  'pine',
+  'cactus',
+  'rock',
+  'snowrock',
+  'bush',
+  'crystal',
+  'shrub',
+  'flowers',
+  'pad',
+  'floe',
+  'vent',
+] as const;
+
+export type PropKind = (typeof PROP_KINDS)[number];
 
 export interface PropInfo {
   /** Casts a soft shadow on the ground. */
   readonly shadow: boolean;
+  /** Blocks walking on its tile (world maps, C19). */
+  readonly solid: boolean;
   /** Placed on liquid tiles (lily pads, ice floes) instead of ground. */
   readonly onLiquid?: boolean;
   /** Vertical offset from the tile bottom (px; negative = up). */
@@ -37,18 +42,18 @@ export interface PropInfo {
 }
 
 export const PROP_INFO: Readonly<Record<PropKind, PropInfo>> = {
-  tree: { shadow: true },
-  pine: { shadow: true },
-  cactus: { shadow: true },
-  rock: { shadow: true },
-  snowrock: { shadow: true },
-  bush: { shadow: true },
-  crystal: { shadow: true },
-  shrub: { shadow: false },
-  flowers: { shadow: false },
-  pad: { shadow: false, onLiquid: true, lift: -4 },
-  floe: { shadow: false, onLiquid: true, lift: -5 },
-  vent: { shadow: false, lift: -3, vent: true },
+  tree: { shadow: true, solid: true },
+  pine: { shadow: true, solid: true },
+  cactus: { shadow: true, solid: true },
+  rock: { shadow: true, solid: true },
+  snowrock: { shadow: true, solid: true },
+  bush: { shadow: true, solid: true },
+  crystal: { shadow: true, solid: true },
+  shrub: { shadow: false, solid: false },
+  flowers: { shadow: false, solid: false },
+  pad: { shadow: false, solid: false, onLiquid: true, lift: -4 },
+  floe: { shadow: false, solid: false, onLiquid: true, lift: -5 },
+  vent: { shadow: false, solid: true, lift: -3, vent: true },
 };
 
 /** Sprite pixels are packed RGBA (see `packColor`); 0 = transparent. */

@@ -1,0 +1,90 @@
+{
+  "zones": {
+    "meadow": {
+      "levels": [3, 8],
+      "spawns": [
+        { "species": "core:sproutle", "weight": 3 },
+        { "species": "core:emberkit", "weight": 2 },
+        { "species": "core:puddlit", "weight": 2 },
+        { "species": "core:voltbat", "weight": 1, "levels": [5, 8] }
+      ]
+    },
+    "deepwood": {
+      "levels": [16, 22],
+      "spawns": [
+        { "species": "core:thornwing", "weight": 2 },
+        { "species": "core:ironshell", "weight": 1 },
+        { "species": "core:blazekit", "weight": 1 }
+      ]
+    },
+    "reedmarsh": {
+      "levels": [15, 20],
+      "spawns": [
+        { "species": "core:torrentoad", "weight": 2 },
+        { "species": "core:voltbat", "weight": 2 }
+      ]
+    },
+    "old-grove": {
+      "levels": [30, 36],
+      "spawns": [
+        { "species": "core:infernyx", "weight": 1 },
+        { "species": "core:thornwing", "weight": 2 },
+        { "species": "core:ironshell", "weight": 2 }
+      ]
+    },
+    "shore": {
+      "name": "Lakeshore",
+      "glyph": "s",
+      "tier": "t1",
+      "levels": [5, 9],
+      "spawns": [
+        { "species": "core:puddlit", "weight": 3 },
+        { "species": "core:voltbat", "weight": 1 }
+      ]
+    }
+  },
+  "anchors": {
+    "shop": { "x": 52, "y": 46, "kind": "shop", "facing": "down" },
+    "elder": { "x": 44, "y": 49, "kind": "npc", "facing": "right" }
+  },
+  "edits": [
+    {
+      "op": "collision",
+      "note": "Zorling center footprint above its door anchor (building art comes with towns, C28)",
+      "rect": { "x": 47, "y": 44, "w": 3, "h": 2 },
+      "mode": "block"
+    },
+    {
+      "op": "clearProps",
+      "note": "Room for the town pond",
+      "rect": { "x": 59, "y": 52, "w": 7, "h": 5 }
+    },
+    {
+      "op": "terrain",
+      "note": "Town pond east of the hub",
+      "layer": "liquid",
+      "set": true,
+      "rect": { "x": 60, "y": 53, "w": 4, "h": 2 }
+    },
+    {
+      "op": "stamp",
+      "note": "Round off the pond's east end",
+      "layer": "liquid",
+      "at": [64, 53],
+      "rows": ["#", "#", "-"]
+    },
+    { "op": "prop", "note": "Lily pad", "kind": "pad", "at": [62, 54], "variant": 2 },
+    {
+      "op": "clearProps",
+      "note": "Meadow patch for tall grass",
+      "rect": { "x": 63, "y": 46, "w": 6, "h": 2 }
+    },
+    { "op": "tall", "set": true, "rect": { "x": 63, "y": 46, "w": 6, "h": 2 } },
+    {
+      "op": "zone",
+      "note": "West lakeshore gets its own spawns",
+      "rect": { "x": 30, "y": 47, "w": 12, "h": 10 },
+      "zone": "shore"
+    }
+  ]
+}

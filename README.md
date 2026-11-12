@@ -12,8 +12,9 @@ Node.js 22+ (developed on Node 24).
 |---|---|
 | `npm install` | Install dependencies |
 | `npm run dev` | Start the Vite dev server (game at `/`, style lab at `/lab/`) |
-| `npm run build` | Typecheck, then build to `dist/` |
+| `npm run build` | Typecheck, rebuild region maps, then build to `dist/` |
 | `npm run preview` | Serve the production build |
+| `npm run world -- <cmd>` | World tool: `gen`, `build`, `check`, `show` region maps (see `tools/README.md`) |
 | `npm test` | Run unit tests once (Vitest) |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run typecheck` | TypeScript, browser code + Node-side config/tools |

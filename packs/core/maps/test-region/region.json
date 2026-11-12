@@ -1,0 +1,15 @@
+{
+  "name": "Test region",
+  "biome": "forest",
+  "seed": 1919,
+  "width": 96,
+  "height": 96,
+  "chunkSize": 32,
+  "zones": {
+    "meadow": { "name": "Sunny Meadow", "tier": "t1" },
+    "deepwood": { "name": "Deepwood", "tier": "t2" },
+    "reedmarsh": { "name": "Reed Marsh", "tier": "t2" },
+    "old-grove": { "name": "Old Grove", "tier": "t3" }
+  },
+  "exits": ["north", "east", "south", "west"]
+}

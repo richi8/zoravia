@@ -13,6 +13,7 @@ import {
 import { bosses, type Boss } from './bosses';
 import { conditions, type Condition } from './conditions';
 import { items, type Item } from './items';
+import { maps, type RegionMap } from './maps';
 import { moves, type Move } from './moves';
 import { reactions, type Reaction } from './reactions';
 import { species, type Species } from './species';
@@ -28,6 +29,7 @@ export const GAME_REGISTRIES = [
   species,
   items,
   bosses,
+  maps,
 ];
 
 export interface EvolutionLine {
@@ -46,6 +48,7 @@ export class GameContent<H extends HookMap = HookMap> {
   readonly species: Registry<Species>;
   readonly items: Registry<Item>;
   readonly bosses: Registry<Boss>;
+  readonly maps: Registry<RegionMap>;
   private readonly reactionIndex = new Map<string, Reaction>();
 
   constructor(readonly loaded: LoadedContent<H>) {
@@ -57,6 +60,7 @@ export class GameContent<H extends HookMap = HookMap> {
     this.species = loaded.registry(species);
     this.items = loaded.registry(items);
     this.bosses = loaded.registry(bosses);
+    this.maps = loaded.registry(maps);
     for (const r of this.reactions) this.reactionIndex.set(`${r.condition}|${r.type}`, r);
   }
 

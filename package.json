@@ -4,8 +4,9 @@
   "description": "Browser monster-collecting RPG with code-generated Zorlings.",
   "scripts": {
     "dev": "vite",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run typecheck && npm run world -- build && vite build",
     "preview": "vite preview",
+    "world": "node tools/run.mjs tools/world/cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",

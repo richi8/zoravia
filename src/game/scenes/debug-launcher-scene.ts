@@ -1,6 +1,6 @@
 /**
  * Debug launcher (C18): starts sample battles with the core pack's test Zorlings until the
- * world (C19+) and the start flow (C33) exist. Keyboard: W/S choose, E start, A/D or E change
+ * world (C19+) and the start flow (C33) exist, and opens the region map viewer (C19). Keyboard: W/S choose, E start, A/D or E change
  * a setting. Every battle starts from fresh teams; the last result shows at the bottom.
  */
 
@@ -18,6 +18,7 @@ import { createZorling, displayName, type Zorling } from '@game/progression';
 import { paper, surface } from '@game/style/tokens';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
+import { MapViewerScene } from './map-viewer-scene';
 
 interface SampleBattle {
   readonly label: string;
@@ -171,6 +172,7 @@ export class DebugLauncherScene implements Scene<Container> {
     const battles = this.battles;
     const items: MenuItem[] = [
       ...battles.map((b) => ({ label: b.label, hint: b.hint })),
+      { label: 'Map viewer: test region', hint: 'C19' },
       { label: 'Battle speed', hint: `${BATTLE_SPEEDS[this.speed] ?? 1}×` },
       { label: 'Confirm 1 2 3 switch', hint: this.confirmSwitch ? 'On' : 'Off' },
     ];
@@ -184,7 +186,8 @@ export class DebugLauncherScene implements Scene<Container> {
       onSelect: (i) => {
         const b = battles[i];
         if (b) void this.start(b);
-        else if (i === battles.length) {
+        else if (i === battles.length) void this.openMap('core:test-region');
+        else if (i === battles.length + 1) {
           this.speed = (this.speed + 1) % BATTLE_SPEEDS.length;
           this.buildMenu(i);
         } else {
@@ -221,6 +224,17 @@ export class DebugLauncherScene implements Scene<Container> {
       height: this.height,
     }));
     await engine.scenes.push(scene, { transition });
+  }
+
+  private async openMap(mapId: string): Promise<void> {
+    const { engine, content, input } = this.options;
+    const scene = new MapViewerScene({
+      content,
+      input,
+      mapId,
+      onExit: () => void engine.scenes.pop({ transition: engine.fade({ duration: 0.25 }) }),
+    });
+    await engine.scenes.push(scene, { transition: engine.fade({ duration: 0.25 }) });
   }
 
   private report(b: SampleBattle, seed: number, r: BattleResult): void {

@@ -4,6 +4,7 @@ export * from './common';
 export * from './conditions';
 export * from './content';
 export * from './items';
+export * from './maps';
 export * from './moves';
 export * from './reactions';
 export * from './species';

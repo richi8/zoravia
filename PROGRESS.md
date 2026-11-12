@@ -24,7 +24,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C16 | Items, capture, AI | ✅ | [log](logs/C16-items-capture-ai.md) |
 | C17 | Bosses | ✅ | [log](logs/C17-bosses.md) |
 | C18 | Battle scene | ✅ | [log](logs/C18-battle-scene.md) |
-| C19 | Map format & world tool | ⬜ | |
+| C19 | Map format & world tool | ✅ | [log](logs/C19-map-format-world-tool.md) |
 | C20 | Overworld movement | ⬜ | |
 | C21 | NPCs & encounters | ⬜ | |
 | C22 | Centers, shops, storage, menus | ⬜ | |
