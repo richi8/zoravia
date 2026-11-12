@@ -26,7 +26,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C18 | Battle scene | ✅ | [log](logs/C18-battle-scene.md) |
 | C19 | Map format & world tool | ✅ | [log](logs/C19-map-format-world-tool.md) |
 | C20 | Overworld movement | ✅ | [log](logs/C20-overworld-movement.md) |
-| C21 | NPCs & encounters | ⬜ | |
+| C21 | NPCs & encounters | ✅ | [log](logs/C21-npcs-encounters.md) |
 | C22 | Centers, shops, storage, menus | ⬜ | |
 | C23 | Save system | ⬜ | |
 | C24 | SFX & cries | ⬜ | |

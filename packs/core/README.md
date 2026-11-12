@@ -13,6 +13,7 @@ The base content pack. The engine loads it like any other pack (`loadGameContent
 | `items.ts` | `items` | 3 potion tiers (bag cap 5) and the Zorb capture item |
 | `bosses.ts` | `bosses` | test Titan and legendary boss forms |
 | `maps.ts` | `maps` | region maps built by the world tool (`maps/<region>/map.json`); `test-region` for now. See `tools/README.md` |
+| `npcs.ts` | `npcs` | 5 test NPCs in the test region (anchor or x/y, look, behavior, lines) |
 
 Schemas live in `src/game/data/`. References are full ids (`"core:fire"`) and are checked after
 loading, so a typo fails with `Unknown moves "core:embr"` and the pack and path it came from.

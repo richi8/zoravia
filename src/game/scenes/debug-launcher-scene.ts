@@ -1,7 +1,7 @@
 /**
  * Debug launcher (C18): starts sample battles with the core pack's test Zorlings until the
- * world (C19+) and the start flow (C33) exist, and opens the overworld (C20) and the region map
- * viewer (C19). Keyboard: W/S choose, E start, A/D or E change
+ * world (C19+) and the start flow (C33) exist, and opens the overworld (C20–C21, with a party
+ * kept between visits) and the region map viewer (C19). Keyboard: W/S choose, E start, A/D or E change
  * a setting. Every battle starts from fresh teams; the last result shows at the bottom.
  */
 
@@ -15,7 +15,8 @@ import { BATTLE_SPEEDS, BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
 import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
-import { createZorling, displayName, type Zorling } from '@game/progression';
+import type { Party } from '@game/player';
+import { createZorling, displayName, statsOf, type Zorling } from '@game/progression';
 import { paper, surface } from '@game/style/tokens';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
@@ -58,6 +59,8 @@ export class DebugLauncherScene implements Scene<Container> {
   private speed = 0;
   private confirmSwitch = false;
   private seed = 1;
+  /** The overworld's party: kept between visits until saves exist (C23). */
+  private party: Party | undefined;
   private width = 480;
   private height = 270;
 
@@ -174,7 +177,7 @@ export class DebugLauncherScene implements Scene<Container> {
     const battles = this.battles;
     const items: MenuItem[] = [
       ...battles.map((b) => ({ label: b.label, hint: b.hint })),
-      { label: 'Overworld: test region', hint: 'C20' },
+      { label: 'Overworld: test region', hint: 'C21' },
       { label: 'Map viewer: test region', hint: 'C19' },
       { label: 'Battle speed', hint: `${BATTLE_SPEEDS[this.speed] ?? 1}×` },
       { label: 'Confirm 1 2 3 switch', hint: this.confirmSwitch ? 'On' : 'Off' },
@@ -230,12 +233,35 @@ export class DebugLauncherScene implements Scene<Container> {
     await engine.scenes.push(scene, { transition });
   }
 
+  private startParty(): Party {
+    const { content } = this.options;
+    const z = (species: string, uid: string): Zorling =>
+      createZorling(content, { uid, species: `core:${species}`, level: 9 });
+    return {
+      team: [z('puddlit', 'p1'), z('emberkit', 'p2'), z('sproutle', 'p3')],
+      storage: [],
+      bag: BAG,
+      money: 1240,
+    };
+  }
+
   private async openWorld(mapId: string): Promise<void> {
-    const { engine, content, input } = this.options;
+    const { engine, content, input, ui, theme } = this.options;
     const scene = new OverworldScene({
+      engine,
       content,
       input,
+      ui,
+      theme,
       mapId,
+      party: (this.party ??= this.startParty()),
+      onParty: (p) => {
+        this.party = p;
+        this.reportParty();
+      },
+      battleSpeed: BATTLE_SPEEDS[this.speed] ?? 1,
+      confirmHotbarSwitch: this.confirmSwitch,
+      seed: this.seed++,
       onExit: () => void engine.scenes.pop({ transition: engine.fade({ duration: 0.25 }) }),
     });
     await engine.scenes.push(scene, { transition: engine.fade({ duration: 0.25 }) });
@@ -250,6 +276,17 @@ export class DebugLauncherScene implements Scene<Container> {
       onExit: () => void engine.scenes.pop({ transition: engine.fade({ duration: 0.25 }) }),
     });
     await engine.scenes.push(scene, { transition: engine.fade({ duration: 0.25 }) });
+  }
+
+  private reportParty(): void {
+    const { content } = this.options;
+    const p = this.party;
+    if (!p) return;
+    const team = p.team
+      .map((z) => `${displayName(content, z)} Lv ${z.level} ${z.hp}/${statsOf(content, z).hp}`)
+      .join(' · ');
+    this.note.text = `Overworld team: ${team}${p.storage.length ? ` · storage ${p.storage.length}` : ''}`;
+    this.layout();
   }
 
   private report(b: SampleBattle, seed: number, r: BattleResult): void {

@@ -69,7 +69,8 @@ export class GridMover {
   constructor(
     start: Tile,
     facing: Dir = 'down',
-    readonly speed = WALK_SPEED,
+    /** Tiles per second; NPCs and wild Zorlings change it (the player's is fixed). */
+    public speed = WALK_SPEED,
   ) {
     this.tx = start.x;
     this.ty = start.y;
