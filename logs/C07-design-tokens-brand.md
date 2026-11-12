@@ -94,7 +94,7 @@ The user reviewed the first logo and asked for iterations. Twelve rounds of prev
 ### Decisions
 - **Decision:** The game's look is pixel art (user, after the Zorling style test: smooth vs pixel at 64/48/32 px and battle mocks at 240×160 / 480×270).
   - **Why:** the user preferred it. Generating shapes in code and pixelating them keeps the "all graphics generated in code" rule and lets one source produce every size.
-  - **Open:** base resolution / sprite size — must be decided before C08.
+  - **Resolution (decided after the commit above):** 480×270 "modern pixel", whole-number scaling; starting sizes 16×16 tiles, 32×32 overworld Zorlings, 96×96 battle sprites (Titans 128×128). Recorded in `DESIGN.md`.
 - **Decision:** Logo concept from the user's AI sketch, but rebuilt as code geometry, not imported as an image.
   - **Why:** `CLAUDE.md` requires code-generated graphics; the code version is recolorable, scalable and produces the favicon and pixel versions from one source.
   - **Trade-off:** less organic than the sketch (geometric head and pose, procedural scale texture). The user accepted it as a first version.
@@ -110,5 +110,6 @@ The user reviewed the first logo and asked for iterations. Twelve rounds of prev
 - Browser (headless Chrome, dev server): lab Brand section renders 4 pixel canvases (400×235, 400×235, 260×153, 32×32) plus smooth/emblem SVGs; game favicon is the head crop (decodes 150×150); no console errors.
 
 ### Follow-ups
-- Before C08: pick base resolution + sprite size; consider a pixel font for UI (C10).
+- Engine: render to a 480×270 virtual screen with whole-number scaling + letterbox (today the engine draws in CSS pixels, see C04) — needed before C10/C20; could be its own small chunk or part of C10.
+- C10: a pixel font for UI at 480×270 (Fredoka/Nunito are smooth fonts).
 - Later: revisit the logo (more organic head/pose, hand-tuned pixels), title-screen usage (C33).

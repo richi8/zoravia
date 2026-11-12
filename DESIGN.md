@@ -114,7 +114,12 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 
 ## Presentation
 - **Pixel art** (decided 2026-11-12, C07 review): everything is generated in code as shapes, then rendered small, snapped to a limited palette and scaled up with crisp, nearest-neighbor pixels. Dark outlines, flat shading bands, optional pixel textures (e.g. scales).
-- Procedural creatures, genome-based (body plan, parts, palette, seed), drawn as pixel-art sprites. Sprite size and base screen resolution (e.g. 240×160 vs 480×270) to be fixed before C08.
+- **Base resolution 480×270** ("modern pixel", decided 2026-11-12): the game renders to a 480×270 virtual screen, scaled up by whole numbers (×2 = 960×540, ×4 = 1920×1080, ×8 = 4K); leftover space is letterboxed. UI text is drawn at this resolution too.
+- Starting sizes (tunable in playtesting):
+  - World tiles **16×16** (≈ 30×17 tiles on screen); player and NPCs about 16×24.
+  - Overworld (roaming) Zorlings fit 32×32.
+  - Battle sprites **96×96** (Titans 128×128; legendaries up to 128×128).
+- Procedural creatures, genome-based (body plan, parts, palette, seed), drawn as pixel-art sprites at those sizes.
 - Rigged parts animated via transforms (tail wag, wing flap, breathing).
 - Battle animations: idle breathing, attack lunge, type VFX, hit flash/knockback/hit-stop/shake, damage numbers, reaction callouts, condition overlays, switch dissolve, capture arc + wobble, faint fade. Actions ≤ ~1.5s; battle speed setting.
 - Overworld: 4-dir walk cycles, grass rustle, water ripple, roaming creatures/NPCs, battle transition.
@@ -169,6 +174,5 @@ Detailed, AI-sized chunks live in `IMPLEMENTATION_PLAN.md`; progress in `PROGRES
 9. Polish, then regions 2 & 3 as packs, endgame, release prep
 
 ## Open
-- Base pixel resolution and sprite size (see Presentation) — decide before C08.
 - Logo: current dragon crest is a first version; revisit later.
 - Formal trademark check for "Zoravia" (EUIPO; USPTO Class 9 & 41).

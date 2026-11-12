@@ -65,7 +65,7 @@ Source of truth for *what* the game is: `DESIGN.md`. This file says *in what ord
 
 ### C08 · Zorling genome & sprite generator v1
 - **Goal:** Prove procedural Zorlings can look good. *(Highest-risk chunk.)*
-- **Deliverables:** genome format (body plan, parts, palette, seed), 5 body plans (quadruped, serpent, avian, blob, biped), part library, type-driven palettes, pixel-art sprites (size per the chosen base resolution, see `DESIGN.md` Presentation) with outlines + shading bands; lab controls (seed, type, body plan, randomize).
+- **Deliverables:** genome format (body plan, parts, palette, seed), 5 body plans (quadruped, serpent, avian, blob, biped), part library, type-driven palettes, pixel-art battle sprites 96×96 and overworld sprites 32×32 (see `DESIGN.md` Presentation) with outlines + shading bands; lab controls (seed, type, body plan, randomize).
 - **Done when:** lab shows a grid of 24 random Zorlings; same genome always renders identically; log includes honest assessment of quality.
 - **Depends:** C02, C07
 
