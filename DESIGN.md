@@ -132,7 +132,7 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 
 Input is context-sensitive: `WASD`/arrows move the player in the overworld; while any menu is open (including the battle action menu) they navigate that menu instead. Every menu is a focusable list/grid with a clearly highlighted cursor. Cursor wraps around at the ends.
 
-The player has **one movement speed** (no running / running shoes), set at genre *running* pace: **~7.5 tiles/second** (one tile per 8 frames at 60 fps). Tunable in playtesting, but there is never a slower walk.
+The player has **one movement speed** (no running / running shoes), **3.75 tiles/second** (one tile per 16 frames at 60 fps). Tunable in playtesting, but there is never a slower walk.
 
 ### Overworld
 `I` inventory, `M` map, `P` party, `B` dex, `J` quests, `Esc` pause menu.

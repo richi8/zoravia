@@ -147,7 +147,7 @@ User reviews `/lab`. Feedback becomes tweak chunks before Phase 2. Log the decis
 - **Depends:** C11, C12
 
 ### C20 · Overworld movement
-- **Deliverables:** tilemap renderer with chunk streaming, tweened grid movement at the single speed from `DESIGN.md` (~7.5 tiles/s, running pace), collision, camera easing, click-to-move pathfinding, walk-cycle animation.
+- **Deliverables:** tilemap renderer with chunk streaming, tweened grid movement at the single speed from `DESIGN.md` (3.75 tiles/s), collision, camera easing, click-to-move pathfinding, walk-cycle animation.
 - **Done when:** player walks the test region smoothly with keyboard and mouse.
 - **Depends:** C19, C05
 
