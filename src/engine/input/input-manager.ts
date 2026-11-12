@@ -301,7 +301,11 @@ export class InputManager<A extends string> {
     return key;
   }
 
-  private suppressHeld(): void {
+  /**
+   * Ignores keys that are currently down until they are released. Called automatically on
+   * context changes; UI calls it when focus moves to a newly opened widget.
+   */
+  suppressHeld(): void {
     for (const key of this.keys.values()) {
       // Presses not yet sampled happened after the change; let them through.
       if (key.down && !key.pendingPress) key.suppressed = true;

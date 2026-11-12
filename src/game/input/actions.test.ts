@@ -183,7 +183,7 @@ describe('Zoravia input — rebinding', () => {
     const b = createBindings();
     expect(b.loadProfile(profile)).toEqual({ ok: true, skipped: [] });
     expect(b.keysFor('move_up')).toEqual(['KeyZ', 'ArrowUp']);
-    expect(b.keysFor('back')).toEqual(['KeyQ', 'Escape', 'Backspace']);
+    expect(b.keysFor('back')).toEqual(['KeyQ', 'Escape', 'Backspace', 'Mouse2']);
   });
 
   it('loadProfile rejects bad data and skips unknown actions', () => {

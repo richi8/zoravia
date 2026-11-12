@@ -51,7 +51,8 @@ export const DEFAULT_BINDINGS: BindingTable<Action> = {
   nav_left: LEFT,
   nav_right: RIGHT,
   confirm: ['KeyE', 'Enter', 'Space', 'NumpadEnter'],
-  back: ['KeyQ', 'Escape', 'Backspace'],
+  // Right click = back keeps menus fully usable with the mouse alone.
+  back: ['KeyQ', 'Escape', 'Backspace', 'Mouse2'],
   hotbar1: ['Digit1', 'Numpad1'],
   hotbar2: ['Digit2', 'Numpad2'],
   hotbar3: ['Digit3', 'Numpad3'],
