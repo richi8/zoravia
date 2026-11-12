@@ -5,7 +5,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | Chunk | Name | Status | Log |
 |---|---|---|---|
 | C01 | Project setup | ✅ | [log](logs/C01-project-setup.md) |
-| C02 | Core utilities | ⬜ | |
+| C02 | Core utilities | ✅ | [log](logs/C02-core-utilities.md) |
 | C03 | Content pack system | ⬜ | |
 | C04 | Rendering, game loop, scenes | ⬜ | |
 | C05 | Input system | ⬜ | |
