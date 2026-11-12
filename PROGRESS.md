@@ -19,7 +19,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | G1 | 🚦 Art direction review | ✅ | [log](logs/G1-art-direction-review.md) |
 | C12 | Core schemas & core pack v0 | ✅ | [log](logs/C12-core-schemas.md) |
 | C13 | Zorling instances & progression | ✅ | [log](logs/C13-progression.md) |
-| C14 | Battle engine core | ⬜ | |
+| C14 | Battle engine core | ✅ | [log](logs/C14-battle-engine.md) |
 | C15 | Conditions & reactions | ⬜ | |
 | C16 | Items, capture, AI | ⬜ | |
 | C17 | Bosses | ⬜ | |
