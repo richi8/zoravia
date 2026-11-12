@@ -85,7 +85,7 @@ export class Engine {
   private readonly uiRoot = new Container({ label: 'ui-root' });
   private readonly uiTransform = new Matrix();
   private readonly virtual: VirtualSize | undefined;
-  private readonly screenTexture: RenderTexture | undefined;
+  private screenTexture: RenderTexture | undefined;
   private readonly screenSprite: Sprite | undefined;
   private currentFit: VirtualFit | undefined;
 
@@ -99,13 +99,7 @@ export class Engine {
     this.uiRoot.addChild(this.layers.ui, this.layers.transitions);
     this.screenRoot.addChild(this.worldRoot, this.uiRoot);
     if (this.virtual) {
-      this.screenTexture = RenderTexture.create({
-        width: this.virtual.width,
-        height: this.virtual.height,
-        resolution: 1,
-        antialias: false,
-        scaleMode: 'nearest',
-      });
+      this.screenTexture = createScreenTexture(this.virtual.width, this.virtual.height);
       this.screenSprite = new Sprite({ texture: this.screenTexture, label: 'screen-view' });
       app.stage.addChild(this.screenSprite);
       this.routePointerEvents();
@@ -286,7 +280,14 @@ export class Engine {
           this.virtual,
         );
         this.currentFit = fit;
-        this.screenTexture?.resize(fit.width, fit.height);
+        // A new texture instead of `resize`: Pixi keeps the GPU render target at the size it
+        // was first rendered at, so a resized texture only showed the first 480×270 pixels.
+        const old = this.screenTexture;
+        if (!old || old.width !== fit.width || old.height !== fit.height) {
+          this.screenTexture = createScreenTexture(fit.width, fit.height);
+          this.screenSprite.texture = this.screenTexture;
+          old?.destroy(true);
+        }
         this.screenSprite.scale.set(fit.cssScale);
         this.uiTransform.set(fit.cssScale, 0, 0, fit.cssScale, 0, 0);
       }
@@ -332,4 +333,15 @@ function syncTextResolution(root: Container, resolution: number): void {
     for (const child of c.children) visit(child);
   };
   visit(root);
+}
+
+/** The pixel screen: game pixels, nearest-neighbor scaling. */
+function createScreenTexture(width: number, height: number): RenderTexture {
+  return RenderTexture.create({
+    width,
+    height,
+    resolution: 1,
+    antialias: false,
+    scaleMode: 'nearest',
+  });
 }
