@@ -4,7 +4,10 @@ import { uiInputFrom } from '@engine/ui';
 import { installFavicon } from '@game/brand/logo';
 import { GAME_TITLE } from '@game/index';
 import { createInput } from '@game/input/actions';
+import { loadGameContent } from '@game/data';
+import { DebugLauncherScene } from '@game/scenes/debug-launcher-scene';
 import { UiDemoScene } from '@game/scenes/ui-demo-scene';
+import { corePack } from '@packs/core';
 import { installCssVars } from '@game/style/css';
 import { loadFonts } from '@game/style/fonts';
 import { ZORAVIA_SCREEN_THEME } from '@game/style/theme';
@@ -48,13 +51,17 @@ async function main(): Promise<void> {
     if (input.pressed('debug_overlay')) engine.debugVisible = !engine.debugVisible;
   });
 
-  // Until the real start flow exists (C33), the app opens the UI framework demo (C06).
-  const demo = new UiDemoScene(engine, ui, ZORAVIA_SCREEN_THEME);
-  await engine.scenes.replace(demo);
+  // Until the real start flow exists (C33), the app opens the battle test launcher (C18);
+  // `?demo` opens the UI framework demo (C06).
+  const content = loadGameContent([corePack]);
+  const first = params.has('demo')
+    ? new UiDemoScene(engine, ui, ZORAVIA_SCREEN_THEME)
+    : new DebugLauncherScene({ engine, content, input, ui, theme: ZORAVIA_SCREEN_THEME });
+  await engine.scenes.replace(first);
   engine.start();
 
   if (import.meta.env.DEV) {
-    (window as unknown as { __zoravia?: unknown }).__zoravia = { engine, input, demo };
+    (window as unknown as { __zoravia?: unknown }).__zoravia = { engine, input, content, first };
   }
 }
 

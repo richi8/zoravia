@@ -90,3 +90,27 @@ export function row(children: readonly Container[], gap: number, x = 0, y = 0): 
   }
   return Math.max(0, cx - x - gap);
 }
+
+/**
+ * Small colored pill with a short label and optional turns pips: statuses without an icon
+ * (a reaction's lingering effect such as Rooted or Frozen) and boss states (Armor, Subdued).
+ */
+export class StatusPill extends Container {
+  constructor(label: string, color: number, on: number, turns?: number, maxTurns = 3) {
+    super({ label: `pill:${label}` });
+    const g = new Graphics();
+    const text = uiText('label', label, on);
+    const w = Math.ceil(text.width) + 6;
+    pixelRoundRect(g, 0, 0, w, CHIP_SIZE, 2, darken(color, 0.4));
+    pixelRoundRect(g, 0, 0, w, CHIP_SIZE - 1, 2, color);
+    text.position.set(3, Math.round((CHIP_SIZE - 1 - text.height) / 2));
+    this.addChild(g, text);
+    if (turns !== undefined) {
+      for (let i = 0; i < maxTurns; i++) {
+        g.rect(1 + i * 3, CHIP_SIZE + 1, 2, 1).fill({
+          color: i < turns ? darken(color, 0.25) : paper.shade,
+        });
+      }
+    }
+  }
+}

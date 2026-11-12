@@ -29,7 +29,7 @@ import { Callout, EffectsLayer, FloatNumber, Toast } from '@game/ui/callout';
 import { MessageBox, MoveInfoPanel } from '@game/ui/panels';
 import { ZorlingActor } from '@game/zorlings/actor';
 import { renderZorling } from '@game/zorlings/render';
-import { drawBackdrop, platforms } from './backdrop';
+import { drawBackdrop, platforms } from '@game/battle/scene/backdrop';
 import {
   APPLIES,
   BAG,

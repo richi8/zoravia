@@ -14,7 +14,7 @@ import {
   type TooltipLayer,
 } from '@engine/ui';
 import { paper, type ConditionId, type TypeId } from '../style/tokens';
-import { CHIP_SIZE, ConditionChip, TypeBadge } from './badges';
+import { CHIP_SIZE, ConditionChip, StatusPill, TypeBadge } from './badges';
 import { HpBar, XpBar, hpColor } from './bars';
 import { drawPaper, drawWell } from './skin';
 import { uiText } from './text';
@@ -30,6 +30,16 @@ export interface CombatantView {
   readonly xp?: number;
   /** 32×32 portrait for the hotbar. */
   readonly portrait?: Texture;
+  /** Pills after the condition chips (lingering reaction effects, Armor, Subdued). */
+  readonly pills?: readonly PillView[];
+}
+
+export interface PillView {
+  readonly label: string;
+  readonly color: number;
+  readonly on: number;
+  readonly turns?: number;
+  readonly tip?: TooltipContent;
 }
 
 export interface HudTips {
@@ -125,6 +135,14 @@ export class CombatantCard extends Container {
       x += CHIP_SIZE + 2;
       this.chips.addChild(chip);
       if (tips) this.unregister.push(tips.layer.register(chip, () => tips.condition(id, turns)));
+    }
+    for (const p of view.pills ?? []) {
+      const pill = new StatusPill(p.label, p.color, p.on, p.turns);
+      pill.x = x;
+      x += Math.ceil(pill.width) + 2;
+      this.chips.addChild(pill);
+      const tip = p.tip;
+      if (tips && tip) this.unregister.push(tips.layer.register(pill, () => tip));
     }
   }
 }

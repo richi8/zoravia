@@ -4,6 +4,7 @@
  */
 
 import { defineRegistry, type CheckContext, type EntryOf, type EntryProblem } from '@engine/packs';
+import { BODY_PLANS, MOODS } from '@game/zorlings/genome';
 import { z } from 'zod';
 import { description, duplicates, name, ref, refTo, STAT_IDS, type StatId } from './common';
 
@@ -37,6 +38,18 @@ export const speciesSchema = z.strictObject({
   xpYield: z.number().int().min(1).max(1000).optional(),
   /** Multiplies the capture chance: below 1 is harder to catch, above 1 easier. */
   catchRate: z.number().positive().max(3).default(1),
+  /**
+   * How the line looks: the genome seed of its final form, optionally with a forced body plan
+   * and mood. Only the final stage of a line has one; earlier stages are derived from it.
+   * Without it the look is rolled from the final form's id.
+   */
+  look: z
+    .strictObject({
+      seed: z.number().int().min(0).max(0xffffffff),
+      plan: z.enum(BODY_PLANS).optional(),
+      mood: z.enum(MOODS).optional(),
+    })
+    .optional(),
 });
 
 export type Species = EntryOf<typeof species>;
@@ -78,6 +91,10 @@ function checkSpecies(s: SpeciesLike, ctx: CheckContext): EntryProblem[] {
   }
   if (s.legendary && (s.evolution || parents.length)) {
     out.push({ path: ['legendary'], message: 'Legendaries never evolve' });
+  }
+
+  if (s.look && s.evolution) {
+    out.push({ path: ['look'], message: 'Only the final form of a line has a look' });
   }
 
   if (s.evolution) {

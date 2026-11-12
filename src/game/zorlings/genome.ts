@@ -110,6 +110,8 @@ export interface GenerateOptions {
   readonly type?: TypeId;
   /** Chance of a second type, 0–1. Default 0.3. */
   readonly dualChance?: number;
+  /** Force both types (overrides `type` and `dualChance`), e.g. from species data. */
+  readonly types?: ZorlingGenome['types'];
 }
 
 type Weights<S extends PartSlot> = Partial<Record<PartKind<S>, number>>;
@@ -347,9 +349,9 @@ export function generateGenome(seed: Seed, options: GenerateOptions = {}): Zorli
   const typeRng = r('types');
   const primary = options.type ?? typeRng.pick(TYPE_IDS);
   const dual = typeRng.chance(options.dualChance ?? 0.3);
-  const types: ZorlingGenome['types'] = dual
-    ? [primary, typeRng.pick(TYPE_IDS.filter((t) => t !== primary))]
-    : [primary];
+  const types: ZorlingGenome['types'] =
+    options.types ??
+    (dual ? [primary, typeRng.pick(TYPE_IDS.filter((t) => t !== primary))] : [primary]);
 
   const moodRng = r('mood');
   const mood = options.mood ?? moodRng.weighted(MOODS, (m) => MOOD_WEIGHTS[plan][m]);

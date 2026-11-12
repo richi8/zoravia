@@ -66,6 +66,11 @@ export class ZorlingActor extends Container {
     this.show();
   }
 
+  /** Renders a clip ahead of time (e.g. while the player reads text), so playing it later does not hitch. */
+  preload(clip: ClipName): void {
+    this.load(clip);
+  }
+
   update(dt: number): void {
     const c = this.load(this.clip);
     const f = c.frames[this.frame];

@@ -1,7 +1,7 @@
 /**
- * Placeholder forest battle backdrop for the mock (sky bands with dithered edges, clouds,
- * hills, tree line, grass, two platforms). Drawn into the pixel layer; extends to any
- * screen size. Real biome backdrops come with C11/C18.
+ * Placeholder forest battle backdrop from the C10 mock (sky bands with dithered edges, clouds,
+ * hills, tree line, grass, two platforms). Drawn into the pixel layer; extends to any screen
+ * size. Biome backdrops come with the world (C19+).
  */
 
 import type { Graphics } from 'pixi.js';

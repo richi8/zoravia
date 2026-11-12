@@ -23,7 +23,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C15 | Conditions & reactions | ✅ | [log](logs/C15-conditions-reactions.md) |
 | C16 | Items, capture, AI | ✅ | [log](logs/C16-items-capture-ai.md) |
 | C17 | Bosses | ✅ | [log](logs/C17-bosses.md) |
-| C18 | Battle scene | ⬜ | |
+| C18 | Battle scene | ✅ | [log](logs/C18-battle-scene.md) |
 | C19 | Map format & world tool | ⬜ | |
 | C20 | Overworld movement | ⬜ | |
 | C21 | NPCs & encounters | ⬜ | |

@@ -31,6 +31,7 @@ export const species = {
     baseStats: { hp: 115, attack: 145, defense: 105, speed: 155 },
     trait: 'core:kindling',
     learnset: learn([1, 'flame-pounce'], [1, 'wing-cut'], [38, 'gale-dash']),
+    look: { seed: 7, plan: 'feline', mood: 'fierce' },
   },
   puddlit: {
     name: 'Puddlit',
@@ -46,6 +47,7 @@ export const species = {
     baseStats: { hp: 140, attack: 110, defense: 135, speed: 105 },
     trait: 'core:waterproof',
     learnset: learn([1, 'splash-shot'], [1, 'drench'], [22, 'tide-crash'], [28, 'rock-slam']),
+    look: { seed: 31, plan: 'quadruped', mood: 'cute' },
   },
   sproutle: {
     name: 'Sproutle',
@@ -61,6 +63,7 @@ export const species = {
     baseStats: { hp: 110, attack: 125, defense: 110, speed: 145 },
     trait: 'core:lingering',
     learnset: learn([1, 'vine-snap'], [1, 'gust'], [20, 'thorn-volley'], [26, 'gale-dash']),
+    look: { seed: 12, plan: 'dragon', mood: 'cute' },
   },
   voltbat: {
     name: 'Voltbat',
@@ -68,6 +71,7 @@ export const species = {
     types: ['core:electric', 'core:wind'],
     baseStats: { hp: 90, attack: 120, defense: 85, speed: 185 },
     learnset: learn([1, 'static-bite'], [1, 'wing-cut'], [18, 'volt-lash'], [24, 'frost-fang']),
+    look: { seed: 5, plan: 'bat', mood: 'cute' },
   },
   ironshell: {
     name: 'Ironshell',
@@ -75,6 +79,7 @@ export const species = {
     types: ['core:metal'],
     baseStats: { hp: 150, attack: 105, defense: 170, speed: 55 },
     learnset: learn([1, 'iron-bash'], [10, 'mud-toss'], [20, 'steel-claw']),
+    look: { seed: 44, plan: 'golem', mood: 'fierce' },
   },
   glacivar: {
     name: 'Glacivar',
@@ -84,5 +89,6 @@ export const species = {
     trait: 'core:heatproof',
     learnset: learn([1, 'frost-fang'], [1, 'hail-dash'], [1, 'rock-slam']),
     legendary: true,
+    look: { seed: 90, plan: 'canine', mood: 'fierce' },
   },
 } satisfies Record<string, SpeciesInput>;
