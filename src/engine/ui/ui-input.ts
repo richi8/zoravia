@@ -11,6 +11,8 @@ export interface UiInput {
   confirmPressed(): boolean;
   confirmHeld(): boolean;
   backPressed(): boolean;
+  /** Position of a primary (left) click started this step, if any. */
+  pointerPressed(): { readonly x: number; readonly y: number } | undefined;
   /** Ignore currently held keys until released (focus moved to a new widget). */
   suppressHeld(): void;
 }
@@ -34,6 +36,8 @@ export function uiInputFrom<A extends string>(
     confirmPressed: () => input.pressed(map.confirm),
     confirmHeld: () => input.held(map.confirm),
     backPressed: () => input.pressed(map.back),
+    pointerPressed: () =>
+      input.rawPressed('Mouse0') ? { x: input.pointer.x, y: input.pointer.y } : undefined,
     suppressHeld: () => input.suppressHeld(),
   };
 }

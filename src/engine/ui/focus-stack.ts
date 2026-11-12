@@ -4,6 +4,10 @@
  * Only the top widget receives input; all stay visible. Opening or closing a widget blurs
  * / focuses the right one and suppresses held keys, so the `E` that opened a submenu does
  * not also act inside it. Renderer-agnostic via attach/detach callbacks.
+ *
+ * Click outside: a left click that lands outside the top widget dismisses it (like `back`),
+ * then the next one, and so on until a widget contains the click or refuses to close
+ * (no `dismiss`, or `dismiss` keeps it open — e.g. a root menu or a dialog).
  */
 
 import type { UiInput } from './ui-input';
@@ -16,6 +20,10 @@ export interface Widget<V = unknown> {
   handleInput(input: UiInput): void;
   /** Called once per step for every widget on the stack. */
   update?(dt: number): void;
+  /** Whether a point (screen coordinates) is inside the widget. Needed for click-outside. */
+  contains?(x: number, y: number): boolean;
+  /** Called on a click outside; typically the same as `back`. Omit to ignore outside clicks. */
+  dismiss?(): void;
 }
 
 export interface FocusHost<V> {
@@ -76,7 +84,23 @@ export class FocusStack<V = unknown> {
   }
 
   update(dt: number): void {
-    this.top?.handleInput(this.input);
+    // A click that dismissed something is fully handled; the newly focused widget
+    // starts taking input next step.
+    if (!this.dismissOutside()) this.top?.handleInput(this.input);
     for (const w of [...this.widgets]) w.update?.(dt);
+  }
+
+  private dismissOutside(): boolean {
+    const click = this.input.pointerPressed();
+    if (!click) return false;
+    let dismissed = false;
+    for (;;) {
+      const top = this.top;
+      if (!top?.contains || !top.dismiss || top.contains(click.x, click.y)) break;
+      top.dismiss();
+      if (this.top === top) break; // refused to close (e.g. root menu)
+      dismissed = true;
+    }
+    return dismissed;
   }
 }

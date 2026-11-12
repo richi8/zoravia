@@ -132,8 +132,10 @@ describe('FocusStack', () => {
       confirmPressed: () => false,
       confirmHeld: () => false,
       backPressed: () => false,
+      pointerPressed: () => click,
       suppressHeld: () => void suppressed++,
     };
+    let click: { x: number; y: number } | undefined;
     const widget = (id: string): Widget<string> => ({
       view: id,
       focus: () => log.push(`${id}:focus`),
@@ -146,7 +148,15 @@ describe('FocusStack', () => {
       { attach: (v) => attached.push(v), detach: (v) => attached.splice(attached.indexOf(v), 1) },
       input,
     );
-    return { stack, log, widget, attached, suppressed: () => suppressed };
+    return {
+      stack,
+      log,
+      widget,
+      attached,
+      suppressed: () => suppressed,
+      clickAt: (x: number, y: number) => (click = { x, y }),
+      noClick: () => (click = undefined),
+    };
   }
 
   it('only the top widget gets input; all update', () => {
@@ -179,5 +189,76 @@ describe('FocusStack', () => {
     expect(attached).toEqual([]);
     expect(stack.size).toBe(0);
     expect(empty).toBe(true);
+  });
+
+  describe('click outside', () => {
+    /** Widget occupying [x0, x1) horizontally; `closable` decides whether dismiss closes it. */
+    function boxed(
+      ctx: ReturnType<typeof setup>,
+      id: string,
+      x0: number,
+      x1: number,
+      closable = true,
+    ): Widget<string> {
+      const w: Widget<string> = {
+        ...ctx.widget(id),
+        contains: (x) => x >= x0 && x < x1,
+        dismiss: () => {
+          ctx.log.push(`${id}:dismiss`);
+          if (closable) ctx.stack.remove(w);
+        },
+      };
+      return w;
+    }
+
+    it('click on empty space closes nested menus down to a root that refuses', () => {
+      const ctx = setup();
+      ctx.stack.push(boxed(ctx, 'root', 0, 100, false));
+      ctx.stack.push(boxed(ctx, 'sub', 100, 200));
+      ctx.stack.push(boxed(ctx, 'subsub', 200, 300));
+      ctx.log.length = 0;
+      ctx.clickAt(500, 0);
+      ctx.stack.update(1 / 60);
+      expect(ctx.stack.size).toBe(1);
+      expect(ctx.log.filter((l) => l.endsWith('dismiss'))).toEqual([
+        'subsub:dismiss',
+        'sub:dismiss',
+        'root:dismiss',
+      ]);
+      // The click was used for dismissing; no widget handled it as input this step.
+      expect(ctx.log.some((l) => l.endsWith(':input'))).toBe(false);
+    });
+
+    it('click on a parent menu closes only the menus above it', () => {
+      const ctx = setup();
+      ctx.stack.push(boxed(ctx, 'root', 0, 100, false));
+      ctx.stack.push(boxed(ctx, 'sub', 100, 200));
+      ctx.stack.push(boxed(ctx, 'subsub', 200, 300));
+      ctx.clickAt(150, 0);
+      ctx.stack.update(1 / 60);
+      expect(ctx.stack.size).toBe(2);
+      expect(ctx.stack.top?.view).toBe('sub');
+    });
+
+    it('click inside the top widget is normal input', () => {
+      const ctx = setup();
+      ctx.stack.push(boxed(ctx, 'root', 0, 100, false));
+      ctx.stack.push(boxed(ctx, 'sub', 100, 200));
+      ctx.log.length = 0;
+      ctx.clickAt(150, 0);
+      ctx.stack.update(1 / 60);
+      expect(ctx.stack.size).toBe(2);
+      expect(ctx.log[0]).toBe('sub:input');
+    });
+
+    it('widgets without dismiss (dialogs) ignore outside clicks', () => {
+      const ctx = setup();
+      ctx.stack.push(boxed(ctx, 'root', 0, 100, false));
+      ctx.stack.push({ ...ctx.widget('dialog'), contains: () => false });
+      ctx.clickAt(500, 0);
+      ctx.stack.update(1 / 60);
+      expect(ctx.stack.size).toBe(2);
+      ctx.noClick();
+    });
   });
 });

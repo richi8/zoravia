@@ -3,7 +3,8 @@
  *
  * Keyboard: directions move (with auto-repeat), confirm selects, back calls `onBack`.
  * Mouse: hovering an item moves the cursor, left click selects it (right click = back via
- * the input bindings). Pointer events are queued and applied in `handleInput`, so all menu
+ * the input bindings; a click outside the menu also acts as back, via `FocusStack`).
+ * Pointer events are queued and applied in `handleInput`, so all menu
  * logic still runs inside the fixed step.
  */
 
@@ -94,6 +95,16 @@ export class Menu implements Widget<Container> {
     if (!item || !row) return;
     this.items[index] = { ...item, label };
     row.text.text = label;
+  }
+
+  contains(x: number, y: number): boolean {
+    const b = this.view.getBounds();
+    return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
+  }
+
+  /** Click outside the menu: same as `back`. */
+  dismiss(): void {
+    this.options.onBack?.(this);
   }
 
   focus(): void {

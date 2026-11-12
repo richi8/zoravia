@@ -18,7 +18,7 @@ A reusable, keyboard-first UI layer: a focus stack for nested menus/dialogs, lis
 - `src/game/input/actions.ts` — `back` also bound to `Mouse2` (right click).
 - `src/game/scenes/ui-demo-scene.ts` — demo: root menu → Party (list) → actions submenu → Summary dialog; Bag (3-column grid with a disabled cell); Talk (3-page dialog with speaker); Settings (toggles that relabel items; text speed applies to dialogs); Fade test (pushes a scene with a fade, any key/click returns); a disabled root item.
 - `src/game/scenes/placeholder-scene.ts` — optional input + `onLeave`; `src/main.ts` boots the demo (FPS overlay now only with `?debug` or F3).
-- Tests: `ui-logic.test.ts` (14 new: grid cursor, typewriter, focus stack).
+- Tests: `ui-logic.test.ts` (18 new: grid cursor, typewriter, focus stack incl. click-outside).
 
 ## Decisions
 - **Decision:** Dialog controls: a confirm *press* only advances a finished page; while typing, holding confirm speeds up (×5) and `Q` completes the page.
@@ -29,6 +29,8 @@ A reusable, keyboard-first UI layer: a focus stack for nested menus/dialogs, lis
   - **Why:** all menu logic runs at one point in the frame — same ordering as keyboard input, no re-entrancy from DOM callbacks.
 - **Decision:** Right click = back (bound as `Mouse2` on `back`); only the focused menu reacts to the mouse.
   - **Why:** makes nested menus fully usable by mouse alone without close buttons; parent menus stay visible but inert (dimmed cursor).
+- **Decision:** Left click outside the focused menu = back (added after user feedback). The `FocusStack` dismisses widgets from the top down until one contains the click: empty space closes all submenus back to the root; a click on a parent menu closes only the menus above it; the click itself does nothing else that step. Dialogs have no `dismiss`, so stray clicks can't skip text; the root menu refuses to close.
+  - **Why:** standard menu behaviour the user asked for; done generically via optional `Widget.contains` / `Widget.dismiss` so future widgets opt in.
 - **Decision:** Engine widgets take a `UiInput`, not `InputManager<Action>`.
   - **Why:** the engine must not know game action names.
 - **Decision:** Theme is passed into widgets (no global singleton); `DEFAULT_THEME` is deliberately plain.
@@ -45,10 +47,11 @@ A reusable, keyboard-first UI layer: a focus stack for nested menus/dialogs, lis
 - Text uses `system-ui` until C07 picks a font.
 
 ## Verification
-- `npm run check` — typecheck, lint, format, 138 tests: all pass.
+- `npm run check` — typecheck, lint, format, 142 tests: all pass.
 - Browser walkthrough (headless Chrome, real keyboard/mouse events, scripted outside the repo) — **36/36 steps passed**:
   - Keyboard only: navigate root (W/S, arrows), wrap past the disabled item; open Bag grid, move with D/↓/A incl. row wrap that skips the disabled cell; select → dialog → E closes; Q / Esc / Backspace close menus; 4-deep nesting (root → Party → actions → Summary dialog); Settings toggles relabel items; Talk dialog: normal speed, hold E = fast, E → next page, Q completes page, finish; Fade test pushes a scene and Q returns.
   - Mouse only: hover highlights, click opens Bag, click on disabled cell ignored, click item → dialog, click closes dialog, right-click back; Party → Gustling → Summary by clicks; click while typing doesn't skip; click through 3 pages; Fade test and click to return.
+  - Click outside (8 more steps, all passed): empty space closes a 3-deep stack back to the root; click on the parent menu closes only the submenu; click on a root item while a submenu is open closes the submenu; click on a menu's own padding keeps it open; click outside a dialog doesn't close it; click outside the root keeps it.
   - No page errors (only the known favicon 404).
 - Screenshots checked: nested menus with dimmed parent cursors and speaker dialog; grid menu with disabled cell.
 - Done when:
