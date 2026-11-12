@@ -43,17 +43,43 @@ export interface Status {
   readonly fresh: boolean;
 }
 
+/** Armor of a boss: holding, broken by a reaction, or none (no Armor, or Subdued). */
+export type ArmorState = 'armored' | 'broken' | 'none';
+
+/** A Zorling fighting in boss form (DESIGN.md "Bosses"). */
+export interface BossState {
+  /** The boss entry (`content.bosses`). */
+  readonly id: string;
+  /**
+   * Max HP without the aura. Status HP loss (Burning, drains) is a fraction of this, so the
+   * aura does not make damage over time stronger.
+   */
+  readonly baseHp: number;
+  readonly armor: ArmorState;
+  /** While broken: the turn at whose end the Armor re-arms. */
+  readonly rearmTurn: number | null;
+  /** Defeated in a wild battle: it waits to be caught (any capture item works). */
+  readonly subdued: boolean;
+}
+
 /** One Zorling taking part in a battle. */
 export interface Combatant {
   /** The Zorling as it entered the battle (the battle never changes it). */
   readonly zorling: Zorling;
   readonly types: readonly string[];
-  /** Battle stats at the start of the battle; `stats.hp` is max HP. */
+  /**
+   * Moves it can use: the Zorling's moves, plus the signature move in boss form (so a boss
+   * may know one more than the 3 move slots).
+   */
+  readonly moves: readonly string[];
+  /** Battle stats at the start of the battle; `stats.hp` is max HP (×3 in boss form). */
   readonly stats: BaseStats;
   /** Current HP. 0 = fainted. */
   readonly hp: number;
   /** Active statuses in the order they were applied. Cleared on switching out or fainting. */
   readonly statuses: readonly Status[];
+  /** Boss form, or null for a normal Zorling. */
+  readonly boss: BossState | null;
 }
 
 export interface BattleSide {
@@ -88,7 +114,9 @@ export type Choice =
    * Player only. Uses an item from the bag; costs the turn. A potion needs `target` (a team
    * slot that has not fainted); a capture item needs none (it is thrown at the wild foe).
    */
-  | { readonly kind: 'item'; readonly item: string; readonly target?: number };
+  | { readonly kind: 'item'; readonly item: string; readonly target?: number }
+  /** Does nothing: the only choice of a Subdued boss. */
+  | { readonly kind: 'wait' };
 
 export type BattleAction =
   /** Both sides' choices for the current turn (phase `'choose'`). */
@@ -123,6 +151,12 @@ export type BattleEvent =
       readonly effectiveness: number;
     }
   | { readonly kind: 'fainted'; readonly side: SideId; readonly slot: number }
+  /** A boss was defeated in a wild battle: it is Subdued, not fainted, and can be caught. */
+  | { readonly kind: 'subdued'; readonly side: SideId; readonly slot: number }
+  /** A reaction broke the boss's Armor (it takes ×1.5 damage for a while). */
+  | { readonly kind: 'armorBroken'; readonly side: SideId; readonly reaction: string }
+  /** The boss's Armor is back. */
+  | { readonly kind: 'armorRestored'; readonly side: SideId }
   /**
    * A condition was put on `side`. `source` is the side that applied it (null for weather);
    * `refreshed` means it was already there and now lasts the full time again.

@@ -8,9 +8,12 @@ import { Rng, type Seed } from '@engine/core';
 import type { GameContent, Item, Reaction } from '@game/data';
 import { takeFromBag, type Bag } from '@game/inventory';
 import { statsOf, type Zorling } from '@game/progression';
+import { armorHit, hpUnit, isSubdued } from './boss';
 import {
   ACTION_RANK,
+  ARMOR_BROKEN_TURNS,
   captureChance,
+  CAPTURE_WOBBLES,
   captureWobbles,
   computeDamage,
   DAMAGE_ROLL_MIN,
@@ -30,6 +33,7 @@ import {
   type BattleKind,
   type BattleSide,
   type BattleState,
+  type BossState,
   type Choice,
   type Combatant,
   type SideId,
@@ -50,7 +54,12 @@ import {
 
 /** Working copy the engine changes while resolving one action (never the caller's state). */
 type DraftStatus = { -readonly [K in keyof Status]: Status[K] };
-type DraftCombatant = Omit<Combatant, 'hp' | 'statuses'> & { hp: number; statuses: DraftStatus[] };
+type DraftBoss = { -readonly [K in keyof BossState]: BossState[K] };
+type DraftCombatant = Omit<Combatant, 'hp' | 'statuses' | 'boss'> & {
+  hp: number;
+  statuses: DraftStatus[];
+  boss: DraftBoss | null;
+};
 interface DraftSide {
   team: DraftCombatant[];
   active: number;
@@ -92,13 +101,22 @@ export interface BattleSetup {
   readonly weather?: readonly string[];
   /** The player's bag (items usable in battle). Default: empty. */
   readonly bag?: Bag;
+  /**
+   * An opposing Zorling that fights in boss form (`content.bosses` id; `slot` defaults to 0).
+   * Its Zorling should be the boss species (see `bossZorling`). Beaten in a wild battle, it is
+   * Subdued instead of fainting.
+   */
+  readonly boss?: { readonly id: string; readonly slot?: number };
 }
 
 /** Starts a battle: each side sends out its first Zorling that has not fainted. */
 export function createBattle(content: GameContent, setup: BattleSetup): StepResult {
+  const bossSlot = setup.boss ? (setup.boss.slot ?? 0) : -1;
   const toSide = (team: readonly Zorling[], side: SideId): BattleSide => {
     if (team.length === 0) throw new Error(`Side ${side} has no Zorlings`);
-    const combatants = team.map((z) => toCombatant(content, z));
+    const combatants = team.map((z, i) =>
+      toCombatant(content, z, side === OPPONENT && i === bossSlot ? setup.boss?.id : undefined),
+    );
     const active = combatants.findIndex((c) => c.hp > 0);
     if (active < 0) throw new Error(`Side ${side} has no Zorling that can fight`);
     return { team: combatants, active };
@@ -107,6 +125,9 @@ export function createBattle(content: GameContent, setup: BattleSetup): StepResu
   const opponent = toSide(setup.opponent, OPPONENT);
   if (setup.kind === 'wild' && opponent.team.length !== 1) {
     throw new Error('A wild battle has exactly one opposing Zorling');
+  }
+  if (setup.boss && !opponent.team[bossSlot]) {
+    throw new Error(`No opposing Zorling in boss slot ${bossSlot}`);
   }
   const bag = setup.bag ?? {};
   for (const [item, count] of Object.entries(bag)) {
@@ -141,27 +162,55 @@ export function createBattle(content: GameContent, setup: BattleSetup): StepResu
   return { state: ctx.draft, events: ctx.events };
 }
 
-function toCombatant(content: GameContent, z: Zorling): Combatant {
-  const stats = statsOf(content, z);
+/**
+ * A Zorling as it enters the battle. In boss form (`bossId`) the aura multiplies its max HP
+ * (its HP keeps the same fraction), adds the signature move and puts on its Armor.
+ */
+function toCombatant(content: GameContent, z: Zorling, bossId?: string): Combatant {
+  const base = statsOf(content, z);
+  const hp = Math.min(Math.max(0, z.hp), base.hp);
+  const types = content.species.require(z.species).types;
+  if (bossId === undefined) {
+    return { zorling: z, moves: z.moves, types, stats: base, hp, statuses: [], boss: null };
+  }
+  const boss = content.bosses.require(bossId);
+  if (boss.species !== z.species) {
+    throw new Error(`Boss "${boss.id}" is a "${boss.species}", not a "${z.species}"`);
+  }
+  const maxHp = Math.floor(base.hp * boss.hpMultiplier);
   return {
     zorling: z,
-    types: content.species.require(z.species).types,
-    stats,
-    hp: Math.min(Math.max(0, z.hp), stats.hp),
+    moves: z.moves.includes(boss.signatureMove) ? z.moves : [...z.moves, boss.signatureMove],
+    types,
+    stats: { ...base, hp: maxHp },
+    hp: hp >= base.hp ? maxHp : Math.ceil((hp / base.hp) * maxHp),
     statuses: [],
+    boss: {
+      id: boss.id,
+      baseHp: base.hp,
+      armor: boss.armor ? 'armored' : 'none',
+      rearmTurn: null,
+      subdued: false,
+    },
   };
 }
 
 /**
  * Every choice a side may make this turn (phase `'choose'`). A trapped Zorling (Rooted)
  * cannot switch out. The player may also use items: a potion on any team member that has not
- * fainted and is not at full HP, a capture item in a wild battle.
+ * fainted and is not at full HP, a capture item in a wild battle (not at a boss until it is
+ * Subdued). A Subdued boss can only wait; the player can then only throw capture items.
  */
 export function legalChoices(content: GameContent, state: BattleState, side: SideId): Choice[] {
   if (state.phase !== 'choose') return [];
   const s = state.sides[side];
   const active = activeOf(state, side);
-  const out: Choice[] = active.zorling.moves.map((_, slot) => ({ kind: 'move', slot }));
+  if (isSubdued(active)) return [{ kind: 'wait' }];
+  if (isSubdued(activeOf(state, foe(side)))) {
+    if (side !== PLAYER) return [];
+    return itemChoices(content, state).filter((c) => c.kind === 'item' && c.target === undefined);
+  }
+  const out: Choice[] = active.moves.map((_, slot) => ({ kind: 'move', slot }));
   if (!isTrapped(content, active)) {
     s.team.forEach((c, to) => {
       if (to !== s.active && c.hp > 0) out.push({ kind: 'switch', to });
@@ -181,11 +230,23 @@ function itemChoices(content: GameContent, state: BattleState): Choice[] {
       state.sides[PLAYER].team.forEach((c, target) => {
         if (c.hp > 0 && c.hp < c.stats.hp) out.push({ kind: 'item', item: item.id, target });
       });
-    } else if (state.kind === 'wild') {
+    } else if (state.kind === 'wild' && canBeCaught(activeOf(state, OPPONENT))) {
       out.push({ kind: 'item', item: item.id });
     }
   }
   return out;
+}
+
+/** A boss can only be caught once Subdued. */
+function canBeCaught(c: Combatant): boolean {
+  return c.boss === null || c.boss.subdued;
+}
+
+/** Whether the bag holds a capture item. */
+function hasCaptureItem(content: GameContent, bag: Bag): boolean {
+  return Object.entries(bag).some(
+    ([id, n]) => n > 0 && content.items.require(id).effect.kind === 'capture',
+  );
 }
 
 /** Whether two choices are the same. */
@@ -199,6 +260,8 @@ export function sameChoice(a: Choice, b: Choice): boolean {
       return b.kind === 'run';
     case 'item':
       return b.kind === 'item' && a.item === b.item && a.target === b.target;
+    case 'wait':
+      return b.kind === 'wait';
   }
 }
 
@@ -275,6 +338,7 @@ function playTurn(
       if (q.choice.kind === 'move') useMove(ctx, q.side, q.choice.slot);
     }
     tickStatuses(ctx);
+    rearm(ctx);
     endTurn(ctx);
   }
   ctx.draft.rng = ctx.rng.getState();
@@ -331,9 +395,13 @@ function useItem(ctx: Ctx, side: SideId, id: string, target: number | undefined)
   }
 }
 
-/** One roll decides the catch; how close it came sets the wobbles. */
+/** One roll decides the catch; how close it came sets the wobbles. Subdued: always caught. */
 function throwCapture(ctx: Ctx, item: Item, strength: number): void {
   const wild = active(ctx, OPPONENT);
+  if (isSubdued(wild)) {
+    ctx.events.push({ kind: 'capture', item: item.id, success: true, wobbles: CAPTURE_WOBBLES });
+    return finish(ctx, 'caught');
+  }
   const chance = captureChance({
     hp: wild.hp,
     maxHp: wild.stats.hp,
@@ -379,7 +447,7 @@ function useMove(ctx: Ctx, side: SideId, slot: number): void {
     events.push({ kind: 'skipped', side, status: skip.id });
     return;
   }
-  const move = content.moves.require(user.zorling.moves[slot] ?? '');
+  const move = content.moves.require(user.moves[slot] ?? '');
   events.push({ kind: 'useMove', side, move: move.id });
   const fumble = fumbleChance(content, user);
   if (fumble > 0 && rng.chance(fumble)) {
@@ -396,6 +464,12 @@ function useMove(ctx: Ctx, side: SideId, slot: number): void {
   if (move.power > 0) {
     // Only hits with power set off reactions; status moves just apply their condition.
     const reaction = triggerReaction(ctx, targetSide, move.type);
+    const armor = armorHit(content, target, reaction?.id);
+    if (armor.breaks && target.boss && reaction) {
+      target.boss.armor = 'broken';
+      target.boss.rearmTurn = ctx.draft.turn + ARMOR_BROKEN_TURNS;
+      events.push({ kind: 'armorBroken', side: targetSide, reaction: reaction.id });
+    }
     const effectiveness = content.effectiveness(move.type, target.types);
     const amount = computeDamage({
       level: user.zorling.level,
@@ -404,7 +478,8 @@ function useMove(ctx: Ctx, side: SideId, slot: number): void {
       defense: target.stats.defense * statMultiplier(content, target, 'defense'),
       effectiveness,
       roll: rng.float(DAMAGE_ROLL_MIN, 1),
-      multiplier: (reaction?.damageMultiplier ?? 1) * typePower(content, user, move.type),
+      multiplier:
+        (reaction?.damageMultiplier ?? 1) * typePower(content, user, move.type) * armor.multiplier,
       ignoreDefense: reaction?.ignoreDefense ?? false,
     });
     const dealt = Math.min(amount, target.hp);
@@ -505,7 +580,7 @@ function tickStatuses(ctx: Ctx): void {
       }
       for (const effect of statusEffects(ctx.content, status)) {
         if (effect.kind !== 'hpLoss' || holder.hp <= 0) continue;
-        const loss = statusHpLoss(holder.stats.hp, effect.fraction, effect.growth, status.ticks);
+        const loss = statusHpLoss(hpUnit(holder), effect.fraction, effect.growth, status.ticks);
         const amount = Math.min(loss, holder.hp);
         holder.hp -= amount;
         ctx.events.push({ kind: 'statusDamage', side, status: status.id, amount, hp: holder.hp });
@@ -534,9 +609,32 @@ function heal(ctx: Ctx, side: SideId, amount: number, slot: number): void {
   ctx.events.push({ kind: 'heal', side, slot, amount: healed, hp: c.hp });
 }
 
+/** At 0 HP: a boss in a wild battle is Subdued (its aura and Armor go), others faint. */
 function faint(ctx: Ctx, side: SideId): void {
-  active(ctx, side).statuses = [];
-  ctx.events.push({ kind: 'fainted', side, slot: ctx.draft.sides[side].active });
+  const c = active(ctx, side);
+  c.statuses = [];
+  const slot = ctx.draft.sides[side].active;
+  if (c.boss && ctx.draft.kind === 'wild') {
+    c.boss.subdued = true;
+    c.boss.armor = 'none';
+    c.boss.rearmTurn = null;
+    ctx.events.push({ kind: 'subdued', side, slot });
+    return;
+  }
+  ctx.events.push({ kind: 'fainted', side, slot });
+}
+
+/** Broken Armor whose time is up re-arms at the end of the turn. */
+function rearm(ctx: Ctx): void {
+  for (const side of [PLAYER, OPPONENT] as const) {
+    const boss = active(ctx, side).boss;
+    if (boss?.armor !== 'broken' || boss.rearmTurn === null || boss.rearmTurn > ctx.draft.turn) {
+      continue;
+    }
+    boss.armor = 'armored';
+    boss.rearmTurn = null;
+    ctx.events.push({ kind: 'armorRestored', side });
+  }
 }
 
 function endTurn(ctx: Ctx): void {
@@ -545,11 +643,16 @@ function endTurn(ctx: Ctx): void {
   draft.turn += 1;
   const playerUp = canFight(draft, PLAYER);
   const opponentUp = canFight(draft, OPPONENT);
+  // A Subdued boss waits for a capture item; without one (or a team to throw it), it is a win.
+  const subdued = isSubdued(activeOf(draft, OPPONENT));
+  const catchable = subdued && playerUp && hasCaptureItem(ctx.content, draft.bag);
   // If both sides are out at once (damage over time), the player wins.
-  if (!opponentUp) return finish(ctx, 'win');
+  if (!opponentUp && !catchable) return finish(ctx, 'win');
   if (!playerUp) return finish(ctx, 'lose');
 
-  const waiting = ([PLAYER, OPPONENT] as const).filter((s) => activeOf(draft, s).hp <= 0);
+  const waiting = ([PLAYER, OPPONENT] as const).filter(
+    (s) => activeOf(draft, s).hp <= 0 && !isSubdued(activeOf(draft, s)),
+  );
   if (waiting.length > 0) {
     draft.phase = 'replace';
     events.push({ kind: 'replaceNeeded', sides: waiting });

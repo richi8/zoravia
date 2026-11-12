@@ -11,7 +11,14 @@ export const RUN_BASE_CHANCE = 0.5;
 export const RUN_CHANCE_STEP = 0.25;
 
 /** Action order within a turn: running first, then switches and items, then moves by speed. */
-export const ACTION_RANK = { run: 0, switch: 1, item: 1, move: 2 } as const;
+export const ACTION_RANK = { run: 0, switch: 1, item: 1, move: 2, wait: 2 } as const;
+
+/** Damage a boss takes while its Armor holds. */
+export const ARMOR_DAMAGE_MULTIPLIER = 0.4;
+/** Damage a boss takes while its Armor is broken (the breaking hit included). */
+export const ARMOR_BROKEN_MULTIPLIER = 1.5;
+/** Turns after the one it broke in that Armor stays broken; it re-arms at the end of the last. */
+export const ARMOR_BROKEN_TURNS = 2;
 
 /** Capture chance at full HP, and how much the missing HP fraction adds on top. */
 export const CAPTURE_BASE = 0.1;
@@ -66,7 +73,7 @@ export interface DamageInput {
   readonly effectiveness: number;
   /** Random roll in [DAMAGE_ROLL_MIN, 1). */
   readonly roll: number;
-  /** Extra multiplier: a reaction's damage multiplier times the user's trait type power. */
+  /** Extra multiplier: reaction × the user's trait type power × the target's Armor. */
   readonly multiplier?: number;
   /** The target's defense counts as no higher than the user's attack (Shatter, Shred). */
   readonly ignoreDefense?: boolean;

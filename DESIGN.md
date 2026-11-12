@@ -120,12 +120,20 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 
 ## Bosses
 - **Titans** (2–3 per region): boosted regional species with boss aura (~×3 HP, Armor, extra move).
-  - **Armor**: takes ×0.3 damage until the right reaction breaks it → ×1.5 damage for 2 turns, then re-arms.
+  - **Armor**: takes ×0.4 damage until the right reaction breaks it → ×1.5 damage for 2 turns, then re-arms. (Was ×0.3; changed 2026-11-12 in C17: with ×0.3, brute force needed ~8 good potions in the simulation instead of the ~4–5 the Economy section asks for.)
   - Hinted via NPC dialogue; weakness logged in Dex after first encounter.
 - **Regional legendary**: campaign finale, T3 level, one clear weakness, never evolves, bound by level cap.
 - **Capture**: defeat the boss → it becomes **Subdued** → standard capture item, guaranteed.
 - **Boss form ≠ captured form**: aura is gone after capture. Titans keep a Titan mark (+5% stats, bigger glowing sprite, signature move).
 - **One per save**, with **rematches** available later (higher level, rewards).
+- Rules settled in C17 (2026-11-12; starting values, tuned in C31):
+  - The extra move is the boss's **signature move**. A boss can know 4 moves in boss form; caught, it keeps the signature move in place of its oldest move.
+  - Each boss lists the reactions that break its Armor (usually one). The breaking hit already counts ×1.5; Armor stays broken for the 2 turns after, then re-arms at the end of the second. Other reactions still hit ×0.4.
+  - Damage over time and drains on a boss are fractions of its HP **without** the aura, so the aura does not make Burning stronger than the hint.
+  - Defeated in a wild battle, a boss is **Subdued** (not fainted): it waits, and the player can only throw a capture item, which always works. Capture items cannot be thrown at a boss before that. With no capture item in the bag, the battle ends as a win. In trainer battles a boss faints as usual.
+  - Running from a boss battle follows the wild rules.
+  - Caught, it comes with 1 HP. Legendaries get no Titan mark.
+  - Trainer AI against Armor: plain hits count ×0.4, and breaking it (or setting up the condition that breaks it) is worth a bonus.
 
 ## Economy
 - Potions: **shop-only, money-only**, tiered prices, **bag cap 5 per type**.

@@ -22,7 +22,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C14 | Battle engine core | ✅ | [log](logs/C14-battle-engine.md) |
 | C15 | Conditions & reactions | ✅ | [log](logs/C15-conditions-reactions.md) |
 | C16 | Items, capture, AI | ✅ | [log](logs/C16-items-capture-ai.md) |
-| C17 | Bosses | ⬜ | |
+| C17 | Bosses | ✅ | [log](logs/C17-bosses.md) |
 | C18 | Battle scene | ⬜ | |
 | C19 | Map format & world tool | ⬜ | |
 | C20 | Overworld movement | ⬜ | |

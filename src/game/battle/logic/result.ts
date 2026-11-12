@@ -3,7 +3,15 @@
 import type { GameContent } from '@game/data';
 import type { Bag } from '@game/inventory';
 import { defeatXp, shareXp, type ProgressEvent, type Zorling } from '@game/progression';
-import { OPPONENT, PLAYER, type BattleOutcome, type BattleState, type SideId } from './state';
+import { capturedForm } from './boss';
+import {
+  activeOf,
+  OPPONENT,
+  PLAYER,
+  type BattleOutcome,
+  type BattleState,
+  type SideId,
+} from './state';
 
 export interface BattleResult {
   readonly outcome: BattleOutcome;
@@ -16,8 +24,8 @@ export interface BattleResult {
   /** The bag after the items used in battle. */
   readonly bag: Bag;
   /**
-   * The caught wild Zorling with its battle HP (outcome `caught`). Where it goes (team or
-   * storage) is up to the caller.
+   * The caught wild Zorling with its battle HP (outcome `caught`); a caught boss in its
+   * captured form (see `capturedForm`). Where it goes (team or storage) is up to the caller.
    */
   readonly caught: Zorling | null;
 }
@@ -49,7 +57,7 @@ export function finishBattle(
   if (state.phase !== 'ended' || !state.outcome) throw new Error('The battle has not ended');
   const team = teamAfter(state, PLAYER);
   const { outcome, bag } = state;
-  const caught = outcome === 'caught' ? (teamAfter(state, OPPONENT)[0] ?? null) : null;
+  const caught = outcome === 'caught' ? capturedForm(content, activeOf(state, OPPONENT)) : null;
   if (outcome !== 'win' && outcome !== 'caught') {
     return { outcome, team, xp: 0, progress: team.map(() => []), bag, caught };
   }

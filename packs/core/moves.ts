@@ -1,4 +1,7 @@
-/** Test moves: 2–3 per type, including a status move for Fire, Water and Nature. */
+/**
+ * Test moves: 2–3 per type, status moves for Fire, Water, Nature and Ice, and the test
+ * bosses' signature moves.
+ */
 
 import type { MoveInput } from '@game/data';
 
@@ -60,12 +63,36 @@ export const moves = {
     accuracy: 100,
     applyChance: 0.3,
   },
+  'static-field': {
+    name: 'Static Field',
+    description: 'Fills the air with sparks: Charged.',
+    type: t('electric'),
+    power: 0,
+    accuracy: 90,
+    applyChance: 1,
+  },
   'volt-lash': {
     name: 'Volt Lash',
     type: t('electric'),
     power: 70,
     accuracy: 90,
     applyChance: 0.2,
+  },
+  'cold-snap': {
+    name: 'Cold Snap',
+    description: 'A blast of cold air: Chilled.',
+    type: t('ice'),
+    power: 0,
+    accuracy: 90,
+    applyChance: 1,
+  },
+  whiteout: {
+    name: 'Whiteout',
+    description: 'Glacivar’s signature move.',
+    type: t('ice'),
+    power: 80,
+    accuracy: 90,
+    applyChance: 0.3,
   },
   'frost-fang': { name: 'Frost Fang', type: t('ice'), power: 45, accuracy: 95, applyChance: 0.3 },
   'hail-dash': { name: 'Hail Dash', type: t('ice'), power: 65, accuracy: 95, applyChance: 0.2 },
@@ -75,5 +102,13 @@ export const moves = {
   'wing-cut': { name: 'Wing Cut', type: t('wind'), power: 55, accuracy: 100, applyChance: 0.2 },
   'gale-dash': { name: 'Gale Dash', type: t('wind'), power: 65, accuracy: 95, applyChance: 0.2 },
   'iron-bash': { name: 'Iron Bash', type: t('metal'), power: 45, accuracy: 100, applyChance: 0.3 },
+  'bramble-gale': {
+    name: 'Bramble Gale',
+    description: 'The Thornwing Titan’s signature move.',
+    type: t('wind'),
+    power: 80,
+    accuracy: 90,
+    applyChance: 0.3,
+  },
   'steel-claw': { name: 'Steel Claw', type: t('metal'), power: 65, accuracy: 95, applyChance: 0.2 },
 } satisfies Record<string, MoveInput>;

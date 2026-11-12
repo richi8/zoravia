@@ -10,6 +10,7 @@ import {
   type PackDefinition,
   type Registry,
 } from '@engine/packs';
+import { bosses, type Boss } from './bosses';
 import { conditions, type Condition } from './conditions';
 import { items, type Item } from './items';
 import { moves, type Move } from './moves';
@@ -18,7 +19,16 @@ import { species, type Species } from './species';
 import { traits, type Trait } from './traits';
 import { STRONG_MULTIPLIER, types, WEAK_MULTIPLIER, type ZorlingType } from './types';
 
-export const GAME_REGISTRIES = [types, conditions, reactions, moves, traits, species, items];
+export const GAME_REGISTRIES = [
+  types,
+  conditions,
+  reactions,
+  moves,
+  traits,
+  species,
+  items,
+  bosses,
+];
 
 export interface EvolutionLine {
   /** Species in stage order. */
@@ -35,6 +45,7 @@ export class GameContent<H extends HookMap = HookMap> {
   readonly traits: Registry<Trait>;
   readonly species: Registry<Species>;
   readonly items: Registry<Item>;
+  readonly bosses: Registry<Boss>;
   private readonly reactionIndex = new Map<string, Reaction>();
 
   constructor(readonly loaded: LoadedContent<H>) {
@@ -45,6 +56,7 @@ export class GameContent<H extends HookMap = HookMap> {
     this.traits = loaded.registry(traits);
     this.species = loaded.registry(species);
     this.items = loaded.registry(items);
+    this.bosses = loaded.registry(bosses);
     for (const r of this.reactions) this.reactionIndex.set(`${r.condition}|${r.type}`, r);
   }
 

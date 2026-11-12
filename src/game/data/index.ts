@@ -1,4 +1,5 @@
 /** Game data model: schemas and registries for everything packs provide. */
+export * from './bosses';
 export * from './common';
 export * from './conditions';
 export * from './content';

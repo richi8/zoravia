@@ -1,6 +1,7 @@
-/** The `core` pack: base types, conditions, reactions, moves, traits, species and items. */
+/** The `core` pack: base types, conditions, reactions, moves, traits, species, items, bosses. */
 
 import { definePack } from '@engine/packs';
+import { bosses } from './bosses';
 import { conditions } from './conditions';
 import { items } from './items';
 import { moves } from './moves';
@@ -16,7 +17,7 @@ export const corePack = definePack({
     name: 'Zoravia core',
     description: 'Base rules content every other pack builds on.',
   },
-  content: { types, conditions, reactions, moves, traits, species, items },
+  content: { types, conditions, reactions, moves, traits, species, items, bosses },
 });
 
 export default corePack;
