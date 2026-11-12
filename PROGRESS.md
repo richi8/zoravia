@@ -6,7 +6,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 |---|---|---|---|
 | C01 | Project setup | ✅ | [log](logs/C01-project-setup.md) |
 | C02 | Core utilities | ✅ | [log](logs/C02-core-utilities.md) |
-| C03 | Content pack system | ⬜ | |
+| C03 | Content pack system | ✅ | [log](logs/C03-content-packs.md) |
 | C04 | Rendering, game loop, scenes | ⬜ | |
 | C05 | Input system | ⬜ | |
 | C06 | UI framework | ⬜ | |

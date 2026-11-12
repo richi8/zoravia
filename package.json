@@ -31,5 +31,8 @@
   "private": true,
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
   }
 }
