@@ -3,9 +3,6 @@
  * tuned in C31. All functions are pure; randomness is passed in as already-rolled numbers.
  */
 
-/** Moves of one of the user's own types deal this much more damage. */
-export const SAME_TYPE_BONUS = 1.25;
-
 /** Damage is multiplied by a roll in [DAMAGE_ROLL_MIN, 1). */
 export const DAMAGE_ROLL_MIN = 0.85;
 
@@ -21,8 +18,6 @@ export interface DamageInput {
   readonly power: number;
   readonly attack: number;
   readonly defense: number;
-  /** Same-type bonus applies. */
-  readonly sameType: boolean;
   /** Type effectiveness multiplier (`GameContent.effectiveness`). */
   readonly effectiveness: number;
   /** Random roll in [DAMAGE_ROLL_MIN, 1). */
@@ -30,15 +25,15 @@ export interface DamageInput {
 }
 
 /**
- * Damage of a hit: ((2·L/5 + 2) · power · ATK/DEF) / 50 + 2, then same-type bonus,
- * effectiveness and the roll. A move with power always deals at least 1.
+ * Damage of a hit: ((2·L/5 + 2) · power · ATK/DEF) / 50 + 2, then effectiveness and the
+ * roll. A move with power always deals at least 1. No same-type bonus (dropped 2026-11-12:
+ * it would weaken the off-type moves that combos rely on).
  */
 export function computeDamage(d: DamageInput): number {
   if (d.power <= 0) return 0;
   const levelFactor = Math.floor((2 * d.level) / 5) + 2;
   const base = Math.floor((levelFactor * d.power * d.attack) / Math.max(1, d.defense) / 50) + 2;
-  const bonus = d.sameType ? SAME_TYPE_BONUS : 1;
-  return Math.max(1, Math.floor(base * bonus * d.effectiveness * d.roll));
+  return Math.max(1, Math.floor(base * d.effectiveness * d.roll));
 }
 
 /** Chance (0–1) that a move hits. C15 adds accuracy and evasion modifiers. */

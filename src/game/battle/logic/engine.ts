@@ -241,7 +241,6 @@ function useMove(
     power: move.power,
     attack: user.stats.attack,
     defense: target.stats.defense,
-    sameType: user.types.includes(move.type),
     effectiveness,
     roll: rng.float(DAMAGE_ROLL_MIN, 1),
   });

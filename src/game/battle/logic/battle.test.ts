@@ -14,7 +14,6 @@ import {
   OPPONENT,
   PLAYER,
   runChance,
-  SAME_TYPE_BONUS,
   step,
   teamAfter,
   type BattleAction,
@@ -116,7 +115,6 @@ describe('damage formula', () => {
     power: 60,
     attack: 100,
     defense: 100,
-    sameType: false,
     effectiveness: 1,
     roll: 1,
   };
@@ -128,13 +126,10 @@ describe('damage formula', () => {
     expect(computeDamage({ ...base, roll: DAMAGE_ROLL_MIN })).toBe(Math.floor(28 * 0.85));
   });
 
-  it('applies same-type bonus and effectiveness', () => {
-    expect(computeDamage({ ...base, sameType: true })).toBe(Math.floor(28 * SAME_TYPE_BONUS));
+  it('applies effectiveness, with no same-type bonus', () => {
     expect(computeDamage({ ...base, effectiveness: 1.5 })).toBe(42);
     expect(computeDamage({ ...base, effectiveness: 0.67 })).toBe(18);
-    expect(computeDamage({ ...base, sameType: true, effectiveness: 2.25 })).toBe(
-      Math.floor(28 * 1.25 * 2.25),
-    );
+    expect(computeDamage({ ...base, effectiveness: 2.25 })).toBe(Math.floor(28 * 2.25));
   });
 
   it('deals at least 1 with power and 0 without', () => {

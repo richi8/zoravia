@@ -9,7 +9,7 @@ A pure, deterministic 1v1 battle engine now lives in `src/game/battle/logic/`. `
 
 ## What was built
 - `state.ts`: `BattleState` (`kind wild | trainer`, `turn`, `phase choose | replace | ended`, `outcome win | lose | ran`, `runAttempts`, two `sides`, `rng`), `Combatant` (the entering `Zorling`, types, stats at battle start, current HP), `Choice` (`move` / `switch` / `run`), `BattleAction` (`turn` with both sides' choices, or `replace`), `BattleEvent` (`sendOut`, `turnStart`, `switchOut`, `useMove`, `miss`, `damage`, `fainted`, `runFailed`, `ran`, `turnEnd`, `replaceNeeded`, `end`). Helpers `activeOf`, `canFight`, `needsReplacement`, `foe`, `PLAYER`/`OPPONENT`.
-- `rules.ts`: `computeDamage`, `hitChance`, `runChance`, constants `SAME_TYPE_BONUS` 1.25, `DAMAGE_ROLL_MIN` 0.85, `RUN_BASE_CHANCE` 0.5, `RUN_CHANCE_STEP` 0.25, `ACTION_RANK`.
+- `rules.ts`: `computeDamage`, `hitChance`, `runChance`, constants `DAMAGE_ROLL_MIN` 0.85, `RUN_BASE_CHANCE` 0.5, `RUN_CHANCE_STEP` 0.25, `ACTION_RANK`.
 - `engine.ts`: `createBattle(content, { kind, seed, player, opponent })` → `{ state, events }`, `step`, `legalChoices(state, side)`, `legalReplacements(state, side)`. Illegal actions throw.
 - `result.ts`: `teamAfter(state, side)` (Zorlings with battle HP), `winXp`, `finishBattle(content, state, { badges })` → outcome, updated team, XP and each member's progression events (via `shareXp`).
 - Tests: `src/game/battle/logic/battle.test.ts` (30 tests).
@@ -20,8 +20,9 @@ A pure, deterministic 1v1 battle engine now lives in `src/game/battle/logic/`. `
   - **Alternatives considered:** one action per side with a pending slot in state. More state, no gain.
 - **Decision:** Order within a turn: run, then switches, then moves by Speed; ties are a coin flip from the battle RNG. No move priority.
   - **Why:** classic and readable. The schema has no priority field, and none is in DESIGN.md.
-- **Decision:** Damage formula as in DESIGN.md "Combat", with a same-type bonus of ×1.25 and no critical hits.
-  - **Why:** the familiar formula scales well with the C13 stat formula. The same-type bonus keeps each Zorling's own types worth using. Crits add swingy randomness the design does not ask for. Added to DESIGN.md.
+- **Decision:** Damage formula as in DESIGN.md "Combat", with no critical hits and no same-type bonus.
+  - **Why:** the familiar formula scales well with the C13 stat formula. Crits add swingy randomness the design does not ask for. Added to DESIGN.md.
+  - **Alternatives considered:** a ×1.25 same-type bonus (genre convention) was in the first version. The user dropped it after review: it quietly weakens off-type moves, which the condition/reaction combos rely on, and it is a hidden multiplier against "simple, readable combat". Revisit in C31 if playtests show everyone using the same few moves.
 - **Decision:** Run: always succeeds when at least as fast, else 50% + 25% per failed attempt. Player only, wild only.
   - **Why:** simple, never traps the player for long (guaranteed by the third try).
 - **Decision:** XP is awarded once at the end of a win, as the sum over all opposing Zorlings.
@@ -33,7 +34,7 @@ A pure, deterministic 1v1 battle engine now lives in `src/game/battle/logic/`. `
 - **Decision:** Code in `src/game/battle/logic/`, matching the existing ESLint purity rule.
 
 ## Deviations from plan / design
-- `DESIGN.md` updated (Combat): turn order, damage formula and same-type bonus, run rule, XP of a win.
+- `DESIGN.md` updated (Combat): turn order, damage formula (no same-type bonus), run rule, XP of a win.
 - Status moves (power 0) only roll to hit for now. Applying conditions (and `applyChance` on damaging moves) is C15.
 
 ## Issues & known limitations

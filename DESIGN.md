@@ -102,7 +102,7 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 ## Combat
 - 1v1 turn-based, menu-driven (see Controls). Switch costs the turn (shortcut `1 2 3`); free after a faint.
 - Turn order: running first, then switches, then moves by Speed (a tie is a coin flip). A Zorling that faints before acting loses its move.
-- Damage (starting values, C14; tuned in C31): ((2·Lv/5 + 2) · power · ATK/DEF) / 50 + 2, ×1.25 when the move matches one of the user's types, × type effectiveness, × a random roll 0.85–1. At least 1. No critical hits.
+- Damage (starting values, C14; tuned in C31): ((2·Lv/5 + 2) · power · ATK/DEF) / 50 + 2, × type effectiveness, × a random roll 0.85–1. At least 1. No critical hits. No same-type bonus (dropped 2026-11-12: it would weaken the off-type moves that combos rely on; revisit in C31 only if everyone ends up using the same few moves).
 - Run (wild battles only): always works when at least as fast as the foe; otherwise 50%, +25% per failed attempt. A failed attempt costs the turn.
 - The XP of a win is the sum over every opposing Zorling, awarded when the battle is won (none for running or losing).
 - Potion use costs the turn.
