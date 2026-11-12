@@ -12,8 +12,9 @@
 import type { EasingName } from '@engine/core';
 
 /**
- * The game screen in game pixels (DESIGN.md "Presentation"): rendered at this size and scaled
- * up by whole numbers (×2 = 960×540, ×4 = 1920×1080, ×8 = 4K).
+ * Minimum game screen in game pixels (DESIGN.md "Presentation"). The game renders at the
+ * largest whole-number scale that keeps at least this much visible and fills the rest of the
+ * window with more game pixels (e.g. 480×300 on a 16:10 window at ×3).
  */
 export const SCREEN = { width: 480, height: 270 } as const;
 

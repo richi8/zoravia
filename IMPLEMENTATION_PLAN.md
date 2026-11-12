@@ -71,8 +71,8 @@ Source of truth for *what* the game is: `DESIGN.md`. This file says *in what ord
 
 ### C08b · Virtual screen (480×270)
 - **Goal:** The game renders at its pixel-art resolution (see `DESIGN.md` Presentation).
-- **Deliverables:** engine option to render scenes into a fixed game screen, whole-number scaling (device-pixel exact, HiDPI-aware), centered with letterbox; pointer events and input in game pixels; debug overlay stays native; game boot uses 480×270.
-- **Done when:** the game shows a crisp 480×270 screen at ×2/×4 with letterbox; keyboard and mouse still work; stable 60 fps.
+- **Deliverables:** engine option to render scenes in game pixels at a whole-number scale (device-pixel exact, HiDPI-aware); the game screen fills the whole window with at least 480×270 game pixels (no bars, no stretching); pointer events and input in game pixels; debug overlay stays native.
+- **Done when:** the game fills any window crisply (×2/×3/×4…), showing ≥ 480×270 game pixels; keyboard and mouse still work; stable 60 fps.
 - **Depends:** C04, C05, C06
 - *(Added 2026-11-12: follow-up from the C07 pixel-art decision, needed before C10/C20.)*
 

@@ -10,11 +10,12 @@
  * Without `virtual`, coordinates are CSS pixels (`engine.width/height`) and the renderer
  * resolution follows `devicePixelRatio`.
  *
- * With `virtual: { width: 480, height: 270 }`, scenes and transitions draw into a fixed
- * low-resolution game screen (a render texture, nearest-neighbor), shown scaled by a whole
- * number and centered with letterbox bars (see `virtual-screen.ts`). `engine.width/height`
- * are then the game-screen size, Pixi pointer events and `engine.toScreen()` report
- * game-screen coordinates, and the debug overlay stays at native resolution.
+ * With `virtual: { width: 480, height: 270 }` (pixel-art mode), scenes and transitions draw
+ * into a game screen measured in game pixels: a nearest-neighbor render texture shown at a
+ * whole-number scale. The game screen fills the whole window — `virtual` is its minimum
+ * size; wider/taller windows get a larger game screen (see `virtual-screen.ts`), so scenes
+ * must lay out for `engine.width/height` in `resize`. Pixi pointer events and
+ * `engine.toScreen()` report game pixels; the debug overlay stays at native resolution.
  */
 
 import { Application, Container, RenderTexture, Sprite } from 'pixi.js';
@@ -39,9 +40,8 @@ export interface EngineOptions {
   /** Show the FPS overlay at start (toggle via `debugVisible`). Default false. */
   readonly debug?: boolean;
   /** Fixed game-screen size in game pixels (pixel-art mode). Default: none (CSS pixels). */
+  /** Minimum game-screen size in game pixels (pixel-art mode). Default: none (CSS pixels). */
   readonly virtual?: VirtualSize;
-  /** Color of the bars around the virtual game screen. Default black. */
-  readonly letterbox?: number;
 }
 
 export type EngineEvents = {
@@ -49,7 +49,7 @@ export type EngineEvents = {
     readonly width: number;
     readonly height: number;
     readonly resolution: number;
-    /** Set in virtual-screen mode: how the game screen sits in the canvas. */
+    /** Set in virtual-screen mode: scale and game-screen size. */
     readonly fit?: VirtualFit;
   };
 };
@@ -142,9 +142,7 @@ export class Engine {
   static async create(options: EngineOptions): Promise<Engine> {
     const app = new Application();
     await app.init({
-      background: options.virtual
-        ? (options.letterbox ?? 0x000000)
-        : (options.background ?? 0x0f1115),
+      background: options.background ?? 0x0f1115,
       resizeTo: options.parent,
       resolution: window.devicePixelRatio || 1,
       autoDensity: true,
@@ -161,14 +159,14 @@ export class Engine {
 
   /** Game-screen width: virtual width, or the canvas width in CSS pixels. */
   get width(): number {
-    return this.virtual?.width ?? this.app.screen.width;
+    return this.currentFit?.width ?? this.app.screen.width;
   }
 
   get height(): number {
-    return this.virtual?.height ?? this.app.screen.height;
+    return this.currentFit?.height ?? this.app.screen.height;
   }
 
-  /** How the virtual game screen sits in the canvas (undefined without `virtual`). */
+  /** Current game-screen scale and size (undefined without `virtual`). */
   get fit(): VirtualFit | undefined {
     return this.currentFit;
   }
@@ -259,7 +257,7 @@ export class Engine {
           this.virtual,
         );
         this.currentFit = fit;
-        this.screenSprite.position.set(fit.x, fit.y);
+        this.screenTexture?.resize(fit.width, fit.height);
         this.screenSprite.scale.set(fit.cssScale);
       }
       this.scenes.resize(this.width, this.height);

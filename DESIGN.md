@@ -114,7 +114,7 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 
 ## Presentation
 - **Pixel art** (decided 2026-11-12, C07 review): everything is generated in code as shapes, then rendered small, snapped to a limited palette and scaled up with crisp, nearest-neighbor pixels. Dark outlines, flat shading bands, optional pixel textures (e.g. scales).
-- **Base resolution 480×270** ("modern pixel", decided 2026-11-12): the game renders to a 480×270 virtual screen, scaled up by whole numbers (×2 = 960×540, ×4 = 1920×1080, ×8 = 4K); leftover space is letterboxed. UI text is drawn at this resolution too.
+- **Base resolution 480×270** ("modern pixel", decided 2026-11-12): everything is drawn in game pixels, shown at a whole-number scale (×2, ×3, ×4, … ×8 for 4K) so pixels stay crisp. 480×270 is the **minimum** visible area: the game always fills the whole window, and windows of other shapes or sizes show more game pixels (e.g. 480×300 on a 16:10 laptop at ×3). No stretching, no letterbox bars. UI, Zorlings and tiles keep their size in game pixels; the world and battle backgrounds extend to fill, and UI anchors to screen edges. UI text is drawn at this resolution too.
 - Starting sizes (tunable in playtesting):
   - World tiles **16×16** (≈ 30×17 tiles on screen); player and NPCs about 16×24.
   - Overworld (roaming) Zorlings fit 32×32.

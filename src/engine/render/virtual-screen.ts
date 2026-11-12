@@ -1,8 +1,12 @@
 /**
- * Virtual screen math (pure): fit a fixed low-resolution game screen (e.g. 480×270) into a
- * window with whole-number scaling, centered, letterboxed. Scaling is computed in device
- * pixels so every game pixel becomes an exact `scale × scale` block, also on HiDPI screens
- * with fractional `devicePixelRatio`.
+ * Virtual screen math (pure): the game draws in "game pixels", each shown as an exact
+ * `scale × scale` block of device pixels (whole-number scale, so pixel art stays crisp, also
+ * on HiDPI screens with fractional `devicePixelRatio`).
+ *
+ * The game screen has no fixed size: it fills the whole window. The scale is the largest
+ * whole number that still leaves at least `min` game pixels (e.g. 480×270); the game screen
+ * is then however many game pixels the window holds at that scale. Wider or taller windows
+ * simply show more; nothing is stretched and there are no bars.
  */
 
 export interface VirtualSize {
@@ -15,41 +19,34 @@ export interface VirtualFit {
   readonly scale: number;
   /** CSS pixels per game pixel (`scale / devicePixelRatio`). */
   readonly cssScale: number;
-  /** Top-left of the game screen in the canvas, CSS pixels (on a device-pixel boundary). */
-  readonly x: number;
-  readonly y: number;
-  /** Displayed size, CSS pixels. */
+  /** Game-screen size in game pixels (≥ `min` unless the window is tiny). */
   readonly width: number;
   readonly height: number;
 }
 
 /**
- * Largest whole-number scale that fits `screen` into a `cssWidth × cssHeight` area.
- * When the area is smaller than one game screen, the scale stays 1 and the edges are cut off.
+ * Fits the game screen to a `cssWidth × cssHeight` window. The game screen covers the window
+ * completely (rounding up, so at most one game pixel is cut off at the right/bottom edge).
  */
 export function fitVirtual(
   cssWidth: number,
   cssHeight: number,
   devicePixelRatio: number,
-  screen: VirtualSize,
+  min: VirtualSize,
 ): VirtualFit {
   const dpr = devicePixelRatio > 0 ? devicePixelRatio : 1;
-  const devW = Math.floor(cssWidth * dpr);
-  const devH = Math.floor(cssHeight * dpr);
-  const scale = Math.max(1, Math.floor(Math.min(devW / screen.width, devH / screen.height)));
-  const offX = Math.floor((devW - screen.width * scale) / 2);
-  const offY = Math.floor((devH - screen.height * scale) / 2);
+  const devW = Math.max(1, Math.round(cssWidth * dpr));
+  const devH = Math.max(1, Math.round(cssHeight * dpr));
+  const scale = Math.max(1, Math.floor(Math.min(devW / min.width, devH / min.height)));
   return {
     scale,
     cssScale: scale / dpr,
-    x: offX / dpr,
-    y: offY / dpr,
-    width: (screen.width * scale) / dpr,
-    height: (screen.height * scale) / dpr,
+    width: Math.ceil(devW / scale),
+    height: Math.ceil(devH / scale),
   };
 }
 
-/** Canvas CSS coordinates → game-screen coordinates (may fall outside the screen). */
+/** Canvas CSS coordinates → game-screen coordinates. */
 export function toVirtual(fit: VirtualFit, cssX: number, cssY: number): { x: number; y: number } {
-  return { x: (cssX - fit.x) / fit.cssScale, y: (cssY - fit.y) / fit.cssScale };
+  return { x: cssX / fit.cssScale, y: cssY / fit.cssScale };
 }
