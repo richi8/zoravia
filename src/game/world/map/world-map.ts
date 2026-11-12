@@ -133,7 +133,19 @@ export class WorldMap {
   }
 
   /**
-   * Recomputes collision: a tile is blocked when it is mostly liquid or holds a solid prop,
+   * Whether a tile's water/lava blocks walking: 3+ liquid corners, or 2 unless they are the
+   * two top corners. With water only at the top, an entity's feet (bottom of the tile) stand
+   * on the bank; any other half-liquid tile would put the feet or body in the water (C20).
+   */
+  liquidBlocks(tx: number, ty: number): boolean {
+    const n = this.liquidCorners(tx, ty);
+    if (n >= LIQUID_BLOCK_CORNERS) return true;
+    if (n < 2) return false;
+    return !(this.liquid.get(tx, ty) && this.liquid.get(tx + 1, ty));
+  }
+
+  /**
+   * Recomputes collision: a tile is blocked when its liquid blocks (`liquidBlocks`) or it holds a solid prop,
    * unless its flags force it (`TILE_BLOCK` wins over `TILE_OPEN`).
    */
   refreshCollision(): void {
@@ -141,7 +153,7 @@ export class WorldMap {
     solid.fill(0);
     for (let ty = 0; ty < height; ty++) {
       for (let tx = 0; tx < width; tx++) {
-        if (this.liquidCorners(tx, ty) >= LIQUID_BLOCK_CORNERS) solid[ty * width + tx] = 1;
+        if (this.liquidBlocks(tx, ty)) solid[ty * width + tx] = 1;
       }
     }
     for (const p of this.props) {

@@ -67,22 +67,7 @@ export class TerrainRenderer {
     }
 
     // Tall grass, swaying.
-    const tall = this.tall;
-    for (const tf of bake.tufts) {
-      const sway = Math.sin(t * 2.2 + tf.x * 0.11 + tf.y * 0.05);
-      for (let b = -1; b <= 1; b++) {
-        const hgt = tf.height - Math.abs(b) - (b === 1 ? 1 : 0);
-        for (let k = 0; k < hgt; k++) {
-          const f = k / hgt;
-          const off = Math.round(sway * 1.3 * f * f + b * Math.floor(k / 3) * 0.7);
-          const X = tf.x + b + off - camX;
-          const Y = tf.y - k - camY;
-          if (X < 0 || Y < 0 || X >= W || Y >= H) continue;
-          const tone = Math.min(tall.length - 1, Math.floor((0.15 + f * 0.85) * tall.length));
-          out[Y * W + X] = tall[tone] ?? 0;
-        }
-      }
-    }
+    this.drawTufts(buf, camX, camY, t);
 
     // Props.
     if (x1 > x0) {
@@ -107,6 +92,48 @@ export class TerrainRenderer {
         for (let dy = -r; dy <= r; dy++) {
           for (let dx = -r; dx <= r; dx++)
             if (dx * dx + dy * dy <= r * r) buf.dot(x + dx, y + dy, 0xd8d0cc, a);
+        }
+      }
+    }
+  }
+
+  /**
+   * Draws the swaying tall-grass tufts. With `front`, only tufts whose base is below
+   * `front.baseY` and inside the `front` pixel box (world px) — used to draw grass over an
+   * entity's feet after the entity (C20).
+   */
+  drawTufts(
+    buf: PixelBuffer,
+    camX: number,
+    camY: number,
+    t: number,
+    front?: { baseY: number; x: number; y: number; width: number; height: number },
+  ): void {
+    const out = buf.data;
+    const W = buf.width;
+    const H = buf.height;
+    const tall = this.tall;
+    for (const tf of this.bake.tufts) {
+      if (
+        front &&
+        (tf.y <= front.baseY ||
+          tf.x < front.x - 2 ||
+          tf.x > front.x + front.width + 2 ||
+          tf.y - 8 > front.y + front.height ||
+          tf.y < front.y)
+      )
+        continue;
+      const sway = Math.sin(t * 2.2 + tf.x * 0.11 + tf.y * 0.05);
+      for (let b = -1; b <= 1; b++) {
+        const hgt = tf.height - Math.abs(b) - (b === 1 ? 1 : 0);
+        for (let k = 0; k < hgt; k++) {
+          const f = k / hgt;
+          const off = Math.round(sway * 1.3 * f * f + b * Math.floor(k / 3) * 0.7);
+          const X = tf.x + b + off - camX;
+          const Y = tf.y - k - camY;
+          if (X < 0 || Y < 0 || X >= W || Y >= H) continue;
+          const tone = Math.min(tall.length - 1, Math.floor((0.15 + f * 0.85) * tall.length));
+          out[Y * W + X] = tall[tone] ?? 0;
         }
       }
     }

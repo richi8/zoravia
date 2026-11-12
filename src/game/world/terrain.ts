@@ -69,6 +69,11 @@ export interface TerrainBake {
   /** Packed prop pixels drawn over animated layers (0 = none). */
   readonly overlay: Uint32Array;
   /**
+   * Per overlay pixel: world y of its prop's base (footprint center), 0 where `overlay` is
+   * empty. Entities whose base is above (smaller y) are hidden behind that pixel (C20).
+   */
+  readonly depth: Int32Array;
+  /**
    * Liquid pixels, `LIQUID_STRIDE` ints each: local index, world x, world y, edge coverage
    * ×1000 (with noise; 500 = shoreline) and smooth depth ×1000.
    */
@@ -218,6 +223,7 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
 
   // Props overlay (clipped to the rect; props from neighbouring chunks overlap in too).
   const overlay = new Uint32Array(W * H);
+  const depth = new Int32Array(W * H);
   const vents: { x: number; y: number }[] = [];
   for (const p of props) {
     const { width: sw, height: sh, data } = p.sprite;
@@ -226,7 +232,10 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
         const c = data[y * sw + x] ?? 0;
         if (!c) continue;
         const i = local(p.x + x, p.y + y);
-        if (i >= 0) overlay[i] = c;
+        if (i >= 0) {
+          overlay[i] = c;
+          depth[i] = p.by;
+        }
       }
     }
     if (p.info.vent && local(p.bx, p.by) >= 0) vents.push({ x: p.bx, y: p.by - 4 });
@@ -239,6 +248,7 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
     height: H,
     base,
     overlay,
+    depth,
     liquid: Int32Array.from(liquid),
     tufts,
     vents,

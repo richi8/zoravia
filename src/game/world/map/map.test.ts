@@ -80,7 +80,9 @@ describe('map collision and chunks', () => {
   it('blocks mostly-liquid tiles, solid props, forced tiles and the outside', () => {
     const m = sample();
     expect(m.blocked(8, 1)).toBe(true); // lake (4 liquid corners)
-    expect(m.blocked(6, 1)).toBe(false); // shore: 2 liquid corners
+    expect(m.blocked(6, 1)).toBe(true); // side shore: 2 liquid corners, waterline through the body
+    expect(m.blocked(8, 3)).toBe(false); // top shore: feet on the bank
+    expect(m.blocked(6, 3)).toBe(false); // 1 liquid corner
     expect(m.blocked(2, 1)).toBe(true); // tree
     expect(m.blocked(5, 5)).toBe(false); // flowers are not solid
     expect(m.blocked(9, 5)).toBe(true); // TILE_BLOCK
