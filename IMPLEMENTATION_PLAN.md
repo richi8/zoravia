@@ -69,6 +69,13 @@ Source of truth for *what* the game is: `DESIGN.md`. This file says *in what ord
 - **Done when:** lab shows a grid of 24 random Zorlings; same genome always renders identically; log includes honest assessment of quality.
 - **Depends:** C02, C07
 
+### C08b · Virtual screen (480×270)
+- **Goal:** The game renders at its pixel-art resolution (see `DESIGN.md` Presentation).
+- **Deliverables:** engine option to render scenes into a fixed game screen, whole-number scaling (device-pixel exact, HiDPI-aware), centered with letterbox; pointer events and input in game pixels; debug overlay stays native; game boot uses 480×270.
+- **Done when:** the game shows a crisp 480×270 screen at ×2/×4 with letterbox; keyboard and mouse still work; stable 60 fps.
+- **Depends:** C04, C05, C06
+- *(Added 2026-11-12: follow-up from the C07 pixel-art decision, needed before C10/C20.)*
+
 ### C09 · Zorling rig & animation, variants
 - **Goal:** Zorlings feel alive.
 - **Deliverables:** part-based rig, animations (idle breathe/blink, attack lunge, hurt, faint), evolution stages from one genome (1/2/3-stage), Titan variant (bigger, glow), shiny palette.

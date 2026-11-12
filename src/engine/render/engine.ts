@@ -7,11 +7,17 @@
  * engine.start();
  * ```
  *
- * Coordinates are CSS pixels (`engine.width/height`); the renderer resolution follows
- * `devicePixelRatio` (also when the window moves to another monitor).
+ * Without `virtual`, coordinates are CSS pixels (`engine.width/height`) and the renderer
+ * resolution follows `devicePixelRatio`.
+ *
+ * With `virtual: { width: 480, height: 270 }`, scenes and transitions draw into a fixed
+ * low-resolution game screen (a render texture, nearest-neighbor), shown scaled by a whole
+ * number and centered with letterbox bars (see `virtual-screen.ts`). `engine.width/height`
+ * are then the game-screen size, Pixi pointer events and `engine.toScreen()` report
+ * game-screen coordinates, and the debug overlay stays at native resolution.
  */
 
-import { Application, Container } from 'pixi.js';
+import { Application, Container, RenderTexture, Sprite } from 'pixi.js';
 import { EventBus } from '../core/events';
 import { createLogger } from '../core/logger';
 import { FpsCounter } from '../debug/fps-counter';
@@ -20,6 +26,7 @@ import { FixedStepLoop } from '../loop/fixed-step';
 import { createRafDriver, type FrameDriver } from '../loop/raf';
 import { SceneManager, type Transition } from '../scenes/scene-manager';
 import { createFade, type FadeOptions } from './fade';
+import { fitVirtual, toVirtual, type VirtualFit, type VirtualSize } from './virtual-screen';
 
 const log = createLogger('engine:render');
 
@@ -31,10 +38,20 @@ export interface EngineOptions {
   readonly stepHz?: number;
   /** Show the FPS overlay at start (toggle via `debugVisible`). Default false. */
   readonly debug?: boolean;
+  /** Fixed game-screen size in game pixels (pixel-art mode). Default: none (CSS pixels). */
+  readonly virtual?: VirtualSize;
+  /** Color of the bars around the virtual game screen. Default black. */
+  readonly letterbox?: number;
 }
 
 export type EngineEvents = {
-  resize: { readonly width: number; readonly height: number; readonly resolution: number };
+  resize: {
+    readonly width: number;
+    readonly height: number;
+    readonly resolution: number;
+    /** Set in virtual-screen mode: how the game screen sits in the canvas. */
+    readonly fit?: VirtualFit;
+  };
 };
 
 export class Engine {
@@ -52,13 +69,34 @@ export class Engine {
   private readonly overlay: FpsOverlay;
   private readonly disposers: (() => void)[] = [];
   private readonly preUpdate: ((dt: number) => void)[] = [];
+  /** Everything that belongs to the game screen (scenes + transitions). */
+  private readonly screenRoot = new Container({ label: 'screen' });
+  private readonly virtual: VirtualSize | undefined;
+  private readonly screenTexture: RenderTexture | undefined;
+  private readonly screenSprite: Sprite | undefined;
+  private currentFit: VirtualFit | undefined;
 
   private constructor(
     readonly app: Application,
     private readonly parent: HTMLElement,
     options: EngineOptions,
   ) {
-    app.stage.addChild(this.layers.scenes, this.layers.transitions, this.layers.debug);
+    this.virtual = options.virtual;
+    this.screenRoot.addChild(this.layers.scenes, this.layers.transitions);
+    if (this.virtual) {
+      this.screenTexture = RenderTexture.create({
+        width: this.virtual.width,
+        height: this.virtual.height,
+        resolution: 1,
+        antialias: false,
+        scaleMode: 'nearest',
+      });
+      this.screenSprite = new Sprite({ texture: this.screenTexture, label: 'screen-view' });
+      app.stage.addChild(this.screenSprite, this.layers.debug);
+      this.routePointerEvents();
+    } else {
+      app.stage.addChild(this.screenRoot, this.layers.debug);
+    }
 
     this.scenes = new SceneManager<Container>({
       attach: (view) => this.layers.scenes.addChild(view),
@@ -77,6 +115,14 @@ export class Engine {
       },
       render: (alpha) => {
         this.scenes.render(alpha);
+        if (this.screenTexture) {
+          app.renderer.render({
+            container: this.screenRoot,
+            target: this.screenTexture,
+            clear: true,
+            clearColor: options.background ?? 0x0f1115,
+          });
+        }
         app.render();
       },
     });
@@ -96,11 +142,14 @@ export class Engine {
   static async create(options: EngineOptions): Promise<Engine> {
     const app = new Application();
     await app.init({
-      background: options.background ?? 0x0f1115,
+      background: options.virtual
+        ? (options.letterbox ?? 0x000000)
+        : (options.background ?? 0x0f1115),
       resizeTo: options.parent,
       resolution: window.devicePixelRatio || 1,
       autoDensity: true,
-      antialias: true,
+      antialias: !options.virtual,
+      roundPixels: Boolean(options.virtual),
       autoStart: false,
       sharedTicker: false,
     });
@@ -110,12 +159,23 @@ export class Engine {
     return new Engine(app, options.parent, options);
   }
 
+  /** Game-screen width: virtual width, or the canvas width in CSS pixels. */
   get width(): number {
-    return this.app.screen.width;
+    return this.virtual?.width ?? this.app.screen.width;
   }
 
   get height(): number {
-    return this.app.screen.height;
+    return this.virtual?.height ?? this.app.screen.height;
+  }
+
+  /** How the virtual game screen sits in the canvas (undefined without `virtual`). */
+  get fit(): VirtualFit | undefined {
+    return this.currentFit;
+  }
+
+  /** Canvas CSS coordinates → game-screen coordinates (identity without `virtual`). */
+  toScreen(cssX: number, cssY: number): { x: number; y: number } {
+    return this.currentFit ? toVirtual(this.currentFit, cssX, cssY) : { x: cssX, y: cssY };
   }
 
   get debugVisible(): boolean {
@@ -159,7 +219,29 @@ export class Engine {
   destroy(): void {
     this.stop();
     for (const dispose of this.disposers) dispose();
+    this.screenTexture?.destroy(true);
     this.app.destroy({ removeView: true }, { children: true });
+  }
+
+  /**
+   * Pixi hit-tests pointer events against the last container rendered to the canvas and in
+   * canvas coordinates. In virtual mode the scenes live in a render texture, so point the
+   * event system at the game-screen root and map positions into game pixels.
+   */
+  private routePointerEvents(): void {
+    const renderer = this.app.renderer;
+    const events = renderer.events;
+    const map = events.mapPositionToPoint.bind(events);
+    events.mapPositionToPoint = (point, x, y) => {
+      map(point, x, y);
+      const v = this.toScreen(point.x, point.y);
+      point.x = v.x;
+      point.y = v.y;
+    };
+    Object.defineProperty(renderer, 'lastObjectRendered', {
+      configurable: true,
+      get: () => this.screenRoot,
+    });
   }
 
   private watchResize(): void {
@@ -169,8 +251,24 @@ export class Engine {
         this.app.renderer.resolution = resolution;
       }
       this.app.resize();
+      if (this.virtual && this.screenSprite) {
+        const fit = fitVirtual(
+          this.app.screen.width,
+          this.app.screen.height,
+          resolution,
+          this.virtual,
+        );
+        this.currentFit = fit;
+        this.screenSprite.position.set(fit.x, fit.y);
+        this.screenSprite.scale.set(fit.cssScale);
+      }
       this.scenes.resize(this.width, this.height);
-      this.events.emit('resize', { width: this.width, height: this.height, resolution });
+      this.events.emit('resize', {
+        width: this.width,
+        height: this.height,
+        resolution,
+        ...(this.currentFit ? { fit: this.currentFit } : {}),
+      });
     };
 
     const observer = new ResizeObserver(apply);

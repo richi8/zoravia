@@ -10,6 +10,8 @@ export interface DomInputOptions {
   readonly keyTarget?: Window;
   /** Element for pointer events; coordinates are relative to it, in CSS pixels. */
   readonly pointerTarget?: HTMLElement;
+  /** Maps element-relative CSS coordinates (e.g. into game pixels via `engine.toScreen`). */
+  readonly mapPoint?: (x: number, y: number) => { x: number; y: number };
 }
 
 export function attachDomInput<A extends string>(
@@ -44,7 +46,11 @@ export function attachDomInput<A extends string>(
   if (el) {
     const local = (e: PointerEvent): [number, number] => {
       const r = el.getBoundingClientRect();
-      return [e.clientX - r.left, e.clientY - r.top];
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      if (!options.mapPoint) return [x, y];
+      const p = options.mapPoint(x, y);
+      return [p.x, p.y];
     };
     const listen = <K extends keyof HTMLElementEventMap>(
       type: K,
@@ -58,10 +64,7 @@ export function attachDomInput<A extends string>(
     listen('pointerleave', () => input.pointerLeave());
     listen('contextmenu', (e) => e.preventDefault());
     // Release on window so a drag ending outside the canvas still releases.
-    on(win, 'pointerup', (e) => {
-      const r = el.getBoundingClientRect();
-      input.pointerUp(e.button, e.clientX - r.left, e.clientY - r.top);
-    });
+    on(win, 'pointerup', (e) => input.pointerUp(e.button, ...local(e)));
   }
 
   return () => {

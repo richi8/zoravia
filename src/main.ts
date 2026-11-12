@@ -7,8 +7,8 @@ import { createInput } from '@game/input/actions';
 import { UiDemoScene } from '@game/scenes/ui-demo-scene';
 import { installCssVars } from '@game/style/css';
 import { loadFonts } from '@game/style/fonts';
-import { ZORAVIA_THEME } from '@game/style/theme';
-import { surface } from '@game/style/tokens';
+import { ZORAVIA_PIXEL_THEME } from '@game/style/theme';
+import { SCREEN, surface } from '@game/style/tokens';
 
 document.title = GAME_TITLE;
 
@@ -25,10 +25,14 @@ async function main(): Promise<void> {
     parent: root,
     background: surface.background,
     debug: params.has('debug'),
+    virtual: SCREEN,
   });
 
   const input = createInput();
-  attachDomInput(input, { pointerTarget: engine.app.canvas });
+  attachDomInput(input, {
+    pointerTarget: engine.app.canvas,
+    mapPoint: (x, y) => engine.toScreen(x, y),
+  });
   input.setContexts(['menu']);
   const ui = uiInputFrom(input, {
     up: 'nav_up',
@@ -45,7 +49,7 @@ async function main(): Promise<void> {
   });
 
   // Until the real start flow exists (C33), the app opens the UI framework demo (C06).
-  const demo = new UiDemoScene(engine, ui, ZORAVIA_THEME);
+  const demo = new UiDemoScene(engine, ui, ZORAVIA_PIXEL_THEME);
   await engine.scenes.replace(demo);
   engine.start();
 

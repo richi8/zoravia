@@ -79,8 +79,13 @@ export class PlaceholderScene implements Scene<Container> {
 
   resize(width: number, height: number): void {
     this.bg.clear().rect(0, 0, width, height).fill({ color: this.options.background });
-    this.square.position.set(width / 2, height / 2 - 90);
-    this.title.position.set(width / 2, height / 2 + 20);
-    this.hint.position.set(width / 2, height / 2 + 80);
+    // Layout designed for a ~540 px tall screen; shrinks on the 270 px game screen.
+    const k = Math.min(1, height / 540);
+    this.view.children.forEach((c) => {
+      if (c !== this.bg) c.scale.set(k);
+    });
+    this.square.position.set(width / 2, height / 2 - 90 * k);
+    this.title.position.set(width / 2, height / 2 + 20 * k);
+    this.hint.position.set(width / 2, height / 2 + 80 * k);
   }
 }

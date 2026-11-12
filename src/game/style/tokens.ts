@@ -11,6 +11,12 @@
 
 import type { EasingName } from '@engine/core';
 
+/**
+ * The game screen in game pixels (DESIGN.md "Presentation"): rendered at this size and scaled
+ * up by whole numbers (×2 = 960×540, ×4 = 1920×1080, ×8 = 4K).
+ */
+export const SCREEN = { width: 480, height: 270 } as const;
+
 /** Neutral scale: cool indigo "night sky". 950 = darkest. */
 export const ink = {
   950: 0x0d0f1f,

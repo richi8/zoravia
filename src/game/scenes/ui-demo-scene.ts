@@ -20,6 +20,9 @@ import { PlaceholderScene } from './placeholder-scene';
 
 const GAP = 12;
 
+/** Layout numbers below are for a 20 px theme font; they scale with the theme. */
+const BASE_FONT = 20;
+
 export class UiDemoScene implements Scene<Container> {
   readonly id = 'ui-demo';
   readonly view = new Container({ label: 'scene:ui-demo' });
@@ -39,16 +42,22 @@ export class UiDemoScene implements Scene<Container> {
     private readonly theme: UiTheme = DEFAULT_THEME,
   ) {
     const font = theme.font.family;
+    const u = (n: number): number => this.u(n);
     this.header = new Text({
       text:
         'UI framework demo\n' +
         'Keyboard: WASD / arrows move · E / Enter / Space select (hold E = faster text) · Q / Esc back\n' +
         'Mouse: hover to highlight · click to select / advance text · right-click back',
-      style: { fontFamily: font, fontSize: 14, fill: theme.colors.textDim, lineHeight: 20 },
+      style: {
+        fontFamily: font,
+        fontSize: Math.max(8, u(14)),
+        fill: theme.colors.textDim,
+        lineHeight: Math.max(10, u(20)),
+      },
     });
     this.status = new Text({
       text: 'Ready.',
-      style: { fontFamily: font, fontSize: 14, fill: theme.colors.accent },
+      style: { fontFamily: font, fontSize: Math.max(8, u(14)), fill: theme.colors.accent },
     });
     this.view.addChild(this.header, this.layer, this.status);
 
@@ -72,7 +81,7 @@ export class UiDemoScene implements Scene<Container> {
       onBack: () => this.setStatus('Already at the top menu.'),
       onHighlight: (i, menu) => this.setStatus(`Highlight: ${menu.selectedItem?.label ?? i}`),
     });
-    this.open(this.root, () => this.root.view.position.set(32, 96));
+    this.open(this.root, () => this.root.view.position.set(this.u(32), this.u(96)));
   }
 
   enter(): void {
@@ -86,8 +95,8 @@ export class UiDemoScene implements Scene<Container> {
   resize(width: number, height: number): void {
     this.width = width;
     this.height = height;
-    this.header.position.set(32, 16);
-    this.status.position.set(32, height - 32);
+    this.header.position.set(this.u(32), this.u(16));
+    this.status.position.set(this.u(32), height - this.u(32));
     this.layoutAll();
   }
 
@@ -181,7 +190,7 @@ export class UiDemoScene implements Scene<Container> {
     const settings: Menu = new Menu({
       theme: this.theme,
       title: 'Settings',
-      width: 300,
+      width: this.u(300),
       items: [{ label: label(0) }, { label: label(1) }, { label: 'Done' }],
       onSelect: (i, m) => {
         if (i === 0) this.settings.textSpeed = (this.settings.textSpeed + 1) % speeds.length;
@@ -210,13 +219,18 @@ export class UiDemoScene implements Scene<Container> {
 
   // ------------------------------------------------------------------ helpers
 
+  /** A layout length designed for a 20 px theme font, scaled to the current theme. */
+  private u(n: number): number {
+    return Math.round((n * this.theme.font.size) / BASE_FONT);
+  }
+
   private say(pages: readonly string[], speaker?: string): void {
     const speed = [20, 40, 80][this.settings.textSpeed] ?? 40;
     const theme = { ...this.theme, motion: { ...this.theme.motion, textSpeed: speed } };
     const dialog: DialogBox = new DialogBox({
       theme,
       pages,
-      width: Math.min(720, Math.max(320, this.width - 64)),
+      width: Math.min(this.u(720), Math.max(this.u(320), this.width - this.u(64))),
       ...(speaker ? { speaker } : {}),
       onDone: (d) => {
         this.close(d);
@@ -224,7 +238,10 @@ export class UiDemoScene implements Scene<Container> {
       },
     });
     this.open(dialog, () =>
-      dialog.view.position.set((this.width - dialog.width) / 2, this.height - dialog.height - 56),
+      dialog.view.position.set(
+        (this.width - dialog.width) / 2,
+        this.height - dialog.height - this.u(56),
+      ),
     );
   }
 
@@ -241,11 +258,11 @@ export class UiDemoScene implements Scene<Container> {
   }
 
   private rightOf(menu: Menu, parent: Menu, dy = 0): void {
-    const x = parent.view.x + parent.width + GAP;
-    const fits = x + menu.width <= this.width - 16;
+    const x = parent.view.x + parent.width + this.u(GAP);
+    const fits = x + menu.width <= this.width - this.u(16);
     menu.view.position.set(
-      fits ? x : Math.max(16, this.width - menu.width - 16),
-      parent.view.y + dy + (fits ? 0 : 24),
+      fits ? x : Math.max(this.u(16), this.width - menu.width - this.u(16)),
+      parent.view.y + dy + (fits ? 0 : this.u(24)),
     );
   }
 
