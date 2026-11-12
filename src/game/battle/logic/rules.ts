@@ -22,23 +22,37 @@ export interface DamageInput {
   readonly effectiveness: number;
   /** Random roll in [DAMAGE_ROLL_MIN, 1). */
   readonly roll: number;
+  /** Extra multiplier: a reaction's damage multiplier times the user's trait type power. */
+  readonly multiplier?: number;
+  /** The target's defense counts as no higher than the user's attack (Shatter, Shred). */
+  readonly ignoreDefense?: boolean;
 }
 
 /**
- * Damage of a hit: ((2·L/5 + 2) · power · ATK/DEF) / 50 + 2, then effectiveness and the
- * roll. A move with power always deals at least 1. No same-type bonus (dropped 2026-11-12:
+ * Damage of a hit: ((2·L/5 + 2) · power · ATK/DEF) / 50 + 2, then effectiveness, the extra
+ * multiplier and the roll. Ignoring defense caps DEF at ATK, so it never lowers damage. A move with power always deals at least 1. No same-type bonus (dropped 2026-11-12:
  * it would weaken the off-type moves that combos rely on).
  */
 export function computeDamage(d: DamageInput): number {
   if (d.power <= 0) return 0;
   const levelFactor = Math.floor((2 * d.level) / 5) + 2;
-  const base = Math.floor((levelFactor * d.power * d.attack) / Math.max(1, d.defense) / 50) + 2;
-  return Math.max(1, Math.floor(base * d.effectiveness * d.roll));
+  const defense = Math.max(1, d.ignoreDefense ? Math.min(d.defense, d.attack) : d.defense);
+  const base = Math.floor((levelFactor * d.power * d.attack) / defense / 50) + 2;
+  return Math.max(1, Math.floor(base * d.effectiveness * (d.multiplier ?? 1) * d.roll));
 }
 
-/** Chance (0–1) that a move hits. C15 adds accuracy and evasion modifiers. */
-export function hitChance(accuracy: number): number {
-  return Math.min(1, Math.max(0, accuracy / 100));
+/**
+ * Chance (0–1) that a move hits: accuracy % times the user's accuracy multiplier, divided by
+ * the target's evasion multiplier (evasion below 1 means easier to hit).
+ */
+export function hitChance(accuracy: number, accuracyMultiplier = 1, evasionMultiplier = 1): number {
+  const p = ((accuracy / 100) * accuracyMultiplier) / evasionMultiplier;
+  return Math.min(1, Math.max(0, p));
+}
+
+/** HP a status takes at the end of a turn: max HP × (fraction + growth × ticks so far), ≥ 1. */
+export function statusHpLoss(maxHp: number, fraction: number, growth: number, ticks: number) {
+  return Math.max(1, Math.floor(maxHp * (fraction + growth * ticks)));
 }
 
 /**

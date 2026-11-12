@@ -5,9 +5,16 @@
  */
 
 import { Rng, type Seed } from '@engine/core';
-import type { GameContent } from '@game/data';
+import type { GameContent, Reaction } from '@game/data';
 import { statsOf, type Zorling } from '@game/progression';
-import { ACTION_RANK, computeDamage, DAMAGE_ROLL_MIN, hitChance, runChance } from './rules';
+import {
+  ACTION_RANK,
+  computeDamage,
+  DAMAGE_ROLL_MIN,
+  hitChance,
+  runChance,
+  statusHpLoss,
+} from './rules';
 import {
   activeOf,
   canFight,
@@ -23,11 +30,24 @@ import {
   type Choice,
   type Combatant,
   type SideId,
+  type Status,
   type StepResult,
 } from './state';
+import {
+  conditionTurnBonus,
+  effectiveSpeed,
+  fumbleChance,
+  immunityTo,
+  isTrapped,
+  statMultiplier,
+  statusEffects,
+  statusWith,
+  typePower,
+} from './status';
 
 /** Working copy the engine changes while resolving one action (never the caller's state). */
-type DraftCombatant = Omit<Combatant, 'hp'> & { hp: number };
+type DraftStatus = { -readonly [K in keyof Status]: Status[K] };
+type DraftCombatant = Omit<Combatant, 'hp' | 'statuses'> & { hp: number; statuses: DraftStatus[] };
 interface DraftSide {
   team: DraftCombatant[];
   active: number;
@@ -41,6 +61,16 @@ type Draft = Omit<BattleState, 'turn' | 'phase' | 'outcome' | 'runAttempts' | 's
   rng: BattleState['rng'];
 };
 
+/** Everything one step works with. */
+interface Ctx {
+  readonly content: GameContent;
+  readonly draft: Draft;
+  readonly rng: Rng;
+  readonly events: BattleEvent[];
+  /** Sides whose move this turn has not been resolved yet. */
+  readonly pending: Set<SideId>;
+}
+
 export interface BattleSetup {
   readonly kind: BattleKind;
   readonly seed: Seed;
@@ -48,6 +78,11 @@ export interface BattleSetup {
   readonly player: readonly Zorling[];
   /** The wild Zorling, or the trainer's team in send-out order. */
   readonly opponent: readonly Zorling[];
+  /**
+   * Conditions the weather puts on both Zorlings sent out first (e.g. ash storms → Burning).
+   * Traits can block them as usual.
+   */
+  readonly weather?: readonly string[];
 }
 
 /** Starts a battle: each side sends out its first Zorling that has not fainted. */
@@ -73,11 +108,22 @@ export function createBattle(content: GameContent, setup: BattleSetup): StepResu
     sides: [player, opponent],
     rng: new Rng(setup.seed).getState(),
   };
-  const events: BattleEvent[] = [
-    { kind: 'sendOut', side: PLAYER, slot: player.active },
-    { kind: 'sendOut', side: OPPONENT, slot: opponent.active },
-  ];
-  return { state, events };
+  const ctx: Ctx = {
+    content,
+    draft: clone(state),
+    rng: Rng.fromState(state.rng),
+    events: [
+      { kind: 'sendOut', side: PLAYER, slot: player.active },
+      { kind: 'sendOut', side: OPPONENT, slot: opponent.active },
+    ],
+    // Both still act in turn 1, so weather conditions count down from turn 1.
+    pending: new Set([PLAYER, OPPONENT]),
+  };
+  for (const condition of setup.weather ?? []) {
+    content.conditions.require(condition);
+    for (const side of [PLAYER, OPPONENT] as const) applyCondition(ctx, side, condition, null);
+  }
+  return { state: ctx.draft, events: ctx.events };
 }
 
 function toCombatant(content: GameContent, z: Zorling): Combatant {
@@ -87,18 +133,24 @@ function toCombatant(content: GameContent, z: Zorling): Combatant {
     types: content.species.require(z.species).types,
     stats,
     hp: Math.min(Math.max(0, z.hp), stats.hp),
+    statuses: [],
   };
 }
 
-/** Every choice a side may make this turn (phase `'choose'`). */
-export function legalChoices(state: BattleState, side: SideId): Choice[] {
+/**
+ * Every choice a side may make this turn (phase `'choose'`). A trapped Zorling (Rooted)
+ * cannot switch out.
+ */
+export function legalChoices(content: GameContent, state: BattleState, side: SideId): Choice[] {
   if (state.phase !== 'choose') return [];
   const s = state.sides[side];
   const active = activeOf(state, side);
   const out: Choice[] = active.zorling.moves.map((_, slot) => ({ kind: 'move', slot }));
-  s.team.forEach((c, to) => {
-    if (to !== s.active && c.hp > 0) out.push({ kind: 'switch', to });
-  });
+  if (!isTrapped(content, active)) {
+    s.team.forEach((c, to) => {
+      if (to !== s.active && c.hp > 0) out.push({ kind: 'switch', to });
+    });
+  }
   if (side === PLAYER && state.kind === 'wild') out.push({ kind: 'run' });
   return out;
 }
@@ -144,36 +196,41 @@ function playTurn(
   opponent: Choice,
 ): StepResult {
   if (state.phase !== 'choose') throw new Error(`Cannot play a turn in phase "${state.phase}"`);
-  checkChoice(state, PLAYER, player);
-  checkChoice(state, OPPONENT, opponent);
+  checkChoice(content, state, PLAYER, player);
+  checkChoice(content, state, OPPONENT, opponent);
 
-  const draft = clone(state);
-  const rng = Rng.fromState(state.rng);
-  const events: BattleEvent[] = [{ kind: 'turnStart', turn: draft.turn }];
   const queue: Queued[] = [
     { side: PLAYER, choice: player },
     { side: OPPONENT, choice: opponent },
   ];
   const ranked = (rank: number): Queued[] =>
     queue.filter((q) => ACTION_RANK[q.choice.kind] === rank);
+  const ctx: Ctx = {
+    content,
+    draft: clone(state),
+    rng: Rng.fromState(state.rng),
+    events: [{ kind: 'turnStart', turn: state.turn }],
+    pending: new Set(ranked(ACTION_RANK.move).map((q) => q.side)),
+  };
 
   // Only the player can choose to run (checked above).
-  if (player.kind === 'run') tryRun(draft, rng, events);
-  if (draft.phase !== 'ended') {
+  if (player.kind === 'run') tryRun(ctx);
+  if (ctx.draft.phase !== 'ended') {
     for (const q of ranked(ACTION_RANK.switch)) {
-      if (q.choice.kind === 'switch') doSwitch(draft, q.side, q.choice.to, events);
+      if (q.choice.kind === 'switch') doSwitch(ctx, q.side, q.choice.to);
     }
-    for (const q of moveOrder(draft, rng, ranked(ACTION_RANK.move))) {
-      if (q.choice.kind === 'move') useMove(content, draft, rng, q.side, q.choice.slot, events);
+    for (const q of moveOrder(ctx, ranked(ACTION_RANK.move))) {
+      if (q.choice.kind === 'move') useMove(ctx, q.side, q.choice.slot);
     }
-    endTurn(draft, events);
+    tickStatuses(ctx);
+    endTurn(ctx);
   }
-  draft.rng = rng.getState();
-  return { state: draft, events };
+  ctx.draft.rng = ctx.rng.getState();
+  return { state: ctx.draft, events: ctx.events };
 }
 
-function checkChoice(state: BattleState, side: SideId, choice: Choice): void {
-  const ok = legalChoices(state, side).some(
+function checkChoice(content: GameContent, state: BattleState, side: SideId, choice: Choice) {
+  const ok = legalChoices(content, state, side).some(
     (c) =>
       c.kind === choice.kind &&
       (c.kind !== 'move' || (choice.kind === 'move' && c.slot === choice.slot)) &&
@@ -182,84 +239,229 @@ function checkChoice(state: BattleState, side: SideId, choice: Choice): void {
   if (!ok) throw new Error(`Side ${side} cannot choose ${JSON.stringify(choice)} now`);
 }
 
-/** Faster Zorling first; a speed tie is a coin flip. */
-function moveOrder(draft: Draft, rng: Rng, moves: Queued[]): Queued[] {
+function active(ctx: Ctx, side: SideId): DraftCombatant {
+  const s = ctx.draft.sides[side];
+  const c = s.team[s.active];
+  if (!c) throw new Error(`Side ${side} has no Zorling in slot ${s.active}`);
+  return c;
+}
+
+/** Faster Zorling first (after Wet, Chilled, …); a speed tie is a coin flip. */
+function moveOrder(ctx: Ctx, moves: Queued[]): Queued[] {
   const [a, b] = moves;
   if (!a || !b) return moves;
-  const speedA = activeOf(draft, a.side).stats.speed;
-  const speedB = activeOf(draft, b.side).stats.speed;
-  const aFirst = speedA === speedB ? rng.chance(0.5) : speedA > speedB;
+  const speedA = effectiveSpeed(ctx.content, active(ctx, a.side));
+  const speedB = effectiveSpeed(ctx.content, active(ctx, b.side));
+  const aFirst = speedA === speedB ? ctx.rng.chance(0.5) : speedA > speedB;
   return aFirst ? [a, b] : [b, a];
 }
 
-function tryRun(draft: Draft, rng: Rng, events: BattleEvent[]): void {
-  const speed = activeOf(draft, PLAYER).stats.speed;
-  const foeSpeed = activeOf(draft, OPPONENT).stats.speed;
-  if (rng.chance(runChance(speed, foeSpeed, draft.runAttempts))) {
-    events.push({ kind: 'ran' });
-    finish(draft, 'ran', events);
+function tryRun(ctx: Ctx): void {
+  const speed = effectiveSpeed(ctx.content, active(ctx, PLAYER));
+  const foeSpeed = effectiveSpeed(ctx.content, active(ctx, OPPONENT));
+  if (ctx.rng.chance(runChance(speed, foeSpeed, ctx.draft.runAttempts))) {
+    ctx.events.push({ kind: 'ran' });
+    finish(ctx, 'ran');
   } else {
-    draft.runAttempts += 1;
-    events.push({ kind: 'runFailed' });
+    ctx.draft.runAttempts += 1;
+    ctx.events.push({ kind: 'runFailed' });
   }
 }
 
-function doSwitch(draft: Draft, side: SideId, to: number, events: BattleEvent[]): void {
-  const s = draft.sides[side];
-  events.push({ kind: 'switchOut', side, slot: s.active });
+/** Switching out clears the Zorling's conditions and lingering effects. */
+function doSwitch(ctx: Ctx, side: SideId, to: number): void {
+  const s = ctx.draft.sides[side];
+  active(ctx, side).statuses = [];
+  ctx.events.push({ kind: 'switchOut', side, slot: s.active });
   s.active = to;
-  events.push({ kind: 'sendOut', side, slot: to });
+  ctx.events.push({ kind: 'sendOut', side, slot: to });
 }
 
-function useMove(
-  content: GameContent,
-  draft: Draft,
-  rng: Rng,
-  side: SideId,
-  slot: number,
-  events: BattleEvent[],
-): void {
-  const user = activeOf(draft, side);
+/**
+ * Resolves one move. RNG draws in order: fumble (only when Charged), hit, damage (moves with
+ * power), condition (moves with an apply chance, if the target is still up).
+ */
+function useMove(ctx: Ctx, side: SideId, slot: number): void {
+  const { content, rng, events } = ctx;
+  ctx.pending.delete(side);
+  const user = active(ctx, side);
   if (user.hp <= 0) return; // fainted earlier this turn
   const targetSide = foe(side);
-  const targetTeam = draft.sides[targetSide];
-  const target = targetTeam.team[targetTeam.active];
-  if (!target) throw new Error(`Side ${targetSide} has no active Zorling`);
+  const target = active(ctx, targetSide);
   if (target.hp <= 0) return;
 
+  const skip = statusWith(content, user, 'skipTurn');
+  if (skip) {
+    events.push({ kind: 'skipped', side, status: skip.id });
+    return;
+  }
   const move = content.moves.require(user.zorling.moves[slot] ?? '');
   events.push({ kind: 'useMove', side, move: move.id });
-  if (!rng.chance(hitChance(move.accuracy))) {
+  const fumble = fumbleChance(content, user);
+  if (fumble > 0 && rng.chance(fumble)) {
+    events.push({ kind: 'fumbled', side, move: move.id });
+    return;
+  }
+  const accuracy = statMultiplier(content, user, 'accuracy');
+  const evasion = statMultiplier(content, target, 'evasion');
+  if (!rng.chance(hitChance(move.accuracy, accuracy, evasion))) {
     events.push({ kind: 'miss', side, move: move.id });
     return;
   }
-  if (move.power === 0) return; // status move: its condition is applied in C15
 
-  const effectiveness = content.effectiveness(move.type, target.types);
-  const amount = computeDamage({
-    level: user.zorling.level,
-    power: move.power,
-    attack: user.stats.attack,
-    defense: target.stats.defense,
-    effectiveness,
-    roll: rng.float(DAMAGE_ROLL_MIN, 1),
-  });
-  const dealt = Math.min(amount, target.hp);
-  target.hp -= dealt;
-  events.push({ kind: 'damage', side: targetSide, amount: dealt, hp: target.hp, effectiveness });
-  if (target.hp <= 0) {
-    events.push({ kind: 'fainted', side: targetSide, slot: draft.sides[targetSide].active });
+  if (move.power > 0) {
+    // Only hits with power set off reactions; status moves just apply their condition.
+    const reaction = triggerReaction(ctx, targetSide, move.type);
+    const effectiveness = content.effectiveness(move.type, target.types);
+    const amount = computeDamage({
+      level: user.zorling.level,
+      power: move.power,
+      attack: user.stats.attack * statMultiplier(content, user, 'attack'),
+      defense: target.stats.defense * statMultiplier(content, target, 'defense'),
+      effectiveness,
+      roll: rng.float(DAMAGE_ROLL_MIN, 1),
+      multiplier: (reaction?.damageMultiplier ?? 1) * typePower(content, user, move.type),
+      ignoreDefense: reaction?.ignoreDefense ?? false,
+    });
+    const dealt = Math.min(amount, target.hp);
+    target.hp -= dealt;
+    events.push({ kind: 'damage', side: targetSide, amount: dealt, hp: target.hp, effectiveness });
+    if (target.hp <= 0) return faint(ctx, targetSide);
+    if (reaction?.lingering) addLingering(ctx, targetSide, reaction, side);
+  }
+  if (move.applyChance > 0 && rng.chance(move.applyChance)) {
+    applyCondition(ctx, targetSide, content.conditionOf(move.type).id, side);
   }
 }
 
-function endTurn(draft: Draft, events: BattleEvent[]): void {
+/**
+ * A hit of `moveType` on a target with a condition it exploits: uses the condition up and
+ * returns the reaction. With several matching conditions, the oldest one reacts.
+ */
+function triggerReaction(ctx: Ctx, side: SideId, moveType: string): Reaction | undefined {
+  const target = active(ctx, side);
+  for (const status of target.statuses) {
+    if (status.origin !== 'condition') continue;
+    const reaction = ctx.content.reactionFor(status.id, moveType);
+    if (!reaction) continue;
+    target.statuses = target.statuses.filter((s) => s !== status);
+    ctx.events.push({ kind: 'reaction', side, reaction: reaction.id, condition: status.id });
+    return reaction;
+  }
+  return undefined;
+}
+
+/** Puts a condition on `side`'s active Zorling, or refreshes it if it is already there. */
+function applyCondition(ctx: Ctx, side: SideId, condition: string, source: SideId | null) {
+  const target = active(ctx, side);
+  if (target.hp <= 0) return;
+  const trait = immunityTo(ctx.content, target, condition);
+  if (trait) {
+    ctx.events.push({ kind: 'conditionBlocked', side, condition, trait });
+    return;
+  }
+  const bonus = source === null ? 0 : conditionTurnBonus(ctx.content, active(ctx, source));
+  const turns = Math.max(1, ctx.content.conditions.require(condition).turns + bonus);
+  const refreshed = addStatus(ctx, side, condition, 'condition', turns, source);
+  ctx.events.push({ kind: 'conditionApplied', side, condition, turns, source, refreshed });
+}
+
+function addLingering(ctx: Ctx, side: SideId, reaction: Reaction, source: SideId): void {
+  if (!reaction.lingering) return;
+  addStatus(ctx, side, reaction.id, 'reaction', reaction.lingering.turns, source);
+}
+
+/**
+ * Adds a status, or restarts the same one in place. Returns whether it was already there.
+ *
+ * Applied after the holder acted this turn, a new status is `fresh` (skips this turn's
+ * countdown and HP loss). A status that was already ticking keeps this turn's tick and gets
+ * one extra countdown instead, so re-applying it every turn never stops its HP loss.
+ */
+function addStatus(
+  ctx: Ctx,
+  side: SideId,
+  id: string,
+  origin: Status['origin'],
+  turns: number,
+  source: SideId | null,
+): boolean {
+  const holder = active(ctx, side);
+  const i = holder.statuses.findIndex((s) => s.id === id && s.origin === origin);
+  const existing = holder.statuses[i];
+  const acted = !ctx.pending.has(side);
+  const keepTick = acted && existing !== undefined && !existing.fresh;
+  const status: DraftStatus = {
+    id,
+    origin,
+    turnsLeft: keepTick ? turns + 1 : turns,
+    ticks: 0,
+    source,
+    fresh: acted && !keepTick,
+  };
+  if (existing) holder.statuses[i] = status;
+  else holder.statuses.push(status);
+  return existing !== undefined;
+}
+
+/**
+ * End of turn, player first: each status on a Zorling on the field takes its HP (drains
+ * heal the applier's side), then counts down and ends at 0. A status applied after its
+ * holder acted this turn skips this countdown.
+ */
+function tickStatuses(ctx: Ctx): void {
+  for (const side of [PLAYER, OPPONENT] as const) {
+    const holder = active(ctx, side);
+    if (holder.hp <= 0) continue; // fainted during the turn
+    for (const status of [...holder.statuses]) {
+      if (holder.hp <= 0) break;
+      if (status.fresh) {
+        status.fresh = false;
+        continue;
+      }
+      for (const effect of statusEffects(ctx.content, status)) {
+        if (effect.kind !== 'hpLoss' || holder.hp <= 0) continue;
+        const loss = statusHpLoss(holder.stats.hp, effect.fraction, effect.growth, status.ticks);
+        const amount = Math.min(loss, holder.hp);
+        holder.hp -= amount;
+        ctx.events.push({ kind: 'statusDamage', side, status: status.id, amount, hp: holder.hp });
+        if (effect.toSource && status.source !== null) heal(ctx, status.source, amount);
+      }
+      status.ticks += 1;
+      status.turnsLeft -= 1;
+      if (status.turnsLeft <= 0 && holder.hp > 0) {
+        holder.statuses = holder.statuses.filter((s) => s !== status);
+        ctx.events.push({ kind: 'statusEnded', side, status: status.id, origin: status.origin });
+      }
+    }
+    if (holder.hp <= 0) faint(ctx, side);
+  }
+}
+
+/** Heals `side`'s active Zorling (if it is still up), never above max HP. */
+function heal(ctx: Ctx, side: SideId, amount: number): void {
+  const c = active(ctx, side);
+  if (c.hp <= 0) return;
+  const healed = Math.min(amount, c.stats.hp - c.hp);
+  if (healed <= 0) return;
+  c.hp += healed;
+  ctx.events.push({ kind: 'heal', side, amount: healed, hp: c.hp });
+}
+
+function faint(ctx: Ctx, side: SideId): void {
+  active(ctx, side).statuses = [];
+  ctx.events.push({ kind: 'fainted', side, slot: ctx.draft.sides[side].active });
+}
+
+function endTurn(ctx: Ctx): void {
+  const { draft, events } = ctx;
   events.push({ kind: 'turnEnd', turn: draft.turn });
   draft.turn += 1;
   const playerUp = canFight(draft, PLAYER);
   const opponentUp = canFight(draft, OPPONENT);
-  // If both sides are out at once (possible with C15 damage over time), the player wins.
-  if (!opponentUp) return finish(draft, 'win', events);
-  if (!playerUp) return finish(draft, 'lose', events);
+  // If both sides are out at once (damage over time), the player wins.
+  if (!opponentUp) return finish(ctx, 'win');
+  if (!playerUp) return finish(ctx, 'lose');
 
   const waiting = ([PLAYER, OPPONENT] as const).filter((s) => activeOf(draft, s).hp <= 0);
   if (waiting.length > 0) {
@@ -268,10 +470,10 @@ function endTurn(draft: Draft, events: BattleEvent[]): void {
   }
 }
 
-function finish(draft: Draft, outcome: NonNullable<BattleState['outcome']>, events: BattleEvent[]) {
-  draft.phase = 'ended';
-  draft.outcome = outcome;
-  events.push({ kind: 'end', outcome });
+function finish(ctx: Ctx, outcome: NonNullable<BattleState['outcome']>): void {
+  ctx.draft.phase = 'ended';
+  ctx.draft.outcome = outcome;
+  ctx.events.push({ kind: 'end', outcome });
 }
 
 function clone(state: BattleState): Draft {

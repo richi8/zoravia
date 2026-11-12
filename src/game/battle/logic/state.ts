@@ -17,6 +17,30 @@ export type BattleKind = 'wild' | 'trainer';
 export type BattlePhase = 'choose' | 'replace' | 'ended';
 export type BattleOutcome = 'win' | 'lose' | 'ran';
 
+/** Where a status comes from: a condition, or the lingering effect a reaction left. */
+export type StatusOrigin = 'condition' | 'reaction';
+
+/**
+ * A condition (Burning, Wet, …) or a reaction's lingering effect (Rooted, Frozen, …) on a
+ * Zorling. Its effects are looked up in the content by `id`.
+ */
+export interface Status {
+  /** A condition id (origin `'condition'`) or a reaction id (origin `'reaction'`). */
+  readonly id: string;
+  readonly origin: StatusOrigin;
+  /** End-of-turn countdowns left; it ends when this reaches 0. */
+  readonly turnsLeft: number;
+  /** Countdowns so far (growing drains get stronger with each). */
+  readonly ticks: number;
+  /** The side that applied it (drains heal that side's active Zorling); null for weather. */
+  readonly source: SideId | null;
+  /**
+   * Applied after its holder already acted this turn, so this turn's countdown is skipped. A
+   * status therefore always covers as many of the holder's own turns as it lasts.
+   */
+  readonly fresh: boolean;
+}
+
 /** One Zorling taking part in a battle. */
 export interface Combatant {
   /** The Zorling as it entered the battle (the battle never changes it). */
@@ -26,6 +50,8 @@ export interface Combatant {
   readonly stats: BaseStats;
   /** Current HP. 0 = fainted. */
   readonly hp: number;
+  /** Active statuses in the order they were applied. Cleared on switching out or fainting. */
+  readonly statuses: readonly Status[];
 }
 
 export interface BattleSide {
@@ -68,6 +94,17 @@ export type BattleEvent =
   | { readonly kind: 'switchOut'; readonly side: SideId; readonly slot: number }
   | { readonly kind: 'useMove'; readonly side: SideId; readonly move: string }
   | { readonly kind: 'miss'; readonly side: SideId; readonly move: string }
+  /** A Charged Zorling fumbled its move (it fails). */
+  | { readonly kind: 'fumbled'; readonly side: SideId; readonly move: string }
+  /** The Zorling loses its move to a status (e.g. Frozen). */
+  | { readonly kind: 'skipped'; readonly side: SideId; readonly status: string }
+  /** A hit set off a reaction on `side` (the target); the condition is used up. */
+  | {
+      readonly kind: 'reaction';
+      readonly side: SideId;
+      readonly reaction: string;
+      readonly condition: string;
+    }
   /** `side` is the side that took the damage. */
   | {
       readonly kind: 'damage';
@@ -77,6 +114,42 @@ export type BattleEvent =
       readonly effectiveness: number;
     }
   | { readonly kind: 'fainted'; readonly side: SideId; readonly slot: number }
+  /**
+   * A condition was put on `side`. `source` is the side that applied it (null for weather);
+   * `refreshed` means it was already there and now lasts the full time again.
+   */
+  | {
+      readonly kind: 'conditionApplied';
+      readonly side: SideId;
+      readonly condition: string;
+      readonly turns: number;
+      readonly source: SideId | null;
+      readonly refreshed: boolean;
+    }
+  /** A trait kept the condition off. */
+  | {
+      readonly kind: 'conditionBlocked';
+      readonly side: SideId;
+      readonly condition: string;
+      readonly trait: string;
+    }
+  /** End-of-turn HP loss from a status (Burning, Overgrown, Rooted). */
+  | {
+      readonly kind: 'statusDamage';
+      readonly side: SideId;
+      readonly status: string;
+      readonly amount: number;
+      readonly hp: number;
+    }
+  /** A drain healed `side`. */
+  | { readonly kind: 'heal'; readonly side: SideId; readonly amount: number; readonly hp: number }
+  /** A status ran out. */
+  | {
+      readonly kind: 'statusEnded';
+      readonly side: SideId;
+      readonly status: string;
+      readonly origin: StatusOrigin;
+    }
   | { readonly kind: 'runFailed' }
   | { readonly kind: 'ran' }
   | { readonly kind: 'turnEnd'; readonly turn: number }

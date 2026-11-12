@@ -96,7 +96,15 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 - Side-effect sizes (e.g. Burning = 1/16 max HP per turn, Wet = speed ×0.85) are starting values in `packs/core`, tuned in C31.
 - Switching out clears your creature's conditions (switch costs the turn).
 - Wild creatures apply conditions too; dual-type wilds can self-combo (rare, dangerous).
-- Biome weather can apply conditions at battle start.
+- Biome weather can apply conditions at battle start: they go on **both** Zorlings sent out first (traits such as Waterproof still block them).
+- Rules settled in C15 (2026-11-12):
+  - A Zorling can have several different conditions at once. Applying one it already has restarts its 3 turns (no stacking).
+  - "Lasts 3 turns" means 3 of the holder's own turns. A condition put on a Zorling that has already acted this turn starts counting next turn. Side effects (HP loss) happen at the end of each turn it counts, player side first.
+  - Only hits with power set off reactions; status moves just apply their condition. A hit sets off at most one reaction (the oldest matching condition), and it can then apply its own condition (chains are allowed).
+  - "Ignore DEF" means the target's defense counts as no higher than the attacker's attack.
+  - Frozen / Overload: the Zorling loses its next move (this turn if it has not acted yet). Switching out still works and clears it.
+  - Rooted blocks switching only; running from a wild battle still works.
+  - Drains (Overgrown, Rooted) heal the Zorling the applier's side has on the field. Weather drains heal no one.
 - Trainers combo via switching.
 
 ## Combat

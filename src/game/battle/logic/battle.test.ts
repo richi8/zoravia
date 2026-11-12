@@ -200,7 +200,7 @@ describe('a turn', () => {
     expect(rate).toBeLessThan(0.16);
   });
 
-  it('a status move only uses the turn for now (conditions come in C15)', () => {
+  it('a status move deals no damage', () => {
     const z = make('emberkit', 10, { moves: moves('kindle') });
     const { events } = turn(start([z], [make('sproutle', 10)]).state, MOVE0);
     expect(events.some((e) => e.kind === 'damage' && e.side === OPPONENT)).toBe(false);
@@ -229,14 +229,14 @@ describe('a turn', () => {
       1,
       'wild',
     );
-    expect(legalChoices(wild.state, PLAYER)).toEqual([
+    expect(legalChoices(content, wild.state, PLAYER)).toEqual([
       { kind: 'move', slot: 0 },
       { kind: 'move', slot: 1 },
       { kind: 'move', slot: 2 },
       { kind: 'switch', to: 1 },
       { kind: 'run' },
     ]);
-    expect(legalChoices(wild.state, OPPONENT)).toEqual([
+    expect(legalChoices(content, wild.state, OPPONENT)).toEqual([
       { kind: 'move', slot: 0 },
       { kind: 'move', slot: 1 },
     ]);
@@ -275,7 +275,7 @@ describe('fainting, winning and losing', () => {
     expect(needsReplacement(r.state, PLAYER)).toBe(true);
     expect(needsReplacement(r.state, OPPONENT)).toBe(false);
     expect(legalReplacements(r.state, PLAYER)).toEqual([1]);
-    expect(legalChoices(r.state, PLAYER)).toEqual([]);
+    expect(legalChoices(content, r.state, PLAYER)).toEqual([]);
     expect(() => turn(r.state, MOVE0)).toThrow(/phase "replace"/);
     expect(() => step(content, r.state, { kind: 'replace', side: OPPONENT, to: 0 })).toThrow();
 

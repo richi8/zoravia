@@ -20,7 +20,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C12 | Core schemas & core pack v0 | ✅ | [log](logs/C12-core-schemas.md) |
 | C13 | Zorling instances & progression | ✅ | [log](logs/C13-progression.md) |
 | C14 | Battle engine core | ✅ | [log](logs/C14-battle-engine.md) |
-| C15 | Conditions & reactions | ⬜ | |
+| C15 | Conditions & reactions | ✅ | [log](logs/C15-conditions-reactions.md) |
 | C16 | Items, capture, AI | ⬜ | |
 | C17 | Bosses | ⬜ | |
 | C18 | Battle scene | ⬜ | |
