@@ -22,6 +22,7 @@ import {
 } from './pack';
 import {
   Registry,
+  type CheckContext,
   type Entry,
   type EntryOf,
   type EntryOrigin,
@@ -42,10 +43,17 @@ interface ParsedPack<H extends HookMap> {
   readonly index: number;
 }
 
+interface StoreOrigin {
+  readonly addedBy: string;
+  readonly modifiedBy: string[];
+  /** Pack and path where the entry was last set (for cross-entry check messages). */
+  last: { pack: string; path: readonly string[] };
+}
+
 interface Store {
   readonly def: RegistryDefinition;
   readonly entries: Map<NamespacedId, Entry<unknown>>;
-  readonly origins: Map<NamespacedId, { addedBy: string; modifiedBy: string[] }>;
+  readonly origins: Map<NamespacedId, StoreOrigin>;
 }
 
 export class PackLoader<H extends HookMap = HookMap> {
@@ -92,6 +100,9 @@ export class PackLoader<H extends HookMap = HookMap> {
         }
       }
     }
+    if (issues.length) throw new PackError(issues);
+
+    checkEntries(stores, issues);
     if (issues.length) throw new PackError(issues);
 
     const registries = new Map<string, Registry<unknown>>();
@@ -179,7 +190,7 @@ export class PackLoader<H extends HookMap = HookMap> {
         const entry = validate(store, ns, path, id, raw, issues);
         if (!entry) continue;
         store.entries.set(id, entry);
-        store.origins.set(id, { addedBy: ns, modifiedBy: [] });
+        store.origins.set(id, { addedBy: ns, modifiedBy: [], last: { pack: ns, path } });
       }
     }
   }
@@ -227,7 +238,47 @@ export class PackLoader<H extends HookMap = HookMap> {
         const entry = validate(store, ns, path, id, data, issues);
         if (!entry) continue;
         store.entries.set(id, entry);
-        store.origins.get(id)?.modifiedBy.push(ns);
+        const origin = store.origins.get(id);
+        if (origin) {
+          origin.modifiedBy.push(ns);
+          origin.last = { pack: ns, path };
+        }
+      }
+    }
+  }
+}
+
+/** Runs every registry's `refs` and `check` over the fully loaded content. */
+function checkEntries(stores: ReadonlyMap<string, Store>, issues: PackIssue[]): void {
+  const ctx: CheckContext = {
+    get: (kind, id) => stores.get(kind)?.entries.get(id as NamespacedId),
+    values: (kind) => [...(stores.get(kind)?.entries.values() ?? [])],
+  };
+  for (const store of stores.values()) {
+    const { refs, check } = store.def.options;
+    if (!refs && !check) continue;
+    for (const [id, entry] of store.entries) {
+      const last = store.origins.get(id)?.last ?? { pack: id.split(':')[0] ?? '', path: [] };
+      const report = (path: readonly PropertyKey[], message: string): void => {
+        issues.push({ pack: last.pack, path: formatPath([...last.path, ...path]), message });
+      };
+      try {
+        for (const ref of refs?.(entry) ?? []) {
+          const target = stores.get(ref.kind);
+          if (!target) {
+            report(ref.path, `Refers to unknown content kind "${ref.kind}"`);
+          } else if (!target.entries.has(ref.id as NamespacedId)) {
+            const local = ref.id.split(':').pop();
+            const near = [...target.entries.keys()].filter((k) => k.endsWith(`:${local}`));
+            const hint = near.length
+              ? ` Did you mean ${near.map((k) => `"${k}"`).join(', ')}?`
+              : '';
+            report(ref.path, `Unknown ${ref.kind} "${ref.id}".${hint}`);
+          }
+        }
+        for (const problem of check?.(entry, ctx) ?? []) report(problem.path, problem.message);
+      } catch (err) {
+        report([], `Check of ${store.def.kind} "${id}" threw: ${errorMessage(err)}`);
       }
     }
   }

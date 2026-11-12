@@ -50,6 +50,7 @@ Each region has its own lore, a legendary, a trial/badge, and **its own 3 starte
 ## Creatures
 - **3 move slots**, moves learned by level-up only. Learning a 4th → replace or skip.
 - Move relearner at centers (small fee).
+- **Stats: HP, Attack, Defense, Speed** (no physical/special split; decided 2026-11-12, C12). Stat totals below are the sum of these four.
 - **0 or 1 trait** per species (passive). Trait-less species get slightly higher stats.
 - **Evolution lines vary**: single-stage, 2-stage, or 3-stage. Level-based evolution.
 - Stat-total bands:
@@ -74,6 +75,8 @@ Base effectiveness (×1.5 strong / ×0.67 weak):
 - Wind > Nature
 - Metal > Ice, Wind; resists Nature, Ice, Wind, Metal
 
+"A > B" means A's moves deal ×1.5 to B, and B resists A: B's moves deal ×0.67 to A. Against a dual-type defender the two multipliers multiply (decided 2026-11-12, C12; matches the C10 mock tooltips).
+
 ## Conditions & reactions
 Each type applies one condition; another type exploits it. Conditions last **3 turns** (enough to apply → switch → exploit). A reaction consumes the condition.
 
@@ -88,6 +91,7 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 | Wind | Airborne | −evasion | Exposed | Shred ×1.75 ignore DEF |
 | Metal | Exposed | −defense | Charged | Overload ×1.5 + stun |
 
+- Side-effect sizes (e.g. Burning = 1/16 max HP per turn, Wet = speed ×0.85) are starting values in `packs/core`, tuned in C31.
 - Switching out clears your creature's conditions (switch costs the turn).
 - Wild creatures apply conditions too; dual-type wilds can self-combo (rare, dangerous).
 - Biome weather can apply conditions at battle start.

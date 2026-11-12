@@ -17,7 +17,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C10 | UI kit & battle mock | ✅ | [log](logs/C10-ui-kit-battle-mock.md) |
 | C11 | Biome tiles & weather | ✅ | [log](logs/C11-biome-tiles-weather.md) |
 | G1 | 🚦 Art direction review | ✅ | [log](logs/G1-art-direction-review.md) |
-| C12 | Core schemas & core pack v0 | ⬜ | |
+| C12 | Core schemas & core pack v0 | ✅ | [log](logs/C12-core-schemas.md) |
 | C13 | Zorling instances & progression | ⬜ | |
 | C14 | Battle engine core | ⬜ | |
 | C15 | Conditions & reactions | ⬜ | |

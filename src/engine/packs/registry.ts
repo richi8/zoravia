@@ -7,18 +7,52 @@
 import type { z } from 'zod';
 import type { NamespacedId } from './ids';
 
+/** A reference from one entry to an entry of some kind, found at `path` inside the entry. */
+export interface EntryRef {
+  readonly path: readonly PropertyKey[];
+  /** Registry kind the id must exist in, e.g. `"moves"`. */
+  readonly kind: string;
+  readonly id: string;
+}
+
+/** A problem found by a registry's `check`, at `path` inside the entry. */
+export interface EntryProblem {
+  readonly path: readonly PropertyKey[];
+  readonly message: string;
+}
+
+/** Read access to every loaded entry, for cross-entry checks. */
+export interface CheckContext {
+  get(kind: string, id: string): unknown;
+  values(kind: string): readonly unknown[];
+}
+
+/**
+ * Cross-entry rules, run once after every pack has loaded (so overrides and patches from
+ * later packs are already applied):
+ * - `refs` lists ids the entry points to; each must exist in its registry.
+ * - `check` reports any other problem (cycles, duplicates, rules spanning entries).
+ */
+export interface RegistryOptions<T> {
+  // Method syntax on purpose: definitions of any entry type fit `RegistryDefinition`.
+  refs?(entry: Entry<T>): readonly EntryRef[];
+  check?(entry: Entry<T>, ctx: CheckContext): readonly EntryProblem[];
+}
+
 /** Declares a kind of content and the schema each entry must satisfy. */
 export interface RegistryDefinition<S extends z.ZodType = z.ZodType> {
   /** Key used under `content` in a pack, e.g. `"species"`. */
   readonly kind: string;
   readonly schema: S;
+  readonly options: RegistryOptions<z.output<S>>;
 }
 
 export function defineRegistry<S extends z.ZodType>(
   kind: string,
   schema: S,
+  options: RegistryOptions<z.output<S>> = {},
 ): RegistryDefinition<S> {
-  return { kind, schema };
+  return { kind, schema, options };
 }
 
 /** A validated entry: the schema output plus its full id. */

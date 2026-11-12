@@ -224,3 +224,75 @@ describe('PackLoader — invalid packs fail with readable messages', () => {
     expect(loadError([bad]).message).toContain('[bad] setup: threw: oops');
   });
 });
+
+describe('PackLoader — cross-entry refs and checks', () => {
+  const moves = defineRegistry('moves', z.strictObject({ name: z.string() }));
+  const beasts = defineRegistry(
+    'beasts',
+    z.strictObject({
+      moves: z.array(z.string()).default([]),
+      evolvesTo: z.string().optional(),
+    }),
+    {
+      refs: (e) => [
+        ...e.moves.map((id, i) => ({ path: ['moves', i], kind: 'moves', id })),
+        ...(e.evolvesTo ? [{ path: ['evolvesTo'], kind: 'beasts', id: e.evolvesTo }] : []),
+      ],
+      check: (e, ctx) =>
+        e.evolvesTo === e.id || ctx.values('beasts').length > 3
+          ? [{ path: ['evolvesTo'], message: 'Bad evolution' }]
+          : [],
+    },
+  );
+  const load = (packs: PackDefinition[]): PackError | undefined => {
+    try {
+      new PackLoader([moves, beasts]).load(packs);
+    } catch (err) {
+      if (err instanceof PackError) return err;
+      throw err;
+    }
+    return undefined;
+  };
+
+  it('accepts valid references, including ones fixed by a later patch', () => {
+    const a = definePack({
+      manifest: { id: 'a', version: '1.0.0' },
+      content: { moves: { zap: { name: 'Zap' } }, beasts: { pup: { moves: ['a:zip'] } } },
+    });
+    const b = definePack({
+      manifest: { id: 'b', version: '1.0.0', dependsOn: ['a'] },
+      patches: { beasts: { 'a:pup': { moves: ['a:zap'] } } },
+    });
+    expect(load([a, b])).toBeUndefined();
+  });
+
+  it('reports unknown references with the pack and path that set them', () => {
+    const a = definePack({
+      manifest: { id: 'a', version: '1.0.0' },
+      content: {
+        moves: { zap: { name: 'Zap' } },
+        beasts: { pup: { moves: ['a:zap', 'x:zap'] }, dog: { evolvesTo: 'a:dog' } },
+      },
+    });
+    const b = definePack({
+      manifest: { id: 'b', version: '1.0.0', dependsOn: ['a'] },
+      patches: { beasts: { 'a:dog': { evolvesTo: 'a:wolf' } } },
+    });
+    expect(load([a, b])?.issues).toEqual([
+      {
+        pack: 'a',
+        path: 'content.beasts.pup.moves[1]',
+        message: 'Unknown moves "x:zap". Did you mean "a:zap"?',
+      },
+      { pack: 'b', path: 'patches.beasts.a:dog.evolvesTo', message: 'Unknown beasts "a:wolf".' },
+    ]);
+  });
+
+  it('runs custom checks with access to all entries', () => {
+    const a = definePack({
+      manifest: { id: 'a', version: '1.0.0' },
+      content: { beasts: { pup: { evolvesTo: 'a:pup' } } },
+    });
+    expect(load([a])?.message).toContain('[a] content.beasts.pup.evolvesTo: Bad evolution');
+  });
+});
