@@ -38,7 +38,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C29 | Region 1 Zorlings & trainers | ✅ | [log](logs/C29-region-1-zorlings.md) |
 | C30 | Region 1 campaign & lore | ✅ | [log](logs/C30-region-1-campaign.md) |
 | C31 | Balance & playtest pass | ✅ | [log](logs/C31-balance-playtest.md) |
-| G2 | 🚦 Fun gate | 🟨 | in progress |
+| G2 | 🚦 Fun gate | ✅ | [log](logs/G2-fun-gate.md) |
 | G2a | Battle screen (G2 feedback) | ✅ | [log](logs/G2a-battle-screen.md) |
 | G2b | Text overflow fixes (G2 feedback) | ✅ | [log](logs/G2b-text-overflow.md) |
 | G2c | Fewer battle captions (G2 feedback) | ✅ | [log](logs/G2c-fewer-captions.md) |
