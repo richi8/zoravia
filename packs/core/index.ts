@@ -1,6 +1,6 @@
 /**
  * The `core` pack: base types, conditions, reactions, moves, traits, species, items, music,
- * bosses, region maps and NPCs.
+ * bosses, region maps, NPCs, dialogues and quests.
  */
 
 import { definePack } from '@engine/packs';
@@ -13,6 +13,7 @@ import { music } from './music';
 import { npcs } from './npcs';
 import { reactions } from './reactions';
 import { species } from './species';
+import { dialogues, quests } from './story';
 import { traits } from './traits';
 import { types } from './types';
 
@@ -35,6 +36,8 @@ export const corePack = definePack({
     bosses,
     maps,
     npcs,
+    dialogues,
+    quests,
   },
 });
 

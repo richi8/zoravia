@@ -22,7 +22,7 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 - Saves in IndexedDB. Rules settled in C23 (2026-11-13):
   - **3 save slots**, each one playthrough. Writing a slot keeps the previous write as a backup, used if the main copy can't be read.
   - **Autosave** after every battle, when a menu, dialog or service closes with something changed, every 30 s of play while something changed, on quitting, and when the tab is hidden. The pause menu also has **Save**.
-  - A save keeps the party (team, storage, bag, money, Dex, boss log), the player's map, tile and facing, the last center used, and play time. Wild Zorlings and NPC positions are not kept; they respawn.
+  - A save keeps the party (team, storage, bag, money, Dex, boss log, story flags and quests), the player's map, tile and facing, the last center used, and play time. Wild Zorlings and NPC positions are not kept; they respawn.
   - Saves are **versioned** and old versions are upgraded on load. A save that needs content from a pack that isn't loaded is refused with the missing ids. Numbers a pack update moved (HP above the new max, bag counts above a new cap) are lowered instead.
 
 ## World
@@ -145,6 +145,15 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
   - Running from a boss battle follows the wild rules.
   - Caught, it comes with 1 HP. Legendaries get no Titan mark.
   - Trainer AI against Armor: plain hits count ×0.4, and breaking it (or setting up the condition that breaks it) is worth a bonus.
+
+## Story: dialogue & quests
+Rules settled in C26 (2026-11-13):
+- Dialogue and quests are **pack data only** (`dialogues` and `quests` registries); an NPC talks either in plain `lines` or through a `dialogue`.
+- **Flags** are named numbers in the save (`core:met-elder`). A set flag is 1; counters go up by any amount. Nothing declares flags up front.
+- A dialogue is a graph of nodes. A node shows some pages, runs its actions, then offers up to 4 **choices**, branches on conditions, goes on, or ends. Choices whose condition fails are hidden. Choices appear in a small menu above the last page; `Q` picks the last choice (by convention the "no / leave" one).
+- What actions do is told to the player right after the node's pages, without a speaker ("You received Super Potion.", "New quest: …", "Quest updated: …", "Quest complete: …!"), with a short chime (a fanfare on completion).
+- A **quest** is a list of steps. A step is done as soon as its condition holds, and quests are checked after every dialogue, battle and menu. So dialogue moves a quest on by setting a flag, and a step like "catch a Voltbat" can already be done when it is reached (the quest moves straight past it). The last step completes the quest and pays its reward once.
+- The quest log (`J`) lists active quests first, then finished ones. It shows only the steps reached so far, never the ones ahead.
 
 ## Economy
 - Potions: **shop-only, money-only**, tiered prices, **bag cap 5 per type**.

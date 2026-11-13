@@ -14,7 +14,8 @@ The base content pack. The engine loads it like any other pack (`loadGameContent
 | `music.ts` | `music` | hand-written boss themes (format in `src/game/data/music.ts`) |
 | `bosses.ts` | `bosses` | test Titan and legendary boss forms, each with its theme |
 | `maps.ts` | `maps` | region maps built by the world tool (`maps/<region>/map.json`); `test-region` for now. See `tools/README.md` |
-| `npcs.ts` | `npcs` | 5 test NPCs in the test region (anchor or x/y, look, behavior, lines) |
+| `npcs.ts` | `npcs` | 6 test NPCs in the test region (anchor or x/y, look, behavior, lines or a dialogue, role) |
+| `story.ts` | `dialogues`, `quests` | the sample quest "Nothing Biting" (3 steps) and the dialogues of Fisher Lou and Ranger Ode. Format in `src/game/data/story.ts` |
 
 Schemas live in `src/game/data/`. References are full ids (`"core:fire"`) and are checked after
 loading, so a typo fails with `Unknown moves "core:embr"` and the pack and path it came from.

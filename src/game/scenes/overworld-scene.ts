@@ -5,6 +5,9 @@
  * - Keyboard: W A S D / arrows walk (tap to turn), `E` talks to the NPC in front (or touches
  *   the wild Zorling there). `Esc` opens the pause menu; `P I B M J` open the party, bag,
  *   Dex, map and quests directly (C22, see `overworld-menus.ts`).
+ * - NPCs talk in lines or run a pack dialogue (C26): pages, choices (a menu over the last
+ *   page; `Q` picks the last choice), actions and quest steps. Quests move on after every
+ *   dialogue, battle and menu, with a note and a chime.
  * - NPCs with a role open the Zorling center or their shop after talking (C22). Losing a
  *   battle wakes the player up at the last center used (the map's first one until then).
  * - Wild Zorlings in view are logged in the Dex as seen; a win pays a little money.
@@ -25,7 +28,7 @@ import type { InputManager } from '@engine/input';
 import type { Engine } from '@engine/render/engine';
 import { blendPacked, packColor, PixelBuffer } from '@engine/render/pixel-buffer';
 import type { Scene } from '@engine/scenes/scene-manager';
-import { DialogBox, FocusStack, type UiInput, type UiTheme } from '@engine/ui';
+import { DialogBox, FocusStack, Menu, type UiInput, type UiTheme } from '@engine/ui';
 import type { BattleResult } from '@game/battle/logic';
 import { BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
@@ -44,6 +47,7 @@ import {
 } from '@game/player';
 import { createZorling, displayName } from '@game/progression';
 import type { GameState, Place } from '@game/save';
+import { advanceQuests, DialogueRun, QUEST_NOTE, type DialogueView } from '@game/story';
 import { paper, surface } from '@game/style/tokens';
 import { MoneyLabel } from '@game/ui/panels';
 import { drawPaper } from '@game/ui/skin';
@@ -169,6 +173,11 @@ export class OverworldScene implements Scene<Container> {
   private context = '';
   /** The NPC whose center or shop is open. */
   private talkingTo: NpcActor | undefined;
+  /** A pack dialogue is running: the stack empties between its boxes, which is no "close". */
+  private inDialogue = false;
+  /** Choices shown over the dialog box. */
+  private choiceMenu: Menu | undefined;
+  private heldBox: DialogBox | undefined;
   private inBattle = false;
   private afterBattle: string[] = [];
   /** Move and evolution offers the last battle left (asked on return). */
@@ -214,6 +223,9 @@ export class OverworldScene implements Scene<Container> {
       options.ui,
     );
     this.stack.onEmpty = () => {
+      if (this.inDialogue) return;
+      // Something a menu changed may finish a quest step: tell it before saving.
+      if (this.checkQuests()) return;
       if (this.talkingTo) this.talkingTo.talking = false;
       this.talkingTo = undefined;
       this.setContext();
@@ -367,7 +379,10 @@ export class OverworldScene implements Scene<Container> {
     this.inBattle = false;
     this.setContext();
     fieldAudio(this.map.biome);
-    const pages = this.afterBattle;
+    const quests = advanceQuests(this.options.content, this.party);
+    this.party = quests.party;
+    const pages = [...this.afterBattle, ...quests.notes];
+    if (quests.notes.length) questSound(quests.notes);
     const offers = this.offers;
     this.afterBattle = [];
     this.offers = [];
@@ -500,7 +515,19 @@ export class OverworldScene implements Scene<Container> {
       if (tx < v.x || ty < v.y || tx >= v.x + v.width || ty >= v.y + v.height) continue;
       if (!this.party.dex.seen.includes(r.species)) species.push(r.species);
     }
-    if (species.length) this.party = { ...this.party, dex: markSeen(this.party.dex, species) };
+    if (!species.length) return;
+    this.party = { ...this.party, dex: markSeen(this.party.dex, species) };
+    this.checkQuests();
+  }
+
+  /** Moves quests on; shows the notes (returns true) when one did. */
+  private checkQuests(): boolean {
+    const r = advanceQuests(this.options.content, this.party);
+    if (!r.notes.length) return false;
+    this.party = r.party;
+    questSound(r.notes);
+    this.say(r.notes);
+    return true;
   }
 
   private viewRect(): { x: number; y: number; width: number; height: number } {
@@ -538,7 +565,7 @@ export class OverworldScene implements Scene<Container> {
     npc.faceToward(this.player.destination);
     this.clearPath();
     const role = npc.npc.role;
-    this.say(npc.npc.lines, npc.npc.name, () => {
+    const after = (): void => {
       if (!role) {
         npc.talking = false;
         return;
@@ -548,11 +575,89 @@ export class OverworldScene implements Scene<Container> {
       if (role.kind === 'center') this.menus.openCenter(npc.npc.name);
       else this.menus.openShop(role.title ?? 'Shop', role.stock);
       this.setContext();
-    });
+    };
+    const { dialogue, lines, name } = npc.npc;
+    if (dialogue)
+      this.runDialogue(new DialogueRun(this.options.content, dialogue, this.party, name), after);
+    else this.say(lines ?? [], name, after);
     return true;
   }
 
-  private say(pages: readonly string[], speaker?: string, done?: () => void): void {
+  /** Shows a pack dialogue view by view, writing its changes to the party. */
+  private runDialogue(run: DialogueRun, done: () => void): void {
+    this.inDialogue = true;
+    const step = (): void => {
+      this.party = run.party;
+      const view = run.view;
+      if (!view) {
+        this.inDialogue = false;
+        // The last box closed while `inDialogue` hid it from `onEmpty`: run that now.
+        if (this.stack.size === 0) this.stack.onEmpty?.();
+        done();
+        return;
+      }
+      this.showView(view, (choice) => {
+        run.next(choice);
+        step();
+      });
+    };
+    step();
+  }
+
+  /** The pages (with the speaker), then the notes, then the choices over the last box. */
+  private showView(view: DialogueView, next: (choice?: number) => void): void {
+    const { notes, pages, choices } = view;
+    if (notes.length) questSound(notes);
+    const ask = choices.length ? (box?: DialogBox) => this.ask(choices, box, next) : undefined;
+    const notesBox = (): void => {
+      if (!notes.length) {
+        if (ask) ask();
+        else next();
+        return;
+      }
+      this.say(notes, undefined, () => next(), ask);
+    };
+    if (!pages.length) notesBox();
+    else if (notes.length || !ask) this.say(pages, view.speaker, notesBox);
+    else this.say(pages, view.speaker, undefined, ask);
+  }
+
+  /** A choice menu over the held dialog box (or alone); `Q` picks the last choice. */
+  private ask(
+    choices: readonly string[],
+    box: DialogBox | undefined,
+    next: (c: number) => void,
+  ): void {
+    const pick = (i: number): void => {
+      this.choiceMenu = undefined;
+      this.heldBox = undefined;
+      if (box) this.stack.remove(box);
+      else if (menu) this.stack.remove(menu);
+      next(i);
+    };
+    const menu: Menu = new Menu({
+      theme: this.options.theme,
+      items: choices.map((label) => ({ label })),
+      onSelect: (i) => pick(i),
+      onBack: () => pick(choices.length - 1),
+    });
+    this.choiceMenu = menu;
+    this.heldBox = box;
+    this.stack.push(menu);
+    this.layoutDialog();
+    this.setContext();
+  }
+
+  /**
+   * Dialog pages; `done` runs when they close. With `hold`, the box stays on its last page
+   * and `hold` gets it (the caller removes it).
+   */
+  private say(
+    pages: readonly string[],
+    speaker?: string,
+    done?: () => void,
+    hold?: (box: DialogBox) => void,
+  ): void {
     const { theme } = this.options;
     const dialog: DialogBox = new DialogBox({
       theme,
@@ -564,6 +669,7 @@ export class OverworldScene implements Scene<Container> {
         this.stack.remove(d);
         done?.();
       },
+      ...(hold ? { onLastPage: hold } : {}),
     });
     this.stack.push(dialog);
     this.layoutDialog();
@@ -575,9 +681,25 @@ export class OverworldScene implements Scene<Container> {
   }
 
   private layoutDialog(): void {
-    const d = this.stack.top;
-    if (!(d instanceof DialogBox)) return;
-    d.view.position.set(Math.round((this.width - d.width) / 2), this.height - d.height - 10);
+    const menu =
+      this.choiceMenu && this.stack.includes(this.choiceMenu) ? this.choiceMenu : undefined;
+    const top = this.stack.top;
+    const d = top instanceof DialogBox ? top : this.boxUnder(menu);
+    let boxTop = this.height - 10;
+    if (d) {
+      d.view.position.set(Math.round((this.width - d.width) / 2), this.height - d.height - 10);
+      boxTop = d.view.y;
+    }
+    if (menu) {
+      // Right-aligned with the box, just above it.
+      const right = Math.round((this.width + this.dialogWidth()) / 2);
+      menu.view.position.set(right - menu.width, boxTop - menu.height - 4);
+    }
+  }
+
+  /** The dialog box held under the choice menu, if any. */
+  private boxUnder(menu: Menu | undefined): DialogBox | undefined {
+    return menu ? this.heldBox : undefined;
   }
 
   /** A wild Zorling was touched: "!" over it for a beat, then the battle. */
@@ -963,4 +1085,14 @@ function inFront(at: Tile, facing: Dir): { x: number; y: number; facing: Dir } {
   const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[facing];
   const back = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
   return { x: at.x + (d[0] ?? 0), y: at.y + (d[1] ?? 0), facing: back[facing] };
+}
+
+/** A chime for quest notes: a fanfare when one completed. */
+function questSound(notes: readonly string[]): void {
+  if (notes.some((n) => n.startsWith(QUEST_NOTE.done))) playSfx('world.questDone');
+  else if (
+    notes.some((n) => n.startsWith(QUEST_NOTE.started) || n.startsWith(QUEST_NOTE.updated))
+  ) {
+    playSfx('world.quest');
+  }
 }

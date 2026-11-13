@@ -44,6 +44,11 @@ const STEPS: Readonly<Record<number, Step>> = {
       },
     };
   },
+  // C26: story flags and quests start empty.
+  2: (v2) => {
+    const party = isObject(v2['party']) ? v2['party'] : {};
+    return { ...v2, version: 3, party: { ...party, flags: {}, quests: {} } };
+  },
 };
 
 /** The version a raw save says it has. */

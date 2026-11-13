@@ -5,8 +5,9 @@
  * Version history:
  * - v1: the first format: party (team, storage, bag, money, optional Dex) and the player's
  *   map, tile and facing, all at the top level.
- * - v2 (current): `place` and `respawn` (the last center used) as map + tile + facing,
- *   the boss log (one per save), play time, and the packs the save was made with.
+ * - v2: `place` and `respawn` (the last center used) as map + tile + facing, the boss log
+ *   (one per save), play time, and the packs the save was made with.
+ * - v3 (current, C26): story flags and quest progress in the party.
  */
 
 import { z } from 'zod';
@@ -15,7 +16,7 @@ import { TEAM_SIZE } from '@game/player';
 import { zorlingSchema } from '@game/progression';
 
 export const SAVE_FORMAT = 'zoravia-save';
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 const count = z.number().int().min(0);
 
@@ -33,6 +34,14 @@ export const partySchema = z.strictObject({
   money: count,
   dex: z.strictObject({ seen: z.array(ref), caught: z.array(ref) }),
   bosses: z.record(ref, z.strictObject({ result: z.enum(['defeated', 'caught']) })),
+  flags: z.record(ref, z.number().int()),
+  quests: z.record(
+    ref,
+    z.discriminatedUnion('state', [
+      z.strictObject({ state: z.literal('active'), step: z.string().min(1) }),
+      z.strictObject({ state: z.literal('done') }),
+    ]),
+  ),
 });
 
 export const saveSchema = z.strictObject({

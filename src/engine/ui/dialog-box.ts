@@ -4,6 +4,8 @@
  * A left click anywhere on screen while the dialog is focused works like `Q` while the page
  * is typing and like `E` once it is finished — so click once to show the page, again to go on.
  * Pages are word-wrapped up front so words never jump lines while typing.
+ * With `onLastPage`, the box stays on its last page once it is shown (for a choice menu on
+ * top) and the owner removes it.
  */
 
 import { CanvasTextMetrics, Container, Graphics, Text, TextStyle } from 'pixi.js';
@@ -22,6 +24,11 @@ export interface DialogOptions {
   readonly lines?: number;
   readonly speaker?: string;
   readonly onDone?: (dialog: DialogBox) => void;
+  /**
+   * Called once when the last page is fully shown. The box then stays on it (confirm no
+   * longer closes it) and `onDone` never fires.
+   */
+  readonly onLastPage?: (dialog: DialogBox) => void;
 }
 
 export class DialogBox implements Widget<Container> {
@@ -33,6 +40,7 @@ export class DialogBox implements Widget<Container> {
   private readonly wrapped: string[];
   private blinkTime = 0;
   private doneFired = false;
+  private lastFired = false;
   /** Confirm held during the last input step (speeds up typing). */
   private held = false;
 
@@ -112,7 +120,17 @@ export class DialogBox implements Widget<Container> {
     this.held = false;
   }
 
+  /** Holding on the last page (see `onLastPage`). */
+  private get holding(): boolean {
+    return (
+      this.options.onLastPage !== undefined &&
+      this.typewriter.isLastPage &&
+      this.typewriter.pageComplete
+    );
+  }
+
   handleInput(input: UiInput): void {
+    if (this.holding) return;
     // Clicks are taken from anywhere on screen (the dialog is modal while focused).
     const click = input.pointerPressed() !== undefined;
     const typing = !this.typewriter.pageComplete;
@@ -128,6 +146,14 @@ export class DialogBox implements Widget<Container> {
   }
 
   update(dt: number): void {
+    if (this.holding) {
+      this.more.visible = false;
+      if (!this.lastFired) {
+        this.lastFired = true;
+        this.options.onLastPage?.(this);
+      }
+      return;
+    }
     if (this.typewriter.done) {
       if (!this.doneFired) {
         this.doneFired = true;

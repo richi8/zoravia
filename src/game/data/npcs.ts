@@ -7,7 +7,8 @@
  * - `look`: outfit, hair and skin presets for the shared character body.
  * - `behavior`: `stand` (never moves), `look` (turns around now and then), `wander` (walks
  *   within `radius` tiles of its spot).
- * - `lines`: what it says, one dialog page each. The dialogue engine (C26) builds on this.
+ * - `lines`: what it says, one dialog page each; or `dialogue` (C26): a dialogue from the
+ *   `dialogues` registry, with branches, choices and quest actions. Give one of the two.
  * - `role` (C22): after talking, a `center` NPC opens the Zorling center (heal, storage,
  *   move relearner) and a `shop` NPC opens its shop with `stock` (items with a price).
  */
@@ -63,10 +64,14 @@ export const npcSchema = z
     facing: z.enum(FACINGS).optional(),
     look: npcLookSchema.default({ outfit: 'red', hair: 'brown', skin: 'warm' }),
     behavior: npcBehaviorSchema.default({ kind: 'stand' }),
-    lines: z.array(z.string().min(1).max(240)).min(1),
+    lines: z.array(z.string().min(1).max(240)).min(1).optional(),
+    dialogue: ref.optional(),
     role: npcRoleSchema.optional(),
   })
   .superRefine((n, ctx) => {
+    if ((n.lines === undefined) === (n.dialogue === undefined)) {
+      ctx.addIssue({ code: 'custom', path: ['lines'], message: 'Give either lines or dialogue' });
+    }
     const xy = n.x !== undefined && n.y !== undefined;
     const half = (n.x === undefined) !== (n.y === undefined);
     if (half) ctx.addIssue({ code: 'custom', path: ['x'], message: 'Give both x and y' });
@@ -78,6 +83,7 @@ export const npcSchema = z
 export const npcs = defineRegistry('npcs', npcSchema, {
   refs: (n) => [
     refTo('maps', n.map, 'map'),
+    ...(n.dialogue ? [refTo('dialogues', n.dialogue, 'dialogue')] : []),
     ...(n.role?.kind === 'shop'
       ? n.role.stock.map((id, i) => refTo('items', id, 'role', 'stock', i))
       : []),

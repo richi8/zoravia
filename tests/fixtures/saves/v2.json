@@ -1,0 +1,69 @@
+{
+  "format": "zoravia-save",
+  "version": 2,
+  "savedAt": "2026-11-13T09:30:00.000Z",
+  "packs": {
+    "core": "0.1.0"
+  },
+  "playtime": 734.5,
+  "place": {
+    "map": "core:test-region",
+    "x": 61,
+    "y": 55,
+    "facing": "left"
+  },
+  "party": {
+    "team": [
+      {
+        "uid": "p1",
+        "species": "core:puddlit",
+        "level": 11,
+        "xp": 1330,
+        "hp": 20,
+        "moves": ["core:splash-shot", "core:drench"],
+        "titanMark": false
+      },
+      {
+        "uid": "p2",
+        "species": "core:emberkit",
+        "nickname": "Sparky",
+        "level": 10,
+        "xp": 999,
+        "hp": 34,
+        "moves": ["core:ember", "core:gust", "core:kindle"],
+        "titanMark": false
+      }
+    ],
+    "storage": [
+      {
+        "uid": "p3",
+        "species": "core:sproutle",
+        "level": 7,
+        "xp": 342,
+        "hp": 28,
+        "moves": ["core:vine-snap", "core:spore-cloud"],
+        "titanMark": false
+      }
+    ],
+    "bag": {
+      "core:potion": 3,
+      "core:zorb": 4
+    },
+    "money": 580,
+    "dex": {
+      "seen": ["core:puddlit", "core:emberkit", "core:sproutle", "core:voltbat"],
+      "caught": ["core:puddlit", "core:emberkit", "core:sproutle"]
+    },
+    "bosses": {
+      "core:thornwing-titan": {
+        "result": "defeated"
+      }
+    }
+  },
+  "respawn": {
+    "map": "core:test-region",
+    "x": 48,
+    "y": 47,
+    "facing": "up"
+  }
+}

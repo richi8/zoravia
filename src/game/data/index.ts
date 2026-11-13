@@ -10,5 +10,6 @@ export * from './music';
 export * from './npcs';
 export * from './reactions';
 export * from './species';
+export * from './story';
 export * from './traits';
 export * from './types';

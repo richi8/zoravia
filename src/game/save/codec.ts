@@ -6,11 +6,12 @@
  * Content check: a save that names species, moves, items, bosses or maps the loaded packs
  * don't have is refused with a list of what is missing (a pack was removed). Values that only
  * drifted because a pack changed its numbers are repaired instead: HP above the new max HP and
- * bag counts above a new bag cap are lowered.
+ * bag counts above a new bag cap are lowered, and a quest at a step its pack no longer has
+ * goes back to the quest's first step.
  */
 
 import type { Facing, GameContent } from '@game/data';
-import type { Party } from '@game/player';
+import type { Party, QuestLog } from '@game/player';
 import { statsOf, type Zorling } from '@game/progression';
 import { migrate, SaveError } from './migrate';
 import { SAVE_FORMAT, SAVE_VERSION, type SaveData } from './schema';
@@ -81,6 +82,8 @@ export function fromSave(content: GameContent, data: SaveData): GameState {
     money: p.money,
     dex: p.dex,
     bosses: p.bosses,
+    flags: p.flags,
+    quests: fitQuests(content, p.quests),
   };
   return {
     party,
@@ -104,8 +107,21 @@ function missingContent(content: GameContent, data: SaveData): string[] {
   for (const id of Object.keys(p.bag)) need((i) => content.items.has(i), id);
   for (const id of [...p.dex.seen, ...p.dex.caught]) need((i) => content.species.has(i), id);
   for (const id of Object.keys(p.bosses)) need((i) => content.bosses.has(i), id);
+  for (const id of Object.keys(p.quests)) need((i) => content.quests.has(i), id);
   for (const place of [data.place, data.respawn]) {
     if (place) need((i) => content.maps.has(i), place.map);
   }
   return [...missing].sort();
+}
+
+/** Active quests at a step that no longer exists restart at their first step. */
+function fitQuests(content: GameContent, log: QuestLog): QuestLog {
+  return Object.fromEntries(
+    Object.entries(log).map(([id, q]) => {
+      if (q.state !== 'active') return [id, q];
+      const steps = content.quests.require(id).steps;
+      if (steps.some((s) => s.id === q.step)) return [id, q];
+      return [id, { state: 'active', step: steps[0]?.id ?? q.step }];
+    }),
+  );
 }

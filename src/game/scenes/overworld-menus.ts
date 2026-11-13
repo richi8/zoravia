@@ -43,11 +43,13 @@ import { DexPanel, type DexRow } from '@game/ui/dex-panel';
 import { MapPanel, NoticePanel, type MapMarker } from '@game/ui/map-panel';
 import { formatMoney } from '@game/ui/panels';
 import { PartyPanel } from '@game/ui/party-panel';
+import { QuestPanel } from '@game/ui/quest-panel';
 import { ShopPanel, type ShopItem } from '@game/ui/shop';
 import { StoragePanel } from '@game/ui/storage-panel';
 import type { MoveLine, ZorlingView } from '@game/ui/zorling-view';
 import { BIOMES } from '@game/world/biomes';
 import { buildMinimap, type WorldMap } from '@game/world/map';
+import { questLog } from '@game/story';
 import { speciesLook } from '@game/zorlings/species-look';
 import { LevelUpFlow } from './level-up-flow';
 import { renderZorling } from '@game/zorlings/render';
@@ -342,12 +344,18 @@ export class OverworldMenus {
   }
 
   openQuests(): void {
-    const panel = new NoticePanel(
-      'Quests',
-      'Your quest log is empty for now. People around Zoravia will ask for help soon.',
-      (p) => this.close(p),
-    );
-    this.open(panel, () => ({ w: panel.width, h: panel.height }));
+    const rows = questLog(this.host.content, this.host.party);
+    if (!rows.length) {
+      const panel = new NoticePanel(
+        'Quests',
+        'Your quest log is empty. Talk to people around Zoravia: some of them need a hand.',
+        (p) => this.close(p),
+      );
+      this.open(panel, () => ({ w: panel.width, h: panel.height }));
+      return;
+    }
+    const panel = new QuestPanel({ rows, onBack: (p) => this.close(p) });
+    this.open(panel, () => ({ w: QuestPanel.WIDTH, h: QuestPanel.HEIGHT }));
   }
 
   // ------------------------------------------------------------ Zorling center

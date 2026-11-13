@@ -1,6 +1,6 @@
 /**
- * The player's Zorlings, bag, money, Dex and boss log between battles (C21–C23). Saved by
- * `@game/save`. Pure.
+ * The player's Zorlings, bag, money, Dex, boss log, story flags and quests between battles
+ * (C21–C23, C26). Saved by `@game/save`. Pure.
  */
 
 import type { BattleResult } from '@game/battle/logic';
@@ -23,7 +23,19 @@ export interface Party {
   readonly dex: Dex;
   /** Bosses beaten or caught (one per save). */
   readonly bosses: BossLog;
+  /** Story flags set by dialogue and quests (C26); a missing flag is 0. */
+  readonly flags: Flags;
+  /** Quests started, by id (C26); a quest not listed is not started. */
+  readonly quests: QuestLog;
 }
+
+export type Flags = Readonly<Record<string, number>>;
+
+/** A started quest: at a step (by id), or done. */
+export type QuestProgress =
+  { readonly state: 'active'; readonly step: string } | { readonly state: 'done' };
+
+export type QuestLog = Readonly<Record<string, QuestProgress>>;
 
 export interface NewParty {
   readonly team: readonly Zorling[];
@@ -43,6 +55,8 @@ export function newParty(p: NewParty): Party {
     money: p.money ?? 0,
     dex: markCaught(EMPTY_DEX, owned),
     bosses: EMPTY_BOSS_LOG,
+    flags: {},
+    quests: {},
   };
 }
 

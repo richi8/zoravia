@@ -19,6 +19,7 @@ import { music, type Music } from './music';
 import { npcs, type Npc } from './npcs';
 import { reactions, type Reaction } from './reactions';
 import { species, type Species } from './species';
+import { dialogues, quests, type Dialogue, type Quest } from './story';
 import { traits, type Trait } from './traits';
 import { STRONG_MULTIPLIER, types, WEAK_MULTIPLIER, type ZorlingType } from './types';
 
@@ -34,6 +35,8 @@ export const GAME_REGISTRIES = [
   bosses,
   maps,
   npcs,
+  dialogues,
+  quests,
 ];
 
 export interface EvolutionLine {
@@ -55,6 +58,8 @@ export class GameContent<H extends HookMap = HookMap> {
   readonly music: Registry<Music>;
   readonly maps: Registry<RegionMap>;
   readonly npcs: Registry<Npc>;
+  readonly dialogues: Registry<Dialogue>;
+  readonly quests: Registry<Quest>;
   private readonly reactionIndex = new Map<string, Reaction>();
 
   constructor(readonly loaded: LoadedContent<H>) {
@@ -69,6 +74,8 @@ export class GameContent<H extends HookMap = HookMap> {
     this.music = loaded.registry(music);
     this.maps = loaded.registry(maps);
     this.npcs = loaded.registry(npcs);
+    this.dialogues = loaded.registry(dialogues);
+    this.quests = loaded.registry(quests);
     for (const r of this.reactions) this.reactionIndex.set(`${r.condition}|${r.type}`, r);
   }
 

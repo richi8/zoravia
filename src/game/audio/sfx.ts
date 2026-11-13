@@ -637,6 +637,40 @@ const world = {
       { wave: 'triangle', beat: 0.08, gain: 0.22 },
     ),
   },
+  /** A quest started or moved on (C26). */
+  'world.quest': {
+    tones: notes(
+      [
+        [79, 1],
+        [84, 2],
+      ],
+      { wave: 'triangle', beat: 0.07, gain: 0.22 },
+    ),
+  },
+  /** A quest completed (C26). */
+  'world.questDone': {
+    tones: [
+      ...notes(
+        [
+          [72, 1],
+          [76, 1],
+          [79, 1],
+          [84, 2],
+          [79, 1],
+          [84, 4],
+        ],
+        { wave: 'triangle', beat: 0.09, gain: 0.25 },
+      ),
+      ...bass(
+        [
+          [48, 4],
+          [55, 2],
+          [60, 4],
+        ],
+        { wave: 'sine', beat: 0.09, gain: 0.22 },
+      ),
+    ],
+  },
   'world.evolve': {
     tones: [
       {

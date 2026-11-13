@@ -1,6 +1,7 @@
 /**
- * Test NPCs for the C21 test region (C22: a center attendant and a shop). Region 1's real
- * townsfolk come with C28–C30.
+ * Test NPCs for the C21 test region (C22: a center attendant and a shop; C26: Ranger Ode and
+ * Fisher Lou run the dialogues of the sample quest in `story.ts`). Region 1's real townsfolk
+ * come with C28–C30.
  */
 
 import type { NpcInput } from '@game/data';
@@ -57,10 +58,7 @@ export const npcs: Record<string, NpcInput> = {
     facing: 'left',
     look: { outfit: 'forest', hair: 'dark', skin: 'deep' },
     behavior: { kind: 'look' },
-    lines: [
-      'Some wild Zorlings are curious and run right at you. Shy ones run away.',
-      'If one catches you, it is a battle!',
-    ],
+    dialogue: 'core:ranger-ode',
   },
   'test-fisher': {
     name: 'Fisher Lou',
@@ -69,6 +67,6 @@ export const npcs: Record<string, NpcInput> = {
     y: 56,
     facing: 'up',
     look: { outfit: 'navy', hair: 'brown', skin: 'light' },
-    lines: ['Nothing biting today.'],
+    dialogue: 'core:fisher-lou',
   },
 };

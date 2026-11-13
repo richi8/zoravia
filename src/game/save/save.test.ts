@@ -12,6 +12,7 @@ import {
 import { createZorling, statsOf } from '@game/progression';
 import { corePack } from '@packs/core';
 import v1 from '../../../tests/fixtures/saves/v1.json';
+import v2 from '../../../tests/fixtures/saves/v2.json';
 import {
   formatPlaytime,
   MemoryStore,
@@ -55,6 +56,8 @@ function state(over: Partial<GameState> = {}): GameState {
       money: 1240,
     }),
     bosses: { 'core:thornwing-titan': { result: 'defeated' } },
+    flags: { 'core:pond-ode': 1, 'core:count': 3 },
+    quests: { 'core:nothing-biting': { state: 'active', step: 'catch-voltbat' } },
   };
   return {
     party,
@@ -78,7 +81,9 @@ describe('save format', () => {
 
   it('migrates the v1 fixture to the current version', () => {
     const data = migrate(v1);
-    expect(data.version).toBe(2);
+    expect(data.version).toBe(SAVE_VERSION);
+    expect(data.party.flags).toEqual({});
+    expect(data.party.quests).toEqual({});
     expect(data.place).toEqual({ map: 'core:test-region', x: 61, y: 55, facing: 'left' });
     expect(data.respawn).toBeUndefined();
     expect(data.playtime).toBe(0);
@@ -95,6 +100,33 @@ describe('save format', () => {
     expect(s.party.team[1]?.nickname).toBe('Sparky');
     expect(s.party.storage[0]?.species).toBe('core:sproutle');
     expect(s.party.bag).toEqual({ 'core:potion': 3, 'core:zorb': 4 });
+  });
+
+  it('migrates the v2 fixture: story flags and quests start empty', () => {
+    expect(v2.version).toBe(2);
+    const data = migrate(v2);
+    expect(data.version).toBe(3);
+    expect(data.party.flags).toEqual({});
+    expect(data.party.quests).toEqual({});
+    // Everything v2 had is kept.
+    expect(data.playtime).toBe(734.5);
+    expect(data.respawn).toEqual({ map: 'core:test-region', x: 48, y: 47, facing: 'up' });
+    expect(data.party.bosses).toEqual({ 'core:thornwing-titan': { result: 'defeated' } });
+    expect(data.party.dex.seen).toContain('core:voltbat');
+    const s = readSave(content, v2);
+    expect(s.party.team[1]?.nickname).toBe('Sparky');
+    expect(s.party.money).toBe(580);
+  });
+
+  it('refuses saves with unknown quests and restarts quests at a removed step', () => {
+    const missing = raw() as Raw & { party: { quests: Record<string, unknown> } };
+    missing.party.quests = { 'gone:quest': { state: 'done' } };
+    expect(() => readSave(content, missing)).toThrow(/gone:quest/);
+    const moved = raw() as Raw & { party: { quests: Record<string, unknown> } };
+    moved.party.quests = { 'core:nothing-biting': { state: 'active', step: 'old-step' } };
+    expect(readSave(content, moved).party.quests).toEqual({
+      'core:nothing-biting': { state: 'active', step: 'ask-ode' },
+    });
   });
 
   it('refuses newer, unversioned and malformed saves with readable problems', () => {
