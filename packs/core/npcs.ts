@@ -7,6 +7,7 @@
 
 import type { NpcInput } from '@game/data';
 import { verdaleNpcs } from './verdale-npcs';
+import { verdaleTrainerNpcs } from './verdale-trainers';
 
 export const npcs: Record<string, NpcInput> = {
   'test-elder': {
@@ -132,4 +133,5 @@ export const npcs: Record<string, NpcInput> = {
     dialogue: 'core:glacivar-shrine',
   },
   ...verdaleNpcs,
+  ...verdaleTrainerNpcs,
 };

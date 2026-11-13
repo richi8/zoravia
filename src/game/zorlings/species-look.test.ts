@@ -13,8 +13,10 @@ describe('species looks', () => {
     const c = speciesLook(content, 'core:infernyx');
     expect(c.genome.plan).toBe('feline');
     expect(c.genome.mood).toBe('fierce');
-    expect(a.genome.plan).toBe(c.genome.plan);
-    expect(a.genome.palette).toEqual(c.genome.palette);
+    // Emberkit starts out as a round blob, Blazekit is already a feline (`look.young`).
+    expect(a.genome.plan).toBe('blob');
+    expect(b.genome.plan).toBe('feline');
+    expect(a.genome.palette.secondary).toBe(c.genome.palette.secondary);
     expect(a.fill).toBeLessThan(b.fill);
     expect(b.fill).toBeLessThan(c.fill);
     expect(speciesLook(content, 'core:emberkit')).toBe(a); // cached

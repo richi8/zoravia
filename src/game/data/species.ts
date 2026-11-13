@@ -48,6 +48,14 @@ export const speciesSchema = z.strictObject({
       seed: z.number().int().min(0).max(0xffffffff),
       plan: z.enum(BODY_PLANS).optional(),
       mood: z.enum(MOODS).optional(),
+      /**
+       * Body plans of the earlier stages (metamorphosis, C29): the first entry for stage 1,
+       * the second for stage 2. Missing entries keep the final form's plan.
+       */
+      young: z
+        .array(z.enum(BODY_PLANS))
+        .max(MAX_STAGES - 1)
+        .optional(),
     })
     .optional(),
 });
@@ -95,6 +103,19 @@ function checkSpecies(s: SpeciesLike, ctx: CheckContext): EntryProblem[] {
 
   if (s.look && s.evolution) {
     out.push({ path: ['look'], message: 'Only the final form of a line has a look' });
+  }
+  if (s.look?.young?.length) {
+    let earlier = 0;
+    for (let p = parents[0]; p && earlier < MAX_STAGES; earlier++) {
+      const id: string = p.id;
+      p = (ctx.values('species') as SpeciesLike[]).find((o) => o.evolution?.into === id);
+    }
+    if (s.look.young.length > earlier) {
+      out.push({
+        path: ['look', 'young'],
+        message: `Lists ${s.look.young.length} young plans, but the line has ${earlier} earlier stage(s)`,
+      });
+    }
   }
 
   if (s.evolution) {

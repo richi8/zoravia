@@ -17,6 +17,7 @@ import { dialogues as questDialogues, quests } from './story';
 import { badges, dialogues as trialDialogues, trainers } from './trainers';
 import { traits } from './traits';
 import { types } from './types';
+import { verdaleDialogues, verdaleTrainers } from './verdale-trainers';
 
 export const corePack = definePack({
   manifest: {
@@ -36,10 +37,10 @@ export const corePack = definePack({
     music,
     bosses,
     badges,
-    trainers,
+    trainers: { ...trainers, ...verdaleTrainers },
     maps,
     npcs,
-    dialogues: { ...questDialogues, ...trialDialogues },
+    dialogues: { ...questDialogues, ...trialDialogues, ...verdaleDialogues },
     quests,
   },
 });

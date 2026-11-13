@@ -46,8 +46,8 @@ export type StoryCondition =
   | { readonly caught: string }
   /** The species is seen (in the Dex). */
   | { readonly seen: string }
-  /** The boss is beaten or caught. */
-  | { readonly boss: string }
+  /** The boss is beaten or caught; with `caught: true`, only caught (C29). */
+  | { readonly boss: string; readonly caught?: true | undefined }
   /** The badge is held. */
   | { readonly badge: string }
   /** At least this many badges are held. */
@@ -68,7 +68,7 @@ export const storyConditionSchema: z.ZodType<StoryCondition> = z.lazy(() =>
     z.strictObject({ money: z.number().int().min(0) }),
     z.strictObject({ caught: ref }),
     z.strictObject({ seen: ref }),
-    z.strictObject({ boss: ref }),
+    z.strictObject({ boss: ref, caught: z.literal(true).optional() }),
     z.strictObject({ badge: ref }),
     z.strictObject({ badges: z.number().int().min(0) }),
     z.strictObject({ beat: ref, times: positive.optional() }),
@@ -266,9 +266,9 @@ export function conditionRefs(c: StoryCondition, ...path: PropertyKey[]): EntryR
   return eachCondition(c).flatMap((x): EntryRef[] => {
     if ('quest' in x) return [refTo('quests', x.quest, ...path)];
     if ('has' in x) return [refTo('items', x.has, ...path)];
+    if ('boss' in x) return [refTo('bosses', x.boss, ...path)];
     if ('caught' in x) return [refTo('species', x.caught, ...path)];
     if ('seen' in x) return [refTo('species', x.seen, ...path)];
-    if ('boss' in x) return [refTo('bosses', x.boss, ...path)];
     if ('badge' in x) return [refTo('badges', x.badge, ...path)];
     if ('beat' in x) return [refTo('trainers', x.beat, ...path)];
     return [];

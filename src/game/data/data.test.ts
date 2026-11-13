@@ -69,6 +69,22 @@ describe('game data validation', () => {
     expect(long).toEqual(['content.species.a.evolution: Evolution line has more than 3 stages']);
   });
 
+  it('checks young body plans against the line length', () => {
+    const line = (young: string[]): string[] =>
+      modIssues({
+        content: {
+          species: {
+            a: mon({ evolution: { into: 'mod:b', level: 10 } }),
+            b: mon({ look: { seed: 1, plan: 'serpent', young } }),
+          },
+        },
+      });
+    expect(line(['fish'])).toEqual([]);
+    expect(line(['fish', 'blob'])).toEqual([
+      'content.species.b.look.young: Lists 2 young plans, but the line has 1 earlier stage(s)',
+    ]);
+  });
+
   it('rejects two species evolving into one, and evolving legendaries', () => {
     const issues = modIssues({
       content: {

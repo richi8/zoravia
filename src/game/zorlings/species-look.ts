@@ -46,7 +46,7 @@ export function speciesLook(content: GameContent, speciesId: string): SpeciesLoo
   const of = line.members.length as 1 | 2 | 3;
   const growth = stageGrowth(line.stage, of);
   const result: SpeciesLook = {
-    genome: stageGenome(genome, line.stage, of),
+    genome: stageGenome(genome, line.stage, of, look?.young),
     fill: stageFill(growth),
   };
   byId.set(speciesId, result);

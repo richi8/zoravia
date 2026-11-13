@@ -14,21 +14,12 @@
       "levels": [3, 7],
       "spawns": [
         {
-          "species": "core:sproutle",
+          "species": "core:pipwing",
           "weight": 3
         },
         {
-          "species": "core:emberkit",
-          "weight": 2
-        },
-        {
-          "species": "core:puddlit",
-          "weight": 2
-        },
-        {
-          "species": "core:voltbat",
-          "weight": 1,
-          "levels": [5, 7]
+          "species": "core:sproutle",
+          "weight": 3
         }
       ]
     },
@@ -43,11 +34,11 @@
           "weight": 3
         },
         {
-          "species": "core:sproutle",
-          "weight": 1
+          "species": "core:mudpaddle",
+          "weight": 2
         },
         {
-          "species": "core:voltbat",
+          "species": "core:pipwing",
           "weight": 1
         }
       ]
@@ -63,15 +54,19 @@
           "weight": 2
         },
         {
-          "species": "core:emberkit",
+          "species": "core:hearthog",
           "weight": 2
+        },
+        {
+          "species": "core:sproutle",
+          "weight": 1
         },
         {
           "species": "core:puddlit",
           "weight": 1
         },
         {
-          "species": "core:sproutle",
+          "species": "core:pipwing",
           "weight": 1
         }
       ]
@@ -83,15 +78,16 @@
       "levels": [15, 20],
       "spawns": [
         {
-          "species": "core:torrentoad",
+          "species": "core:puddlit",
           "weight": 3
         },
         {
-          "species": "core:voltbat",
-          "weight": 2
+          "species": "core:mudpaddle",
+          "weight": 2,
+          "levels": [15, 19]
         },
         {
-          "species": "core:puddlit",
+          "species": "core:voltbat",
           "weight": 1
         }
       ]
@@ -103,16 +99,24 @@
       "levels": [16, 22],
       "spawns": [
         {
-          "species": "core:thornwing",
-          "weight": 2
-        },
-        {
-          "species": "core:blazekit",
-          "weight": 1
-        },
-        {
           "species": "core:sproutle",
-          "weight": 1
+          "weight": 2,
+          "levels": [16, 19]
+        },
+        {
+          "species": "core:thornwing",
+          "weight": 2,
+          "levels": [20, 22]
+        },
+        {
+          "species": "core:pipwing",
+          "weight": 1,
+          "levels": [16, 17]
+        },
+        {
+          "species": "core:galehawk",
+          "weight": 1,
+          "levels": [18, 22]
         }
       ]
     },
@@ -124,14 +128,15 @@
       "spawns": [
         {
           "species": "core:thornwing",
-          "weight": 2
+          "weight": 3,
+          "levels": [20, 25]
         },
         {
-          "species": "core:ironshell",
+          "species": "core:voltbat",
           "weight": 1
         },
         {
-          "species": "core:blazekit",
+          "species": "core:mossback",
           "weight": 1
         }
       ]
@@ -143,15 +148,15 @@
       "levels": [21, 27],
       "spawns": [
         {
+          "species": "core:galehawk",
+          "weight": 3
+        },
+        {
           "species": "core:voltbat",
           "weight": 2
         },
         {
           "species": "core:thornwing",
-          "weight": 2
-        },
-        {
-          "species": "core:blazekit",
           "weight": 1
         }
       ]
@@ -163,16 +168,17 @@
       "levels": [17, 23],
       "spawns": [
         {
-          "species": "core:thornwing",
+          "species": "core:hearthog",
           "weight": 2
         },
         {
           "species": "core:ironshell",
-          "weight": 1
+          "weight": 2
         },
         {
-          "species": "core:torrentoad",
-          "weight": 1
+          "species": "core:thornwing",
+          "weight": 1,
+          "levels": [20, 23]
         }
       ]
     },
@@ -183,7 +189,7 @@
       "levels": [32, 38],
       "spawns": [
         {
-          "species": "core:thornwing",
+          "species": "core:mossback",
           "weight": 2
         },
         {
@@ -191,8 +197,8 @@
           "weight": 2
         },
         {
-          "species": "core:infernyx",
-          "weight": 1
+          "species": "core:thornwing",
+          "weight": 2
         }
       ]
     },
@@ -203,12 +209,16 @@
       "levels": [30, 36],
       "spawns": [
         {
-          "species": "core:torrentoad",
-          "weight": 3
+          "species": "core:rimewisp",
+          "weight": 2
         },
         {
-          "species": "core:voltbat",
-          "weight": 1
+          "species": "core:bogmaw",
+          "weight": 2
+        },
+        {
+          "species": "core:torrentoad",
+          "weight": 2
         }
       ]
     },
@@ -219,15 +229,19 @@
       "levels": [36, 42],
       "spawns": [
         {
+          "species": "core:galehawk",
+          "weight": 2
+        },
+        {
+          "species": "core:rimewisp",
+          "weight": 2
+        },
+        {
+          "species": "core:voltbat",
+          "weight": 1
+        },
+        {
           "species": "core:ironshell",
-          "weight": 2
-        },
-        {
-          "species": "core:thornwing",
-          "weight": 2
-        },
-        {
-          "species": "core:infernyx",
           "weight": 1
         }
       ]

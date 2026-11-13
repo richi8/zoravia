@@ -46,6 +46,7 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 
 ### Launch regions
 1. **Verdale** (temperate forest & lakes) — Nature / Water / Wind. Gentlest start. Hub town Willowmere, second town Fernhollow (Grove Trial), outpost Galecrest; exits: Ember Pass (east, to region 2) and a ferry dock (south, to region 3).
+   - Zorlings (C29): 23 species. Starters **Sprigling** (Nature), **Drizzlet** (Water) and **Emberkit** (Fire): the Fire > Nature > Water > Fire triangle reads best for a first choice, even though Fire is not one of Verdale's three types. Titans: **Mossback** (Hollow Oak, Deepwood; breaks on Wildfire) and **Bogmaw** (Sunken Hollow, Reed Marsh; breaks on Conducted). Legendary: **Verdion** (Nature/Wind, Heartwood Shrine; breaks on Shatter).
 2. **Volcanic desert** — Fire / Earth / Metal. Ash storms: battles start with Burning.
 3. **Frozen coast islands** — Ice / Water / Electric. Storms: battles start with Wet.
 
@@ -80,6 +81,7 @@ Each region has its own lore, a legendary, a trial/badge, and **its own 3 starte
 - Nicknames (up to 12 characters).
 - **Team-wide shared XP**: every team member that has not fainted gets the full XP of a win (decided 2026-11-12, C13).
 - Evolution is offered on reaching the level; the player may wait, and it is offered again on later level-ups.
+- **Stages look different, not just smaller** (C29, user review): a baby is rounder and paler with big eyes and fawn spots, and has no horns, back plates or wings (unless the line always flies). A middle stage gets the first adult features (one horn for antlers, spikes for plates, the adult markings). Lines may also change body plan while young (`look.young`, e.g. fish → serpent, puffball chick → bird); that is the default for ordinary lines, while dragons and other distinctive lines keep their shape. A line keeps one voice (the final form's) across stages.
   - Settled in C22b (2026-11-13): the choices are asked after the battle, in the overworld. A new move with all 3 slots full: pick one to forget, or don't learn it (the move relearner can teach it later). Evolution: "Evolve" or "Not now"; a Zorling that waited can also evolve any time from the party screen. Moves the new form learns at its current level are taught (free slot) or offered the same way.
 
 ## Types (8)
@@ -137,7 +139,7 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 - Visible overworld encounters (no random grass battles).
 
 ## Bosses
-- **Titans** (2–3 per region): boosted regional species with boss aura (~×3 HP, Armor, extra move).
+- **Titans** (2–3 per region): boosted regional species with boss aura (~×3 HP, Armor, extra move). Bulky species may get less (Verdale's bosses: ×2, C29 simulations), set per boss.
   - **Armor**: takes ×0.4 damage until the right reaction breaks it → ×1.5 damage for 2 turns, then re-arms. (Was ×0.3; changed 2026-11-12 in C17: with ×0.3, brute force needed ~8 good potions in the simulation instead of the ~4–5 the Economy section asks for.)
   - Hinted via NPC dialogue; weakness logged in Dex after first encounter.
 - **Regional legendary**: campaign finale, T3 level, one clear weakness, never evolves, bound by level cap.

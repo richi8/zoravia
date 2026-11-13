@@ -68,7 +68,8 @@ describe('dex', () => {
     const dex = markCaught(markSeen(EMPTY_DEX, ['core:voltbat']), ['core:emberkit']);
     const rows = dexEntries(content, dex);
     expect(rows).toHaveLength(content.species.values().length);
-    expect(rows[0]).toEqual({ number: 1, species: 'core:emberkit', seen: true, caught: true });
+    expect(rows[0]).toEqual({ number: 1, species: 'core:sprigling', seen: false, caught: false });
+    expect(rows.find((r) => r.species === 'core:emberkit')).toMatchObject({ caught: true });
     const volt = rows.find((r) => r.species === 'core:voltbat');
     expect(volt).toMatchObject({ seen: true, caught: false });
     expect(rows.filter((r) => r.seen)).toHaveLength(2);

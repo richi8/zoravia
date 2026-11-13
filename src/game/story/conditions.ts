@@ -29,9 +29,11 @@ export function holds(content: GameContent, party: Party, c: StoryCondition): bo
   }
   if ('has' in c) return bagCount(party.bag, c.has) >= (c.count ?? 1);
   if ('money' in c) return party.money >= c.money;
+  if ('boss' in c) {
+    return c.caught ? party.bosses[c.boss]?.result === 'caught' : bossDone(party.bosses, c.boss);
+  }
   if ('caught' in c) return party.dex.caught.includes(c.caught);
   if ('seen' in c) return party.dex.seen.includes(c.seen);
-  if ('boss' in c) return bossDone(party.bosses, c.boss);
   if ('badge' in c) return party.badges.includes(c.badge);
   if ('badges' in c) return party.badges.length >= c.badges;
   if ('beat' in c) return trainerWins(party.trainers, c.beat) >= (c.times ?? 1);

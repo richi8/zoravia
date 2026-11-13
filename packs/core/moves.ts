@@ -1,6 +1,7 @@
 /**
- * Test moves: 2–3 per type, status moves for Fire, Water, Nature and Ice, and the test
- * bosses' signature moves.
+ * Moves: a weak, a mid and a strong hit per type, a status move for every type except
+ * Electric's hit-and-charge kit, and the bosses' signature moves (C29: Verdale's strong hits,
+ * status moves and the signatures of its Titans and legendary).
  */
 
 import type { MoveInput } from '@game/data';
@@ -111,4 +112,64 @@ export const moves = {
     applyChance: 0.3,
   },
   'steel-claw': { name: 'Steel Claw', type: t('metal'), power: 65, accuracy: 95, applyChance: 0.2 },
+  'timber-crush': {
+    name: 'Timber Crush',
+    type: t('nature'),
+    power: 85,
+    accuracy: 85,
+    applyChance: 0.2,
+  },
+  riptide: { name: 'Riptide', type: t('water'), power: 85, accuracy: 85, applyChance: 0.2 },
+  'blaze-rush': { name: 'Blaze Rush', type: t('fire'), power: 85, accuracy: 85, applyChance: 0.2 },
+  cyclone: { name: 'Cyclone', type: t('wind'), power: 85, accuracy: 85, applyChance: 0.2 },
+  quake: { name: 'Quake', type: t('earth'), power: 85, accuracy: 85, applyChance: 0.2 },
+  blizzard: { name: 'Blizzard', type: t('ice'), power: 85, accuracy: 80, applyChance: 0.3 },
+  updraft: {
+    name: 'Updraft',
+    description: 'Lifts the target off its feet: Airborne.',
+    type: t('wind'),
+    power: 0,
+    accuracy: 90,
+    applyChance: 1,
+  },
+  'mud-bath': {
+    name: 'Mud Bath',
+    description: 'Covers the target in mud: Muddy.',
+    type: t('earth'),
+    power: 0,
+    accuracy: 90,
+    applyChance: 1,
+  },
+  corrode: {
+    name: 'Corrode',
+    description: 'Rusts the target’s guard: Exposed.',
+    type: t('metal'),
+    power: 0,
+    accuracy: 90,
+    applyChance: 1,
+  },
+  'ancient-root': {
+    name: 'Ancient Root',
+    description: 'The Mossback Titan’s signature move.',
+    type: t('nature'),
+    power: 80,
+    accuracy: 90,
+    applyChance: 0.3,
+  },
+  'bog-surge': {
+    name: 'Bog Surge',
+    description: 'The Bogmaw Titan’s signature move.',
+    type: t('water'),
+    power: 80,
+    accuracy: 90,
+    applyChance: 0.3,
+  },
+  'verdant-gale': {
+    name: 'Verdant Gale',
+    description: 'Verdion’s signature move.',
+    type: t('wind'),
+    power: 85,
+    accuracy: 90,
+    applyChance: 0.3,
+  },
 } satisfies Record<string, MoveInput>;

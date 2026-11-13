@@ -154,7 +154,13 @@ describe('species', () => {
       'Blazekit',
       'Infernyx',
     ]);
-    expect(content.species.values().filter((s) => s.legendary)).toHaveLength(1);
+    // Verdion (Verdale) and Glacivar (the frozen coast's, until Region 3 has its pack).
+    expect(
+      content.species
+        .values()
+        .filter((s) => s.legendary)
+        .map((s) => s.name),
+    ).toEqual(['Verdion', 'Glacivar']);
   });
 
   it('every species knows a move at level 1', () => {

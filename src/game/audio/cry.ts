@@ -18,7 +18,7 @@ import { Rng } from '@engine/core';
 import { clampFreq, type SoundSpec, type Tone, type Wave } from '@engine/audio';
 import type { GameContent } from '@game/data';
 import type { BodyPlan, Mood, ZorlingGenome } from '../zorlings/genome';
-import { battleLook } from '../zorlings/species-look';
+import { battleLook, speciesLook } from '../zorlings/species-look';
 import type { TypeId } from '../style/tokens';
 
 interface Voice {
@@ -328,7 +328,12 @@ export function speciesCry(
   const have = byKey.get(key);
   if (have) return have;
   const look = battleLook(content, speciesId, opts);
-  const cry = cryFor(look.genome, { boss: opts.boss !== undefined });
+  // A line keeps one voice: young stages with another body plan (C29) still use the final
+  // form's, and sound higher only because they are smaller.
+  const line = content.evolutionLine(speciesId).members;
+  const final = line[line.length - 1];
+  const plan = final ? speciesLook(content, final.id).genome.plan : look.genome.plan;
+  const cry = cryFor({ ...look.genome, plan }, { boss: opts.boss !== undefined });
   byKey.set(key, cry);
   return cry;
 }

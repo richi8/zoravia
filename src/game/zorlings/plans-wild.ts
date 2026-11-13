@@ -406,6 +406,8 @@ function dragon(b: Builder): void {
     );
   }
 
+  // Dragons always roll wings; only a young evolution stage has none (`variants.ts`).
+  if (parts.wings === 'none') return;
   const span = 46 + 16 * body.limbs;
   const wing = parts.wings === 'feather' ? featherWing : membraneWing;
   wing(b, {

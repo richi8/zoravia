@@ -126,18 +126,44 @@ describe('evolution stages', () => {
   });
 
   it('the final stage is the genome itself; earlier stages are smaller-limbed, bigger-headed', () => {
+    const flyers = ['avian', 'bat', 'insect', 'raptor'];
     for (let i = 0; i < 30; i++) {
       const g = generateGenome(`evo:${i}`);
       expect(stageGenome(g, 3, 3)).toBe(g);
       const baby = stageGenome(g, 1, 3);
+      const teen = stageGenome(g, 2, 3);
       expect(zorlingGenomeSchema.parse(baby)).toEqual(baby);
+      expect(zorlingGenomeSchema.parse(teen)).toEqual(teen);
       expect(baby.plan).toBe(g.plan);
-      expect(baby.palette).toEqual(g.palette);
+      // Same colors, paler body.
+      expect(baby.palette).toMatchObject({ secondary: g.palette.secondary, eye: g.palette.eye });
+      expect(baby.palette.primary).not.toBe(g.palette.primary);
+      // Babies wear no adult parts; wings only on lines that always fly.
+      expect(['none', 'leaves']).toContain(baby.parts.back);
+      if (!flyers.includes(g.plan)) {
+        expect(baby.parts.wings).toBe('none');
+        expect(teen.parts.wings).toBe('none');
+      }
+      expect(teen.parts.horns).not.toBe('antlers');
       expect(baby.body.head).toBeGreaterThanOrEqual(g.body.head);
       expect(baby.body.limbs).toBeLessThanOrEqual(g.body.limbs);
       expect(['none', 'nubs']).toContain(baby.parts.horns);
       expect(baby.parts.mouth).not.toBe('fangs');
       expect(baby.mood).not.toBe('fierce');
+    }
+  });
+
+  it('young stages can take another body plan (metamorphosis)', () => {
+    const g = generateGenome('meta', { plan: 'serpent', mood: 'fierce' });
+    expect(stageGenome(g, 1, 2, ['fish']).plan).toBe('fish');
+    expect(stageGenome(g, 2, 2, ['fish'])).toBe(g);
+    const three = generateGenome('meta3', { plan: 'dragon' });
+    expect(stageGenome(three, 1, 3, ['quadruped', 'feline']).plan).toBe('quadruped');
+    expect(stageGenome(three, 2, 3, ['quadruped', 'feline']).plan).toBe('feline');
+    expect(stageGenome(three, 2, 3, ['quadruped']).plan).toBe('dragon');
+    for (const s of [1, 2]) {
+      const young = stageGenome(three, s, 3, ['quadruped', 'feline']);
+      expect(renderZorling(young).width).toBe(96);
     }
   });
 

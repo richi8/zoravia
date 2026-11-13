@@ -143,6 +143,14 @@ describe('conditions and actions', () => {
     yes({ caught: 'core:emberkit' });
     no({ seen: 'core:voltbat' });
     yes({ boss: 'core:thornwing-titan' });
+    yes({ boss: 'core:thornwing-titan', caught: true });
+    no({ boss: 'core:glacivar' });
+    expect(
+      holds(content, fresh({ bosses: { 'core:glacivar': { result: 'defeated' } } }), {
+        boss: 'core:glacivar',
+        caught: true,
+      }),
+    ).toBe(false);
     yes({ not: { flag: 'core:y' } });
     yes({ all: [{ flag: 'core:x' }, { money: 50 }] });
     no({ all: [{ flag: 'core:x' }, { money: 500 }] });
