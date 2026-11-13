@@ -175,6 +175,10 @@ export class Engine {
       sharedTicker: false,
     });
     app.ticker.stop(); // the engine drives rendering itself
+    // A block canvas: an inline one leaves a gap below it that overflows a 100%-high parent,
+    // and the scrollbars that adds resize the parent, every frame (blank screen until the
+    // window happened to reach a size without overflow).
+    app.canvas.style.display = 'block';
     options.parent.appendChild(app.canvas);
     log.info('renderer ready', { type: app.renderer.name, resolution: app.renderer.resolution });
     return new Engine(app, options.parent, options);

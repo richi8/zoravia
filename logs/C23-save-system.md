@@ -89,6 +89,11 @@ The game now saves to IndexedDB. There are 3 save slots, and each write keeps th
   - No console errors or warnings in any run.
 - Done when "reload restores exact state": ✅ (browser, same profile, new page). "Migration test from v1 → v2 fixture": ✅ (`save.test.ts`, plus loading the fixture from IndexedDB in the browser).
 
+## Fix after the chunk: blank launcher on load
+- **Reported by the user:** the launcher didn't show after a reload, only after resizing the window.
+- **Cause:** a resize loop that is older than C23 (the C22b commit shows it too). The canvas was an inline element in a 100%-high `#app`. The gap below an inline element made the page overflow, the scrollbars shrank `#app`, and the ResizeObserver resized the canvas, which removed the scrollbars, and so on, every frame. Each round rebuilt the pixel-screen texture, so nothing stayed on screen. It only happened at some window sizes, which is why resizing "fixed" it. Headless Chrome (no scrollbars) never showed it, so my earlier checks missed it.
+- **Fix:** the engine makes its canvas `display: block`, and `index.html` hides page overflow. In a real Chrome window at 1100×700: 60 resizes per 500 ms before, 0 after, and the launcher draws on load and after resizing.
+
 ## Follow-ups
 - **C26:** quest flags and progress in the save (a v2 → v3 step with a fixture of v2).
 - **C27:** badges in the save (and pass them to `BattleScene`'s `badges` for the level cap). Check `bossDone` before placing a Titan or legendary, and pass `boss` to `applyBattleResult`. Rematches read the boss log.
