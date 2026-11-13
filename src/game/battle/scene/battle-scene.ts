@@ -7,8 +7,11 @@
  * the capture throw and wobbles, faints. The HUD follows a mirror of what has been shown
  * (`@game/battle/present`), so it never runs ahead of the animation.
  *
- * Keyboard: action menu (Fight / Switch / Items / Run), move list with info, `1 2 3` to
- * switch, bag with "use on", `F` inspect, `E` advances text (hold = faster). Mouse works too.
+ * Layout (G2 review, option B): the moves are always on screen as cards in the bottom bar;
+ * battle text is a timed caption at the top of the battlefield that no key advances; the
+ * whole battle's text is in the log (`L`); the end of the battle is one results panel that
+ * `E` closes. Keyboard: `A`/`D` + `E` pick a move, `1 2 3` switch, `I` items, `Q` run, `L`
+ * log, `F` inspect. Mouse works too.
  */
 
 import { Container, Graphics } from 'pixi.js';
@@ -16,7 +19,6 @@ import type { InputManager } from '@engine/input';
 import { pixelTexture } from '@engine/render/pixel-texture';
 import type { Scene } from '@engine/scenes/scene-manager';
 import {
-  DialogBox,
   FocusStack,
   InspectWidget,
   Menu,
@@ -33,10 +35,10 @@ import { xpForLevel } from '@game/progression';
 import { conditionIdOf, typeIdOf } from '@game/style/ids';
 import { conditionColors, paper, semantic, typeColors } from '@game/style/tokens';
 import { BagPanel, type BagItem } from '@game/ui/bag';
-import { TypeBadge } from '@game/ui/badges';
+import { BattleCaption, BattleLogPanel, BattleResultPanel, MoveBar } from '@game/ui/battle-bar';
 import { CombatantCard, Hotbar, type CombatantView, type HudTips } from '@game/ui/battle-hud';
 import { Callout, EffectsLayer, FloatNumber } from '@game/ui/callout';
-import { drawItem, MessageBox, MoveInfoPanel } from '@game/ui/panels';
+import { drawItem } from '@game/ui/panels';
 import { ZorlingActor } from '@game/zorlings/actor';
 import { renderZorling } from '@game/zorlings/render';
 import { battleLook, type BattleLook } from '@game/zorlings/species-look';
@@ -115,7 +117,7 @@ const BAR_H = 60;
 const MARGIN = 6;
 const MENU_W = 152;
 
-/** Text that leads straight into an animation closes on its own after a beat. */
+/** Text that leads straight into an animation stays only a short beat. */
 const AUTO_EVENTS: ReadonlySet<BattleEvent['kind']> = new Set([
   'sendOut',
   'switchOut',
@@ -167,14 +169,19 @@ export class BattleScene implements Scene<Container> {
   private readonly foeCard: CombatantCard;
   private readonly allyCard: CombatantCard;
   private readonly hotbar: Hotbar;
-  private readonly message = new MessageBox();
-  private readonly moveInfo: MoveInfoPanel;
+  private readonly moveBar: MoveBar;
+  private readonly caption = new BattleCaption();
   private readonly stack: FocusStack<Container>;
   private readonly theme: UiTheme;
   private readonly portraits = new Map<number, ReturnType<typeof pixelTexture>>();
   private readonly placers = new Map<Widget<Container>, () => void>();
-  private actionMenu: Menu | undefined;
-  private moveMenu: Menu | undefined;
+  /** Every line of battle text so far, with "Turn N" markers (the `L` log). */
+  private readonly log: string[] = [];
+  /** Lines of the `end` event, shown in the results panel. */
+  private endLines: string[] = [];
+  private turns = 0;
+  /** Bumped by every caption, so a timed hide only hides its own. */
+  private captionId = 0;
 
   private state!: BattleState;
   private shown!: Shown;
@@ -223,17 +230,36 @@ export class BattleScene implements Scene<Container> {
     this.allyCard = new CombatantCard({ side: 'ally', tips: this.tips });
     this.hotbar = new Hotbar(this.tips);
     this.hotbar.onSelect = (i) => (this.clickedSlot = i);
-    this.moveInfo = new MoveInfoPanel({
-      layer: this.tooltips,
-      type: (t) => typeTip(content, t),
-      condition: (id) => conditionTip(content, id),
+    this.moveBar = new MoveBar({
+      tips: {
+        layer: this.tooltips,
+        type: (t) => typeTip(content, t),
+        condition: (id) => conditionTip(content, id),
+      },
+      onSelect: (slot) => {
+        const choice: Choice = { kind: 'move', slot };
+        if (this.legal().some((c) => sameChoice(c, choice))) this.choose(choice);
+      },
+      onBack: () => this.tryRun(),
+      onKey: (key) => {
+        if (this.stack.top !== this.moveBar) return;
+        if (key === 'items') this.openBag();
+        else if (key === 'run') this.tryRun();
+        else this.openLog();
+      },
     });
-    this.moveInfo.visible = false;
     this.veil.visible = false;
     this.foeCard.visible = false;
     this.allyCard.visible = false;
-    this.hud.addChild(this.foeCard, this.allyCard, this.hotbar, this.message, this.moveInfo);
-    this.ui.addChild(this.hud, this.effects, this.veil, this.stackLayer, this.tooltips.view);
+    this.hud.addChild(this.foeCard, this.allyCard, this.hotbar, this.moveBar.display);
+    this.ui.addChild(
+      this.hud,
+      this.effects,
+      this.veil,
+      this.caption,
+      this.stackLayer,
+      this.tooltips.view,
+    );
     this.stack = new FocusStack<Container>(
       { attach: (v) => this.stackLayer.addChild(v), detach: (v) => this.stackLayer.removeChild(v) },
       options.ui,
@@ -270,7 +296,7 @@ export class BattleScene implements Scene<Container> {
     });
     this.shown = shownFrom(content, state, this.xpOf, true);
     this.refreshHud(false);
-    this.message.set('');
+    this.refreshMoves();
     void this.playEvents(events).then(() => this.next());
   }
 
@@ -292,11 +318,10 @@ export class BattleScene implements Scene<Container> {
       y - 4 - this.allyCard.cardHeight,
     );
     this.hotbar.position.set(MARGIN, y);
-    const x0 = this.barX;
-    this.message.position.set(x0, y);
-    this.message.resize(width - MARGIN - MENU_W - 4 - x0, BAR_H);
-    this.moveInfo.position.set(x0 + 154, y);
-    this.moveInfo.resize(width - MARGIN - (x0 + 154), BAR_H);
+    this.moveBar.display.position.set(this.barX, y);
+    this.moveBar.resize(width - MARGIN - this.barX, BAR_H);
+    this.caption.setMaxWidth(Math.min(280, width - this.captionLeft - 8));
+    this.placeCaption();
     this.veil.clear().rect(0, 0, width, height).fill({ color: paper.veil, alpha: 0.45 });
     for (const [w, place] of this.placers) {
       if (this.stack.includes(w)) place();
@@ -360,7 +385,7 @@ export class BattleScene implements Scene<Container> {
       }
     }
     this.busy = false;
-    this.openActions();
+    this.openTurn();
   }
 
   private choose(choice: Choice): void {
@@ -385,20 +410,43 @@ export class BattleScene implements Scene<Container> {
     this.ended = true;
     const { content, badges = 0 } = this.options;
     const result = finishBattle(content, this.state, { badges });
+    const lines = [...this.endLines];
+    const foe = shownActive(this.shown, OPPONENT).name;
+    if (!lines.length) {
+      if (result.outcome === 'caught') lines.push(`${foe} was caught!`);
+      else if (result.outcome === 'ran') lines.push('You got away safely.');
+      else if (result.outcome === 'win') lines.push(`You defeated ${foe}!`);
+    }
     if (result.xp > 0) {
-      await this.say(`Your team gained ${result.xp} XP each!`);
+      lines.push(`Your team gained ${result.xp} XP each!`);
       for (const [i, events] of result.progress.entries()) {
-        const z = result.team[i];
-        if (!z) continue;
         const name = this.shown.sides[PLAYER].team[i]?.name ?? '';
         for (const e of events) {
           if (e.kind === 'xp') continue;
           const cue = progressCue(e);
           if (cue) playSfx(cue);
-          for (const line of progressText(content, name, e)) await this.say(line);
+          lines.push(...progressText(content, name, e));
         }
       }
     }
+    const title = { win: 'Victory!', caught: 'Caught!', lose: 'Defeated', ran: 'Got away' }[
+      result.outcome
+    ];
+    this.caption.hide();
+    this.closeMenus();
+    // The only text in a battle that waits for `E`.
+    await new Promise<void>((resolve) => {
+      const panel = new BattleResultPanel(title, lines, () => {
+        this.stack.remove(panel);
+        resolve();
+      });
+      this.push(panel, () =>
+        panel.view.position.set(
+          Math.round((this.width - BattleResultPanel.WIDTH) / 2),
+          Math.max(4, Math.round((this.barY - panel.height) / 2)),
+        ),
+      );
+    });
     this.options.onEnd(result, this.state);
   }
 
@@ -422,10 +470,17 @@ export class BattleScene implements Scene<Container> {
     const apply = (): void => {
       this.shown = applyShown(content, this.shown, e);
     };
-    const sayAll = async (auto = AUTO_EVENTS.has(e.kind)): Promise<void> => {
-      for (const line of lines) await this.say(line, !auto);
+    const sayAll = async (short = AUTO_EVENTS.has(e.kind)): Promise<void> => {
+      for (const line of lines) await this.say(line, short);
     };
-    if (e.kind === 'end') battleOverAudio();
+    if (e.kind === 'end') {
+      battleOverAudio();
+      // The outcome goes into the results panel, not a caption.
+      this.endLines = lines;
+      apply();
+      return;
+    }
+    if (e.kind === 'turnStart') this.log.push(`Turn ${++this.turns}`);
     const cues = eventCues(content, before, e);
     // A move sounds when its VFX launches (after its text); everything else right away.
     if (e.kind !== 'useMove') this.cue(cues);
@@ -435,6 +490,7 @@ export class BattleScene implements Scene<Container> {
         apply();
         this.showActor(e.side, e.slot);
         this.refreshHud(false);
+        this.refreshMoves();
         const appear = this.appear(e.side);
         await sayAll();
         await appear;
@@ -461,7 +517,8 @@ export class BattleScene implements Scene<Container> {
         apply();
         this.refreshHud(true);
         await this.untilBars();
-        await sayAll();
+        // "used Splash Shot!" and "It's super effective!" read as one caption.
+        for (const line of lines) await this.say(line, false, true);
         return;
       }
       case 'reaction': {
@@ -881,7 +938,9 @@ export class BattleScene implements Scene<Container> {
   private preloadOne(): void {
     const job = this.preloads[0];
     if (!job || this.tweens.length > 0 || this.vfxLayer.children.length > 0) return;
-    if (!(this.stack.top instanceof DialogBox) && !(this.stack.top instanceof Menu)) return;
+    const top = this.stack.top;
+    if (top !== this.moveBar && !(top instanceof Menu) && !(top instanceof BattleResultPanel))
+      return;
     this.preloads.shift();
     if (!job.actor.destroyed) job.actor.preload(job.clip);
   }
@@ -898,7 +957,7 @@ export class BattleScene implements Scene<Container> {
     if (input.pressed('inspect')) {
       if (top instanceof InspectWidget) {
         this.stack.remove(top);
-      } else if (!(top instanceof DialogBox)) {
+      } else if (!(top instanceof BattleResultPanel)) {
         this.stack.push(
           new InspectWidget({
             layer: this.tooltips,
@@ -915,8 +974,11 @@ export class BattleScene implements Scene<Container> {
     }
     const clicked = this.clickedSlot;
     this.clickedSlot = undefined;
+    if (top instanceof BattleLogPanel && input.pressed('log')) return top.dismiss();
     if (this.busy || this.state.phase !== 'choose') return;
-    if (top !== this.actionMenu && (top === undefined || top !== this.moveMenu)) return;
+    if (top !== this.moveBar) return;
+    if (input.pressed('inventory')) return this.openBag();
+    if (input.pressed('log')) return this.openLog();
     if (clicked !== undefined) this.trySwitch(clicked);
     (['hotbar1', 'hotbar2', 'hotbar3'] as const).forEach((k, i) => {
       if (input.pressed(k)) this.trySwitch(i);
@@ -927,91 +989,74 @@ export class BattleScene implements Scene<Container> {
     return legalChoices(this.options.content, this.state, PLAYER);
   }
 
-  private openActions(): void {
-    const legal = this.legal();
-    const has = (kind: Choice['kind']): boolean => legal.some((c) => c.kind === kind);
-    const me = shownActive(this.shown, PLAYER);
+  /** The player's turn: the move bar takes the keys. */
+  private openTurn(): void {
+    this.refreshMoves();
     const foe = shownActive(this.shown, OPPONENT);
-    const menu = new Menu({
-      theme: this.theme,
-      items: [
-        { label: 'Fight', disabled: !has('move') },
-        { label: 'Switch', hint: '1 2 3', disabled: !has('switch') },
-        // Open whenever the bag holds something; items that can't be used now say why.
-        { label: 'Items', disabled: !Object.values(this.state.bag).some((n) => n > 0) },
-        { label: 'Run', disabled: !has('run') },
-      ],
-      width: MENU_W,
-      onSelect: (i) => {
-        if (i === 0) this.openMoves();
-        else if (i === 1) this.openSwitch(false);
-        else if (i === 2) this.openBag();
-        else this.choose({ kind: 'run' });
-      },
-    });
-    this.actionMenu = menu;
-    if (foe.subdued) {
-      this.message.set(`${foe.name} is Subdued.\nThrow a capture item!`, [
-        ['E', 'Select'],
-        ['F', 'Info'],
-      ]);
-    } else {
-      this.message.set(`What will ${me.name} do?`, [
-        ['E', 'Select'],
-        ['1-3', 'Switch'],
-        ['F', 'Info'],
-      ]);
-    }
-    this.push(menu, () => menu.view.position.set(this.width - MARGIN - MENU_W, this.barY));
+    if (foe.subdued) this.showCaption(`${foe.name} is Subdued. Press I to throw a capture item!`);
+    else this.caption.hide();
+    this.push(this.moveBar, () => undefined);
+  }
+
+  /** Move cards for the active Zorling, with hints against the foe on the field. */
+  private refreshMoves(): void {
+    const { content } = this.options;
+    const me = activeOf(this.state, PLAYER);
+    const foe = shownActive(this.shown, OPPONENT);
+    const legal = this.state.phase === 'choose' ? this.legal() : [];
+    this.moveBar.set(
+      me.moves.map((id) => moveViewFor(content, id, foe)),
+      me.moves.map((_, slot) => legal.some((c) => sameChoice(c, { kind: 'move', slot }))),
+      legal.some((c) => c.kind === 'run'),
+    );
   }
 
   private closeMenus(): void {
     for (const w of [...this.placers.keys()]) if (this.stack.includes(w)) this.stack.remove(w);
+    if (this.stack.includes(this.moveBar)) this.stack.remove(this.moveBar);
     this.placers.clear();
-    this.actionMenu = undefined;
-    this.moveMenu = undefined;
-    this.moveInfo.visible = false;
-    this.message.visible = true;
     this.veil.visible = false;
   }
 
-  private openMoves(): void {
-    const { content } = this.options;
-    const me = activeOf(this.state, PLAYER);
-    const foe = shownActive(this.shown, OPPONENT);
-    const show = (i: number): void => {
-      const id = me.moves[i];
-      if (id) this.moveInfo.set(moveViewFor(content, id, foe));
-    };
-    const close = (): void => {
-      this.stack.remove(menu);
-      this.moveMenu = undefined;
-      this.moveInfo.visible = false;
-      this.message.visible = true;
-      if (this.actionMenu) this.actionMenu.view.visible = true;
-    };
+  /** `Q` on the move bar: run from a wild battle (asks first). */
+  private tryRun(): void {
+    if (!this.legal().some((c) => c.kind === 'run')) {
+      this.flash(
+        this.state.kind === 'trainer'
+          ? "You can't run from a trainer battle!"
+          : "You can't run now.",
+      );
+      return;
+    }
     const menu = new Menu({
       theme: this.theme,
-      title: 'Moves',
-      width: 150,
-      items: me.moves.map((id) => {
-        const m = content.moves.require(id);
-        const t = typeIdOf(m.type) ?? 'metal';
-        return { label: m.name, icon: () => new TypeBadge(t, { label: false }) };
-      }),
-      onHighlight: (i) => show(i),
-      onSelect: (slot) => {
-        const choice: Choice = { kind: 'move', slot };
-        if (this.legal().some((c) => sameChoice(c, choice))) this.choose(choice);
+      title: 'Run away?',
+      width: 90,
+      items: [{ label: 'Run' }, { label: 'Stay' }],
+      onSelect: (i) => {
+        this.stack.remove(menu);
+        if (i === 0) this.choose({ kind: 'run' });
       },
-      onBack: close,
+      onBack: () => this.stack.remove(menu),
     });
-    this.moveMenu = menu;
-    show(0);
-    this.message.visible = false;
-    this.moveInfo.visible = true;
-    if (this.actionMenu) this.actionMenu.view.visible = false;
-    this.push(menu, () => menu.view.position.set(this.barX, this.barY));
+    this.push(menu, () =>
+      menu.view.position.set(this.width - MARGIN - menu.width, this.barY - menu.height - 3),
+    );
+  }
+
+  /** `L`: every line of this battle so far. */
+  private openLog(): void {
+    const panel = new BattleLogPanel(this.log, () => {
+      this.stack.remove(panel);
+      this.veil.visible = false;
+    });
+    this.veil.visible = true;
+    this.push(panel, () =>
+      panel.view.position.set(
+        Math.round((this.width - BattleLogPanel.WIDTH) / 2),
+        Math.max(4, Math.round((this.barY - panel.height) / 2)),
+      ),
+    );
   }
 
   /** `1 2 3` / hotbar clicks: switch to that slot if allowed. */
@@ -1061,10 +1106,13 @@ export class BattleScene implements Scene<Container> {
     return "You can't switch now.";
   }
 
-  /** Shows a short note in the message box (no turn is used). */
+  /** Shows a short note as a caption for a few seconds (no turn is used). */
   private flash(text: string): void {
     playSfx('ui.blocked');
-    this.message.set(text, [['E', 'Select']]);
+    const id = this.showCaption(text);
+    void this.delay(2.5).then(() => {
+      if (this.captionId === id) this.caption.hide();
+    });
   }
 
   private openSwitch(forced: boolean): void {
@@ -1088,7 +1136,7 @@ export class BattleScene implements Scene<Container> {
       },
       ...(forced ? {} : { onBack: () => this.stack.remove(menu) }),
     });
-    if (forced) this.message.set(`Who will you send out next?`, [['E', 'Select']]);
+    if (forced) this.showCaption('Who will you send out next?');
     else if (isTrapped(this.options.content, activeOf(this.state, PLAYER)))
       this.flash(this.switchBlockedText());
     this.push(menu, () =>
@@ -1098,6 +1146,10 @@ export class BattleScene implements Scene<Container> {
 
   private openBag(): void {
     const { content } = this.options;
+    if (!Object.values(this.state.bag).some((n) => n > 0)) {
+      this.flash('Your bag is empty.');
+      return;
+    }
     const team = this.shown.sides[PLAYER].team.map((z, i) => this.viewOf(z, PLAYER, i));
     const panel = new BagPanel({
       tabs: bagTabsFor(content, this.state.bag),
@@ -1130,7 +1182,6 @@ export class BattleScene implements Scene<Container> {
       return;
     }
     // Not allowed: say why and stay in the bag.
-    playSfx('ui.blocked');
     const { content } = this.options;
     const effect = content.items.require(item.id).effect;
     const foe = shownActive(this.shown, OPPONENT);
@@ -1146,44 +1197,42 @@ export class BattleScene implements Scene<Container> {
     } else if (foe.subdued) {
       why = 'Throw a capture item now!';
     }
-    this.stack.remove(panel);
-    this.veil.visible = false;
-    void this.say(why).then(() => {
-      if (!this.busy && this.state.phase === 'choose') this.openBag();
-    });
+    // Stay in the bag; the caption sits above it.
+    this.flash(why);
   }
 
   // ---- text and timing -------------------------------------------------------------------
 
-  /** Battle text in the message area; resolves when the player has read it. */
-  private say(text: string, waitForKey = true): Promise<void> {
-    return new Promise((resolve) => {
-      const dialog = new DialogBox({
-        theme: this.theme,
-        width: Math.round(this.width - MARGIN * 2 - Hotbar.WIDTH - 4),
-        lines: 4,
-        pages: [text],
-        onDone: (d) => {
-          this.stack.remove(d);
-          this.message.set(text);
-          resolve();
-        },
-      });
-      this.push(dialog, () =>
-        dialog.view.position.set(this.barX, this.barY + BAR_H - dialog.height),
-      );
-      if (!waitForKey) {
-        void this.until(() => dialog.typewriter.pageComplete).then(() =>
-          this.delay(0.35).then(() => {
-            if (this.stack.includes(dialog)) {
-              this.stack.remove(dialog);
-              this.message.set(text);
-              resolve();
-            }
-          }),
-        );
-      }
-    });
+  /**
+   * One line of battle text as a caption, logged. Resolves after it was on screen long
+   * enough to read (battle speed shortens it); no key advances it. `short`: text that leads
+   * into an animation. `append`: adds to the caption on screen (e.g. effectiveness).
+   */
+  private say(text: string, short = false, append = false): Promise<void> {
+    const prev = this.caption.current;
+    const line = append && prev ? `${prev} ${text}` : text;
+    if (append && prev && this.log.length) this.log[this.log.length - 1] = line;
+    else this.log.push(line);
+    this.showCaption(line);
+    const read = Math.min(2.4, Math.max(1, 0.6 + text.length * 0.028));
+    return this.delay(short ? 0.6 : append ? Math.min(1.2, read) : read);
+  }
+
+  private showCaption(text: string): number {
+    this.caption.show(text);
+    this.placeCaption();
+    return ++this.captionId;
+  }
+
+  /** Top of the battlefield, centered, clear of the foe's card. */
+  private placeCaption(): void {
+    const w = this.caption.width;
+    const x = Math.max(this.captionLeft, Math.round((this.width - w) / 2));
+    this.caption.position.set(Math.min(x, this.width - 8 - w), 8);
+  }
+
+  private get captionLeft(): number {
+    return 8 + this.foeCard.cardWidth + 6;
   }
 
   private until(pred: () => boolean): Promise<void> {

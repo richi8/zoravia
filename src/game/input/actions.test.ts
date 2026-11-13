@@ -105,6 +105,12 @@ describe('Zoravia input — context-sensitive WASD', () => {
     input.setContexts(['battle']);
     tap(input, 'Digit2');
     expect(input.pressed('hotbar2')).toBe(true);
+    input.update(1 / 60);
+    tap(input, 'KeyI');
+    expect(input.pressed('inventory')).toBe(true);
+    input.update(1 / 60);
+    tap(input, 'KeyL');
+    expect(input.pressed('log')).toBe(true);
     input.setContexts(['overworld']);
     for (const [code, action] of [
       ['KeyI', 'inventory'],

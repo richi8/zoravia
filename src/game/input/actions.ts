@@ -25,6 +25,8 @@ export const ACTIONS = [
   /** Keyboard tooltips: put a cursor on icons and badges to read what they mean. */
   'inspect',
   'inventory',
+  /** Battle log (C31 G2 tweak): every line of the current battle. */
+  'log',
   'map',
   'party',
   'dex',
@@ -57,6 +59,7 @@ export const DEFAULT_BINDINGS: BindingTable<Action> = {
   hotbar3: ['Digit3', 'Numpad3'],
   inspect: ['KeyF'],
   inventory: ['KeyI'],
+  log: ['KeyL'],
   map: ['KeyM'],
   party: ['KeyP'],
   dex: ['KeyB'],
@@ -85,9 +88,15 @@ export const CONTEXTS = [
     ],
   },
   { id: 'menu', actions: [...NAV, 'inspect'] },
-  /** Battle menus: navigation plus `1 2 3` direct switching and `F` inspect. */
-  { id: 'battle', actions: [...NAV, 'hotbar1', 'hotbar2', 'hotbar3', 'inspect'] },
-  /** Dialogue/battle text: `E` advances (hold to speed up), `Q` skips/closes. */
+  /**
+   * Battle: the move bar and menus (navigation), `1 2 3` direct switching, `I` items, `L` the
+   * battle log and `F` inspect. `Q` (back) on the move bar runs.
+   */
+  {
+    id: 'battle',
+    actions: [...NAV, 'hotbar1', 'hotbar2', 'hotbar3', 'inventory', 'log', 'inspect'],
+  },
+  /** Dialogue text: `E` advances (hold to speed up), `Q` skips/closes. Battle text is timed. */
   { id: 'dialog', actions: ['confirm', 'back'] },
 ] as const satisfies readonly InputContextDef<Action>[];
 

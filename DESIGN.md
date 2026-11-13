@@ -216,13 +216,12 @@ The player has **one movement speed** (no running / running shoes), **3.75 tiles
 `I` inventory, `M` map, `P` party, `B` dex, `J` quests, `Esc` pause menu.
 
 ### Battle flow (keyboard)
-1. Encounter starts → **action menu** appears: `Fight`, `Switch`, `Items`, `Run`.
-   - `W/S` (or arrows) move the cursor, `E` confirms.
-2. `Fight` → **move list** (up to 3 moves). `W/A/S/D` / arrows move between moves, `E` uses the move, `Q` goes back.
-   - The highlighted move shows type, power, accuracy, and which condition it applies or exploits on this enemy.
-3. `Switch` → hotbar list of 3 creatures, `E` confirms (costs the turn), `Q` back. Kept as an alternative for players who prefer menus; the primary way to switch is `1 2 3`.
-4. `Items` → bag list, `E` selects item → `E` selects target, `Q` back.
-5. Dialogue/battle text advances with `E`; holding `E` speeds it up.
+Settled at the G2 review (2026-11-13, option B of a preview round; replaces the Fight / Switch / Items / Run menu):
+1. **Move bar**: whenever it is the player's turn, the active Zorling's moves are on screen as cards in the bottom bar (no `Fight` step). Each card shows the type, the condition it applies, power and accuracy, and a live hint against this foe (effectiveness, a reaction it would set off, a combo it sets up). `A/D` (or arrows) pick, `E` uses the move. During the turn the bar stays visible, dimmed.
+2. Next to the cards, a key column: `I` **items** (bag, `E` selects item → `E` selects target, `Q` back), `Q` **run** (wild battles only; asks first), `L` **battle log**, `1 2 3` **switch**.
+3. **Battle text** is a caption at the top of the battlefield, at most about two lines. It plays on a timer (battle speed shortens it); **no key advances it**, and `E` does nothing to text during a battle. A move and its effectiveness read as one line. Every line goes into the battle log (`L`, with turn markers), so nothing missed is lost.
+4. **End of battle**: one results panel (Victory / Caught / Defeated / Got away) lists the outcome, the XP and level ups. It is the only battle text that waits for `E`.
+5. After a faint, the player picks the next Zorling from a list (`E`).
 
 **Primary switching:** `1 2 3` switch directly to that hotbar creature whenever it's the player's turn (costs the turn). Optional confirm prompt, toggleable in settings. Moves have no letter hotkeys because `W` is used for navigation.
 
