@@ -11,7 +11,7 @@
       "name": "Sunny Meadow",
       "glyph": "m",
       "tier": "t1",
-      "levels": [3, 7],
+      "levels": [3, 6],
       "spawns": [
         {
           "species": "core:pipwing",
@@ -145,7 +145,7 @@
       "name": "Breezy Downs",
       "glyph": "o",
       "tier": "t2",
-      "levels": [21, 27],
+      "levels": [23, 29],
       "spawns": [
         {
           "species": "core:galehawk",

@@ -83,10 +83,10 @@ export const verdaleStoryTrainers: Record<string, TrainerInput> = {
     teams: [
       {
         team: [
-          { species: c('voltbat'), level: 13 },
-          { species: c('mudpaddle'), level: 14 },
+          { species: c('voltbat'), level: 12 },
+          { species: c('mudpaddle'), level: 13 },
           {
-            species: c('thornwing'),
+            species: c('sproutle'),
             level: 15,
             moves: [c('gust'), c('vine-snap'), c('mud-toss')],
           },
@@ -111,7 +111,7 @@ export const verdaleStoryTrainers: Record<string, TrainerInput> = {
         badges: 1,
         team: [
           { species: c('blazekit'), level: 17 },
-          { species: c('galehawk'), level: 17 },
+          { species: c('galehawk'), level: 18 },
           { species: c('voltbat'), level: 16 },
         ],
       },
@@ -125,9 +125,9 @@ export const verdaleStoryTrainers: Record<string, TrainerInput> = {
     teams: [
       {
         team: [
-          { species: c('blazekit'), level: 12 },
-          { species: c('pipwing'), level: 12 },
-          { species: c('ironshell'), level: 11 },
+          { species: c('emberkit'), level: 11 },
+          { species: c('pipwing'), level: 11 },
+          { species: c('ironshell'), level: 10 },
         ],
       },
     ],
@@ -139,9 +139,9 @@ export const verdaleStoryTrainers: Record<string, TrainerInput> = {
     teams: [
       {
         team: [
-          { species: c('galehawk'), level: 30 },
-          { species: c('ironshell'), level: 30 },
-          { species: c('infernyx'), level: 31 },
+          { species: c('galehawk'), level: 26 },
+          { species: c('ironshell'), level: 26 },
+          { species: c('infernyx'), level: 27 },
         ],
       },
     ],

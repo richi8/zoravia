@@ -137,11 +137,11 @@ describe('leveling', () => {
     expect(r.zorling.hp).toBe(0);
   });
 
-  it('team-wide shared XP: every conscious member gets the full amount', () => {
+  it('team-wide shared XP: every member gets the full amount, fainted ones too', () => {
     const team = [make('ironshell', 10), make('puddlit', 10, { hp: 0 }), make('sproutle', 10)];
     const r = shareXp(content, team, 500, NO_CAP);
-    expect(r.team.map((z, i) => z.xp - (team[i]?.xp ?? 0))).toEqual([500, 0, 500]);
-    expect(r.events[1]).toEqual([]);
+    expect(r.team.map((z, i) => z.xp - (team[i]?.xp ?? 0))).toEqual([500, 500, 500]);
+    expect(r.team[1]?.hp).toBe(0);
   });
 });
 

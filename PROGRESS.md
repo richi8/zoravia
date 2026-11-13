@@ -37,7 +37,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C28 | Region 1 map | ✅ | [log](logs/C28-region-1-map.md) |
 | C29 | Region 1 Zorlings & trainers | ✅ | [log](logs/C29-region-1-zorlings.md) |
 | C30 | Region 1 campaign & lore | ✅ | [log](logs/C30-region-1-campaign.md) |
-| C31 | Balance & playtest pass | ⬜ | |
+| C31 | Balance & playtest pass | ✅ | [log](logs/C31-balance-playtest.md) |
 | G2 | 🚦 Fun gate | ⬜ | |
 | C32 | Juice & presentation | ⬜ | |
 | C33 | Title, settings, start flow | ⬜ | |

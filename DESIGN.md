@@ -35,7 +35,8 @@ All graphics and audio are code-generated. Built from day one for expansion via 
   - T3 (Lv 30–45): region boss, legendary, rare species
   - Cross-region danger zones (Lv 45–60) for endgame
 - Wild/zone levels fixed. Only campaign story bosses scale lightly (~+4 Lv per badge held).
-- Badge-based soft level cap: XP gain sharply reduced above cap. Starting values (C13, tuned in C31): cap Lv 30 / 45 / 52 / 60 for 0 / 1 / 2 / 3 badges (+5 per further badge); XP at or above the cap ×0.1.
+- Badge-based soft level cap: XP gain sharply reduced above cap. Values (C13, kept in C31): cap Lv 30 / 45 / 52 / 60 for 0 / 1 / 2 / 3 badges (+5 per further badge); XP at or above the cap ×0.1. In the C31 playthrough simulator Verdale ends at Lv ~40–42, under the one-badge cap.
+- **Pacing** (C31 balance pass, `npm run balance`): a region's campaign takes about 120–145 wild battles and 3–4 hours. Trainers field the stage a wild Zorling has at that level (no final forms below their evolution level), except a rival's ace. A new game is assumed to start with one **Lv 6** starter (the start flow, C33, decides); a region's first zone tops out at that level.
 
 - Region maps settled in C28 (2026-11-13):
   - A region's big shapes (towns, roads, rivers, lakes, zone areas, landmark clearings, exits) are placed by hand in its layout; the world tool adds the organic detail (edges, ponds, trees, grass) once, then the overlay places buildings, signs and NPC spots.
@@ -46,7 +47,7 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 
 ### Launch regions
 1. **Verdale** (temperate forest & lakes) — Nature / Water / Wind. Gentlest start. Hub town Willowmere, second town Fernhollow (Grove Trial), outpost Galecrest; exits: Ember Pass (east, to region 2) and a ferry dock (south, to region 3).
-   - Zorlings (C29): 23 species. Starters **Sprigling** (Nature), **Drizzlet** (Water) and **Emberkit** (Fire): the Fire > Nature > Water > Fire triangle reads best for a first choice, even though Fire is not one of Verdale's three types. Titans: **Mossback** (Hollow Oak, Deepwood; breaks on Wildfire) and **Bogmaw** (Sunken Hollow, Reed Marsh; breaks on Conducted). Legendary: **Verdion** (Nature/Wind, Heartwood Shrine; breaks on Shatter).
+   - Zorlings (C29): 23 species. Starters **Sprigling** (Nature), **Drizzlet** (Water) and **Emberkit** (Fire): the Fire > Nature > Water > Fire triangle reads best for a first choice, even though Fire is not one of Verdale's three types. Titans: **Mossback** (Hollow Oak, Deepwood; breaks on Wildfire) and **Bogmaw** (Sunken Hollow, Reed Marsh; breaks on Conducted). Legendary: **Verdion** (Nature/Wind, Heartwood Shrine; breaks on Overload since C31, was Shatter: Nature resists Earth, so that plan lost to plain potions in the simulator).
    - Campaign (C30): every spring the Heartwood breathes out the **Seedwind**, which wakes the forest; this year it has not come. Main quest **The Still Wind** (Elder Rowan): Grove Badge in Fernhollow → face both Titans (each shows a vision of Crown Rock) → beat the region boss **Stormcatcher Vex** on Crown Rock, whose Gale Engine bottles the wind (her Storm Galehawk fights in boss form) → Verdion appears at the Heartwood Shrine → tell Rowan. Rival **Mira** meets the player on Willowmere's north road, at the trial after the badge, and in Galecrest after both Titans. Four side quests, readable signs and lore stones, and hidden items in the secrets and landmarks.
 2. **Volcanic desert** — Fire / Earth / Metal. Ash storms: battles start with Burning.
 3. **Frozen coast islands** — Ice / Water / Electric. Storms: battles start with Wet.
@@ -80,7 +81,7 @@ Each region has its own lore, a legendary, a trial/badge, and **its own 3 starte
   - Legendary: ~575, never evolves
 - No shiny variants (dropped 2026-11-12, C09 review: a recolored Zorling can be mistaken for another type, since type identity is carried by color).
 - Nicknames (up to 12 characters).
-- **Team-wide shared XP**: every team member that has not fainted gets the full XP of a win (decided 2026-11-12, C13).
+- **Team-wide shared XP**: every team member gets the full XP of a win, fainted ones too (decided 2026-11-12, C13; fainted members included since C31: without them the lead, which faints most, fell 5–7 levels behind its teammates in the playthrough simulator).
 - Evolution is offered on reaching the level; the player may wait, and it is offered again on later level-ups.
 - **Stages look different, not just smaller** (C29, user review): a baby is rounder and paler with big eyes and fawn spots, and has no horns, back plates or wings (unless the line always flies). A middle stage gets the first adult features (one horn for antlers, spikes for plates, the adult markings). Lines may also change body plan while young (`look.young`, e.g. fish → serpent, puffball chick → bird); that is the default for ordinary lines, while dragons and other distinctive lines keep their shape. A line keeps one voice (the final form's) across stages.
   - Settled in C22b (2026-11-13): the choices are asked after the battle, in the overworld. A new move with all 3 slots full: pick one to forget, or don't learn it (the move relearner can teach it later). Evolution: "Evolve" or "Not now"; a Zorling that waited can also evolve any time from the party screen. Moves the new form learns at its current level are taught (free slot) or offered the same way.
@@ -168,7 +169,8 @@ Rules settled in C26 (2026-11-13):
 
 ## Economy
 - Potions: **shop-only, money-only**, tiered prices, **bag cap 5 per type**.
-- Money: trainers (one-time, good), quests (one-time, good), wild creatures (small change: 4 + 2 × level per win, C22 starting value).
+- Money: trainers (one-time, good), quests (one-time, good), wild creatures (small change: 4 + 2 × level per win, C22 starting value, kept in C31).
+- Prices (kept in C31): Potion 100 (30 HP), Super Potion 300 (80 HP), Max Potion 900 (full), Zorb 60. Max Potions are sold in a region's second town (Fernhollow) since C31: in the simulator, T3 money piled up with nothing to buy. Over Verdale the simulated player earns about 7 000 coins from wild battles and 13 000 from trainers, and spends nearly all of it on potions.
 - Brute-forcing a Titan ≈ 4–5 good potions ≈ one route of trainer income: doable sometimes, not always.
 
 ## Presentation

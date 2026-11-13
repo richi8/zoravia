@@ -1,7 +1,7 @@
 {
   "zones": {
     "meadow": {
-      "levels": [3, 7],
+      "levels": [3, 6],
       "spawns": [
         {
           "species": "core:pipwing",
@@ -117,7 +117,7 @@
       ]
     },
     "downs": {
-      "levels": [21, 27],
+      "levels": [23, 29],
       "spawns": [
         {
           "species": "core:galehawk",

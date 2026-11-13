@@ -415,7 +415,7 @@ describe('determinism', () => {
 });
 
 describe('finishBattle', () => {
-  it('writes HP back and shares the XP of a win with members that have not fainted', () => {
+  it('writes HP back and shares the XP of a win with every member, fainted ones too', () => {
     const lead = make('voltbat', 30);
     const down = make('puddlit', 10, { hp: 0 });
     const benched = make('sproutle', 10);
@@ -425,9 +425,9 @@ describe('finishBattle', () => {
     const result = finishBattle(content, state, { badges: 99 });
     const xp = defeatXp(content.species.require(foe.species), 5);
     expect(result.xp).toBe(xp);
-    expect(result.team.map((z) => z.xp)).toEqual([lead.xp + xp, down.xp, benched.xp + xp]);
+    expect(result.team.map((z) => z.xp)).toEqual([lead.xp + xp, down.xp + xp, benched.xp + xp]);
     expect(result.team[1]?.hp).toBe(0);
-    expect(result.progress[1]).toEqual([]);
+    expect(result.progress[1]?.[0]).toMatchObject({ kind: 'xp', amount: xp });
     expect(result.progress[0]?.[0]).toMatchObject({ kind: 'xp', amount: xp });
   });
 

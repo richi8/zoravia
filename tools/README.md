@@ -112,3 +112,24 @@ See `src/game/data/maps.ts` (schema, validated when packs load) and
 `src/game/world/map/` (`WorldMap`, `decodeRegion`, `loadRegion`). Collision is not stored:
 it follows from terrain and props (a tile with 3+ liquid corners or under a solid prop's
 footprint is blocked, a bridge deck opens water), plus the overlay's forced tiles.
+
+## Balance report (`tools/balance`, C31)
+
+```sh
+npm run balance                      # Markdown report for Verdale (10 seeds per team plan)
+npm run balance -- --seeds 20 --out report.md
+```
+
+- `playthrough.ts`: an AI player plays a region's story in order from a new game with real
+  progression. It catches its team, grinds the zones reached (real spawn tables), evolves and
+  learns moves, buys potions, and fights every story trainer and boss through the battle
+  engine, retrying after a loss. After 3 losses to a boss it follows the boss's hint (catches
+  a Zorling of a type the Armor-breaking reaction needs). Pure and deterministic per seed.
+- `verdale.ts`: Verdale's route (zones opened, shops, fights in order), the team plans (each
+  starter plus two catches) and the assumed start.
+- `report.ts`: the tables. Pacing and money from the playthroughs, every story trainer by
+  team level, the bosses by play style, and each starter against the first zone.
+- `playthrough.test.ts` runs the campaign for each team plan in CI and checks the pacing.
+
+A new region adds its own route file and team plans next to `verdale.ts`.
+

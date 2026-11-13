@@ -41,10 +41,11 @@ export const verdaleNpcs: Record<string, NpcInput> = {
     anchor: 'shop-fernhollow',
     look: { outfit: 'navy', hair: 'brown', skin: 'light' },
     lines: ['Stronger potions for the deep woods.'],
+    // Max Potions since C31: late in the region, money piled up with nothing to buy.
     role: {
       kind: 'shop',
       title: 'Fernhollow Shop',
-      stock: ['core:potion', 'core:super-potion', 'core:zorb'],
+      stock: ['core:potion', 'core:super-potion', 'core:max-potion', 'core:zorb'],
     },
   },
   // Galecrest outpost.

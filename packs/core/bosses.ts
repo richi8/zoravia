@@ -58,13 +58,16 @@ export const bosses = {
   },
   verdion: {
     name: 'Verdion',
-    description: 'Chill it with Ice, then strike with Earth: Shatter breaks its Armor.',
+    description: 'Charge it with Electric, then strike with Metal: Overload breaks its Armor.',
     kind: 'legendary',
     species: 'core:verdion',
     level: 36,
     hpMultiplier: 2,
     signatureMove: 'core:verdant-gale',
-    armor: { breaks: ['core:shatter'] },
+    // Was Shatter (Chill, then Earth) until C31: Nature resists Earth and its Nature hits do
+    // ×2.25 to Earth/Water Zorlings, so that plan lost to plain potions. Electric and Metal
+    // Zorlings both resist Verdion's own types.
+    armor: { breaks: ['core:overload'] },
     rematch: { levels: 5, prize: 2000 },
   },
   // Region boss (C30): Stormcatcher Vex's Galehawk, charged by her Gale Engine. It fights only

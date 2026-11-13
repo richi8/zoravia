@@ -194,17 +194,26 @@ describe('Verdale trainers', () => {
 });
 
 describe('Verdale balance', () => {
-  it('each starter at Lv 6 beats the meadow’s Zorlings at Lv 5 (its middle) most of the time', () => {
+  it('a new Lv 6 starter beats the meadow’s spawn table (weights and levels) most of the time', () => {
+    // The start assumed by the C31 playthrough simulator until the start flow exists (C33).
     const meadow = map.zone('meadow');
     expect(meadow).toBeDefined();
+    const [lo, hi] = meadow?.levels ?? [0, 0];
+    expect(hi).toBeLessThanOrEqual(6);
     for (const starter of STARTERS) {
+      let rate = 0;
+      let weights = 0;
       for (const sp of meadow?.spawns ?? []) {
-        const foe = sp.species.slice(5);
-        const rate = winRate(40, (seed) =>
-          fight('wild', [make(starter, 7)], [make(foe, 5)], seed, 'trainer'),
-        );
-        expect(rate, `${starter} vs ${foe}`).toBeGreaterThanOrEqual(0.6);
+        for (let level = lo; level <= hi; level++) {
+          const foe = sp.species.slice(5);
+          const r = winRate(20, (seed) =>
+            fight('wild', [make(starter, 6)], [make(foe, level)], seed, 'trainer'),
+          );
+          rate += r * sp.weight;
+          weights += sp.weight;
+        }
       }
+      expect(rate / weights, starter).toBeGreaterThanOrEqual(0.6);
     }
   });
 
@@ -245,11 +254,11 @@ describe('Verdale balance', () => {
     ],
     [
       'verdion',
-      // Chilled (Cold Snap) + Earth: Shatter.
+      // Charged (Static Field) + Metal: Overload.
       () => [
+        make('voltbat', 38, ['static-field', 'volt-lash', 'frost-fang']),
+        make('ironshell', 38, ['iron-bash', 'steel-claw', 'mud-toss']),
         make('rimewisp', 38, ['cold-snap', 'frost-fang', 'hail-dash']),
-        make('bogmaw', 38, ['mud-toss', 'rock-slam', 'quake']),
-        make('tidefang', 38, ['tide-crash', 'hail-dash', 'riptide']),
       ],
     ],
   ] as const)(
@@ -257,15 +266,10 @@ describe('Verdale balance', () => {
     (boss, team) => {
       const react = bossRun(boss, team, reactions);
       const brute = bossRun(boss, team, brute0);
-      if (boss === 'verdion') {
-        // The legendary: in the sim, the reaction plan (Chill, then Earth) is still weak against
-        // its speed and power; good potions carry it. Tuned in C31.
-        expect(react, 'reactions').toBeGreaterThan(brute);
-        expect(bossRun(boss, team, potions, 5), '5 Super Potions').toBeGreaterThanOrEqual(0.6);
-      } else {
-        expect(react, 'reactions').toBeGreaterThanOrEqual(0.5);
-        expect(brute, 'brute, no potions').toBeLessThanOrEqual(react - 0.25);
-      }
+      expect(react, 'reactions').toBeGreaterThanOrEqual(0.5);
+      expect(brute, 'brute, no potions').toBeLessThanOrEqual(react - 0.25);
+      // Brute force with good potions is doable (DESIGN → Economy: ~4–5 good potions).
+      expect(bossRun(boss, team, potions, 5), '5 Super Potions').toBeGreaterThanOrEqual(0.4);
     },
   );
 });

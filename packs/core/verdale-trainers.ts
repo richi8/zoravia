@@ -120,11 +120,11 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
     facing: 'right',
     look: { outfit: 'sky', hair: 'brown', skin: 'light' },
     team: [
-      ['ironshell', 21],
-      ['hearthog', 22],
-      ['thornwing', 21],
+      ['ironshell', 18],
+      ['hearthog', 19],
+      ['thornwing', 20],
     ],
-    prize: 660,
+    prize: 600,
     hello: 'Halt! Every traveler in the thicket answers to a scout.',
     beaten: 'You may pass. With honors.',
     after: 'Ironshells hide in the brambles. Their shells ring when you tap them.',
@@ -193,7 +193,8 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
     prize: 1080,
     hello: 'The Heartwood Shrine lies ahead. Only those the grove trusts may go on.',
     beaten: 'The grove trusts you. So do I.',
-    after: 'Verdion dwells at the shrine. Chill it first, then strike with Earth.',
+    after:
+      'Verdion dwells at the shrine. Charge it with Electric first, then strike with Metal. Its wind and leaves glance off iron.',
   },
   'ace-lyra': {
     name: 'Ace Lyra',

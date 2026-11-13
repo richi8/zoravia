@@ -154,7 +154,8 @@ export function gainXp(
 }
 
 /**
- * Gives each team member that has not fainted the full XP (team-wide shared XP).
+ * Gives every team member the full XP (team-wide shared XP), fainted ones too: otherwise the
+ * lead, which faints most, falls further behind with every battle (C31).
  * Returns the new team and each member's events, in team order.
  */
 export function shareXp(
@@ -163,9 +164,7 @@ export function shareXp(
   amount: number,
   opts: { readonly badges: number },
 ): { readonly team: readonly Zorling[]; readonly events: readonly (readonly ProgressEvent[])[] } {
-  const results = team.map((z) =>
-    z.hp > 0 ? gainXp(content, z, amount, opts) : { zorling: z, events: [] },
-  );
+  const results = team.map((z) => gainXp(content, z, amount, opts));
   return { team: results.map((r) => r.zorling), events: results.map((r) => r.events) };
 }
 

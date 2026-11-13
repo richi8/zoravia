@@ -17,7 +17,7 @@ export interface BattleResult {
   readonly outcome: BattleOutcome;
   /** The player's team with battle HP written back and XP added, in hotbar order. */
   readonly team: readonly Zorling[];
-  /** XP each team member that has not fainted earned (before the soft cap). */
+  /** XP each team member earned (before the soft cap). */
   readonly xp: number;
   /** Each team member's progression events, in team order. */
   readonly progress: readonly (readonly ProgressEvent[])[];
@@ -46,8 +46,8 @@ export function winXp(content: GameContent, state: BattleState): number {
 }
 
 /**
- * Closes an ended battle. On a win or a catch, every team member that has not fainted gets
- * the full XP (team-wide shared XP). Running or losing gives no XP.
+ * Closes an ended battle. On a win or a catch, every team member gets the full XP, fainted
+ * ones too (team-wide shared XP). Running or losing gives no XP.
  */
 export function finishBattle(
   content: GameContent,
