@@ -8,7 +8,7 @@
  */
 
 import { Container, Graphics, Rectangle } from 'pixi.js';
-import { type UiInput, type Widget } from '@engine/ui';
+import { type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, TypeBadge, row } from './badges';
 import { HpBar } from './bars';
@@ -143,6 +143,7 @@ export class StoragePanel implements Widget<Container> {
   }
 
   private go(spot: StorageSpot): void {
+    uiSound('move');
     this.at = spot;
     this.message = '';
     if (spot.area === 'storage') {
@@ -159,6 +160,7 @@ export class StoragePanel implements Widget<Container> {
 
   private confirm(): void {
     if (!this.held) {
+      uiSound(this.zorlingAt(this.at) ? 'select' : 'blocked');
       if (this.zorlingAt(this.at)) this.held = this.at;
       this.build();
       return;
@@ -168,6 +170,7 @@ export class StoragePanel implements Widget<Container> {
     if (from.area === to.area && from.index === to.index) {
       this.held = undefined;
     } else if (this.options.canMove(from, to)) {
+      uiSound('select');
       const next = this.options.onMove(from, to);
       this.team = next.team;
       this.storage = next.storage;
@@ -179,12 +182,14 @@ export class StoragePanel implements Widget<Container> {
         this.at = { area: 'storage', index: Math.min(this.at.index, this.cells - 1) };
       }
     } else {
+      uiSound('blocked');
       this.message = 'Your team needs at least one Zorling.';
     }
     this.build();
   }
 
   private back(): void {
+    uiSound('back');
     if (this.held) {
       this.held = undefined;
       this.build();

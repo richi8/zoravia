@@ -10,7 +10,7 @@
  */
 
 import { Container, Graphics, Rectangle } from 'pixi.js';
-import { GridCursor, type UiInput, type Widget } from '@engine/ui';
+import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, TypeBadge, row } from './badges';
 import { HpBar, XpBar } from './bars';
@@ -87,12 +87,18 @@ export class PartyPanel implements Widget<Container> {
     const p = this.pointer.take();
     if (p) {
       const was = this.cursor.index;
-      if (this.cursor.set(p.index)) this.build();
+      if (this.cursor.set(p.index)) {
+        uiSound('move');
+        this.build();
+      }
       if (p.click && was === p.index) this.confirm();
       return;
     }
     const dir = input.direction();
-    if ((dir === 'up' || dir === 'down') && this.cursor.move(dir)) this.build();
+    if ((dir === 'up' || dir === 'down') && this.cursor.move(dir)) {
+      uiSound('move');
+      this.build();
+    }
     if (input.confirmPressed()) this.confirm();
     else if (input.backPressed()) this.back();
   }
@@ -100,6 +106,7 @@ export class PartyPanel implements Widget<Container> {
   private confirm(): void {
     const i = this.cursor.index;
     if (i < 0) return;
+    uiSound('select');
     if (this.held === undefined) {
       if (this.options.onSelect) {
         this.options.onSelect(i, this);
@@ -128,6 +135,7 @@ export class PartyPanel implements Widget<Container> {
   }
 
   private back(): void {
+    uiSound('back');
     if (this.held !== undefined) {
       this.held = undefined;
       this.build();

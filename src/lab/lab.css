@@ -534,3 +534,56 @@ a {
   font-size: var(--z-text-xs);
   color: var(--z-surface-text-dim);
 }
+
+/* Sound (C24) */
+.snd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--z-space-xs);
+}
+.snd-btn {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 2px var(--z-space-xs);
+  padding: var(--z-space-xs);
+  background: var(--z-surface-raised);
+  border: 1px solid var(--z-surface-border);
+  border-radius: var(--z-radius-md);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.snd-btn:hover,
+.snd-btn:focus-visible {
+  border-color: var(--z-surface-border-strong);
+}
+.snd-btn.snd-art {
+  grid-template-columns: auto 1fr;
+}
+.snd-btn > canvas:not(.snd-wave) {
+  grid-row: span 2;
+  image-rendering: pixelated;
+  width: 32px;
+  height: 32px;
+}
+.snd-btn code {
+  font-size: var(--z-text-sm);
+  overflow-wrap: anywhere;
+}
+.snd-wave {
+  width: 100%;
+  height: 24px;
+  color: var(--z-surface-text-dim);
+}
+.snd-reroll {
+  margin-bottom: var(--z-space-sm);
+  padding: var(--z-space-2xs) var(--z-space-sm);
+  background: var(--z-surface-raised);
+  border: 1px solid var(--z-surface-border);
+  border-radius: var(--z-radius-pill);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}

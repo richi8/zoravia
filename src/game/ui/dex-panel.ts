@@ -7,7 +7,7 @@
  */
 
 import { Container, Graphics, Rectangle, Sprite, type Texture } from 'pixi.js';
-import { GridCursor, type UiInput, type Widget } from '@engine/ui';
+import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper, type TypeId } from '../style/tokens';
 import { KeyHint, TypeBadge, row } from './badges';
 import { drawCursor, drawPaper, drawWell } from './skin';
@@ -102,10 +102,14 @@ export class DexPanel implements Widget<Container> {
       const next = Math.max(0, Math.min(n - 1, this.cursor.index + step));
       if (this.cursor.set(next)) this.changed();
     }
-    if (input.backPressed()) this.options.onBack(this);
+    if (input.backPressed()) {
+      uiSound('back');
+      this.options.onBack(this);
+    }
   }
 
   private changed(): void {
+    uiSound('move');
     const i = this.cursor.index;
     if (i < this.scroll) this.scroll = i;
     if (i >= this.scroll + VISIBLE) this.scroll = i - VISIBLE + 1;

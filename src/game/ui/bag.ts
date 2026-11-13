@@ -7,7 +7,7 @@
  */
 
 import { Container, Graphics, Rectangle, Sprite } from 'pixi.js';
-import { GridCursor, type UiInput, type Widget } from '@engine/ui';
+import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, row } from './badges';
 import type { CombatantView } from './battle-hud';
@@ -119,7 +119,10 @@ export class BagPanel implements Widget<Container> {
     const dir = input.direction();
     if (this.mode === 'list') {
       if (dir === 'up' || dir === 'down') {
-        if (this.cursor.move(dir)) this.build();
+        if (this.cursor.move(dir)) {
+          uiSound('move');
+          this.build();
+        }
       } else if (dir === 'left' || dir === 'right') {
         this.switchTab(dir === 'right' ? 1 : -1);
       }
@@ -136,7 +139,10 @@ export class BagPanel implements Widget<Container> {
       return;
     }
     if (p.kind === 'row' && this.mode === 'list') {
-      if (this.cursor.set(p.index)) this.build();
+      if (this.cursor.set(p.index)) {
+        uiSound('move');
+        this.build();
+      }
       if (p.click && this.cursor.index === p.index) this.confirm();
       return;
     }
@@ -151,6 +157,7 @@ export class BagPanel implements Widget<Container> {
     const n = this.options.tabs.length;
     if (n < 2) return;
     this.tab = (this.tab + delta + n) % n;
+    uiSound('move');
     this.cursor.reset(this.items.length);
     this.build();
   }
@@ -159,6 +166,7 @@ export class BagPanel implements Widget<Container> {
     for (let i = 1; i <= 3; i++) {
       const t = (this.target + delta * i + 3) % 3;
       if (this.options.team[t]) {
+        if (t !== this.target) uiSound('move');
         this.target = t;
         break;
       }
@@ -168,7 +176,11 @@ export class BagPanel implements Widget<Container> {
 
   private confirm(): void {
     const item = this.selected;
-    if (!item || item.count <= 0) return;
+    if (!item || item.count <= 0) {
+      uiSound('blocked');
+      return;
+    }
+    uiSound('select');
     if (this.mode === 'list') {
       if (item.targeted === false) {
         this.options.onUse(item, undefined, this);
@@ -183,6 +195,7 @@ export class BagPanel implements Widget<Container> {
   }
 
   private back(): void {
+    uiSound('back');
     if (this.mode === 'target') {
       this.mode = 'list';
       this.build();

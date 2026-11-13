@@ -1,10 +1,12 @@
 /**
  * Battle transition: a quick white flash, then pixel bars sweep in from alternating sides
  * and cover the screen; at full cover the battle swaps in and the bars sweep out again.
+ * It plays the battle-start whoosh (C24).
  */
 
 import { Graphics, type Container } from 'pixi.js';
 import type { Transition } from '@engine/scenes/scene-manager';
+import { playSfx } from '@game/audio';
 import { ink } from '@game/style/tokens';
 
 export interface BattleTransitionOptions {
@@ -39,6 +41,7 @@ export function battleTransition(
       last = 0;
       coverIn = true;
       layer.addChild(g);
+      playSfx('world.battleStart');
     },
     setCover(amount) {
       if (amount < last) coverIn = false;

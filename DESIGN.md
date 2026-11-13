@@ -168,6 +168,9 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 - Overworld: 4-dir walk cycles, grass rustle, water ripple, roaming creatures/NPCs, battle transition.
 - Lighting, weather particles, grass/water shaders, camera easing.
 - Audio: synth SFX, genome-derived cries, procedural biome music, hand-authored boss themes, ambience.
+  - **Cries** (C24) come from the species' genome, so a species always sounds the same: the body plan picks the voice (a canine barks, a feline meows, an insect buzzes, a golem rumbles), size lowers the pitch (later evolution stages sound deeper), mood shapes it (cute higher with a rising end, fierce harsher, dark lower and detuned) and the first type adds a texture. Titans and legendaries in boss form sound deeper and longer.
+  - Every battle action and UI action has a sound; turn markers are silent. A cry plays on send-out, and a low, slow one on faint.
+  - **Volume settings** (master, music, sound effects; 10 % steps) belong to the device, not to a save slot.
 
 ## Controls
 **The whole game must be fully playable with the keyboard alone.** Mouse is optional (click-to-move, click menu items), never required. All keys rebindable; gamepad later.

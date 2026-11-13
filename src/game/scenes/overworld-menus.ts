@@ -11,6 +11,8 @@ import { Texture } from 'pixi.js';
 import { pixelTexture } from '@engine/render/pixel-texture';
 import { Menu, type FocusStack, type MenuItem, type UiTheme, type Widget } from '@engine/ui';
 import { bagTabsFor, itemLook } from '@game/battle/scene/view-data';
+import { playSfx } from '@game/audio';
+import { VolumeMenu } from '@game/ui/volume-menu';
 import type { GameContent, NpcRole } from '@game/data';
 import { bagCount } from '@game/inventory';
 import {
@@ -151,6 +153,7 @@ export class OverworldMenus {
       ...(this.host.save
         ? [['Save', '', () => this.saveGame()] as [string, string, () => void]]
         : []),
+      ['Sound', '', () => this.openSound()],
       ['Quit to launcher', '', () => this.host.quit()],
     ];
     this.menu(
@@ -161,10 +164,16 @@ export class OverworldMenus {
     );
   }
 
+  private openSound(): void {
+    const menu = new VolumeMenu({ theme: this.host.theme, onBack: (m) => this.close(m) });
+    this.open(menu, () => ({ w: menu.width, h: menu.height }));
+  }
+
   private saveGame(): void {
-    this.host.save?.((error) =>
-      this.host.say([error ? `Could not save: ${error}` : 'Game saved.']),
-    );
+    this.host.save?.((error) => {
+      playSfx(error ? 'ui.blocked' : 'world.save');
+      this.host.say([error ? `Could not save: ${error}` : 'Game saved.']);
+    });
   }
 
   // ------------------------------------------------------------ party
@@ -362,6 +371,7 @@ export class OverworldMenus {
   private heal(speaker: string): void {
     this.host.party = healAll(this.host.content, this.host.party);
     this.host.centerUsed();
+    playSfx('world.heal');
     this.host.say(['Your Zorlings are fully healed. Come back any time!'], speaker);
   }
 
@@ -479,10 +489,12 @@ export class OverworldMenus {
       onBuy: (item, qty, panel) => {
         const party = this.host.party;
         if (maxBuyable(content, party, item.id) < qty) {
+          playSfx('ui.blocked');
           this.host.say([`You need ${formatMoney(item.price * qty)} coins for that.`]);
           return;
         }
         this.host.party = buyItem(content, party, item.id, qty);
+        playSfx('world.buy');
         panel.setItems(items());
         this.host.say([`You bought ${qty} × ${item.name}.`]);
       },

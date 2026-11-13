@@ -16,6 +16,7 @@ import { pixelRoundStroke } from './pixel-shapes';
 import { firstInReadingOrder, nearestInDirection, type NavRect } from './spatial-nav';
 import type { UiTheme } from './theme';
 import type { UiInput } from './ui-input';
+import { uiSound } from './ui-sound';
 
 export interface TooltipContent {
   readonly title: string;
@@ -255,6 +256,7 @@ export class InspectWidget implements Widget<Container> {
       start && targets.some((t) => t.target === start)
         ? start
         : targets[firstInReadingOrder(targets.map((t) => t.rect)) ?? -1]?.target;
+    uiSound('open');
     this.select(pick);
   }
 
@@ -273,6 +275,7 @@ export class InspectWidget implements Widget<Container> {
 
   handleInput(input: UiInput): void {
     if (input.confirmPressed() || input.backPressed()) {
+      uiSound('back');
       this.options.onClose(this);
       return;
     }
@@ -289,7 +292,10 @@ export class InspectWidget implements Widget<Container> {
       from,
       dir,
     );
-    if (next !== undefined) this.select(targets[next]?.target);
+    if (next !== undefined) {
+      uiSound('move');
+      this.select(targets[next]?.target);
+    }
   }
 
   update(dt: number): void {

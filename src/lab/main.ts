@@ -19,6 +19,7 @@ import { uiThemeSection } from './sections/ui-theme';
 import { biomesSection } from './sections/biomes';
 import { animationSection } from './sections/animation';
 import { battleMockSection } from './sections/battle-mock';
+import { soundSection } from './sections/sound';
 import { zorlingsSection } from './sections/zorlings';
 
 const SECTIONS: LabSection[] = [
@@ -34,6 +35,7 @@ const SECTIONS: LabSection[] = [
   animationSection,
   battleMockSection,
   biomesSection,
+  soundSection,
 ];
 
 async function main(): Promise<void> {

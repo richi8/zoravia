@@ -12,6 +12,7 @@ import { Panel } from './panel';
 import type { UiTheme } from './theme';
 import { Typewriter } from './typewriter';
 import type { UiInput } from './ui-input';
+import { uiSound } from './ui-sound';
 
 export interface DialogOptions {
   readonly pages: readonly string[];
@@ -115,12 +116,14 @@ export class DialogBox implements Widget<Container> {
     // Clicks are taken from anywhere on screen (the dialog is modal while focused).
     const click = input.pointerPressed() !== undefined;
     const typing = !this.typewriter.pageComplete;
+    const advance = !typing && (input.confirmPressed() || click);
     const changed = this.typewriter.update(0, {
       confirmPressed: input.confirmPressed() || (click && !typing),
       confirmHeld: false,
       backPressed: input.backPressed() || (click && typing),
     });
     this.held = input.confirmHeld(); // applied as speed-up in update()
+    if (advance && changed) uiSound('advance');
     if (changed) this.refresh();
   }
 

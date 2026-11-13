@@ -14,6 +14,7 @@ import { FocusStack, Menu, type MenuItem, type UiInput, type UiTheme } from '@en
 import { bossZorling, type BattleResult, type BattleSetup } from '@game/battle/logic';
 import { BATTLE_SPEEDS, BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
+import { audioSettings, formatVolume } from '@game/audio';
 import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
 import { newParty, type Party } from '@game/player';
@@ -29,6 +30,7 @@ import {
 import { paper, surface } from '@game/style/tokens';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
+import { VolumeMenu } from '@game/ui/volume-menu';
 import { MapViewerScene } from './map-viewer-scene';
 import { OverworldScene } from './overworld-scene';
 
@@ -200,6 +202,7 @@ export class DebugLauncherScene implements Scene<Container> {
       { label: 'Map viewer: test region', hint: 'C19' },
       { label: 'Battle speed', hint: `${BATTLE_SPEEDS[this.speed] ?? 1}×` },
       { label: 'Confirm 1 2 3 switch', hint: this.confirmSwitch ? 'On' : 'Off' },
+      { label: 'Sound', hint: formatVolume(audioSettings().master) },
     ];
     const old = this.menu as Menu | undefined;
     if (old) this.stack.remove(old);
@@ -216,15 +219,33 @@ export class DebugLauncherScene implements Scene<Container> {
         else if (i === battles.length + 2) {
           this.speed = (this.speed + 1) % BATTLE_SPEEDS.length;
           this.buildMenu(i);
-        } else {
+        } else if (i === battles.length + 3) {
           this.confirmSwitch = !this.confirmSwitch;
           this.buildMenu(i);
+        } else {
+          this.openSound(i);
         }
       },
     });
     this.menu.cursor.set(index);
     this.stack.push(this.menu);
     this.layout();
+  }
+
+  private openSound(index: number): void {
+    const menu = new VolumeMenu({
+      theme: this.options.theme,
+      width: 200,
+      onBack: () => {
+        this.stack.remove(menu);
+        this.buildMenu(index);
+      },
+    });
+    this.stack.push(menu);
+    menu.view.position.set(
+      this.menu.view.x + Math.round((this.menu.width - menu.width) / 2),
+      this.menu.view.y + Math.round((this.menu.height - menu.height) / 2),
+    );
   }
 
   private async start(b: SampleBattle): Promise<void> {

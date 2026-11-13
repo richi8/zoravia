@@ -29,6 +29,7 @@ import { DialogBox, FocusStack, type UiInput, type UiTheme } from '@engine/ui';
 import type { BattleResult } from '@game/battle/logic';
 import { BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
+import { playSfx } from '@game/audio';
 import type { GameContent } from '@game/data';
 import { MOVE_DIRECTIONS, type Action } from '@game/input/actions';
 import {
@@ -455,6 +456,8 @@ export class OverworldScene implements Scene<Container> {
     const intent = (at: Tile): Intent | undefined => (key ? { dir: key } : this.followPath(at));
     for (const e of this.sim.update(dt, intent, this.viewTiles())) {
       if (e.kind === 'encounter') this.touch(e.roamer);
+      else if (e.kind === 'player' && e.event.kind === 'bump')
+        playSfx('world.bump', { key: 'bump', throttle: 0.25 });
     }
     this.logSeen();
     if ((this.autosaveTimer -= dt) <= 0) this.autosave();
@@ -584,6 +587,7 @@ export class OverworldScene implements Scene<Container> {
       roamer.side = roamer.mover.facing;
     }
     this.encounter = { roamer, t: ENCOUNTER_BEAT };
+    playSfx('world.encounter');
   }
 
   private startBattle(roamer: Roamer): void {

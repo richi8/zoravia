@@ -1,6 +1,8 @@
+import { AudioEngine } from '@engine/audio';
 import { attachDomInput } from '@engine/input';
 import { Engine } from '@engine/render/engine';
 import { uiInputFrom } from '@engine/ui';
+import { installAudio, loadAudioSettings } from '@game/audio';
 import { installFavicon } from '@game/brand/logo';
 import { GAME_TITLE } from '@game/index';
 import { createInput } from '@game/input/actions';
@@ -47,6 +49,15 @@ async function main(): Promise<void> {
     back: 'back',
   });
 
+  // Sound (C24): the audio context starts on the first key press or click.
+  const audio = new AudioEngine();
+  audio.attachUnlock(window);
+  const settingsStore = safeLocalStorage();
+  installAudio(audio, {
+    settings: loadAudioSettings(settingsStore),
+    ...(settingsStore ? { storage: settingsStore } : {}),
+  });
+
   engine.addPreUpdate((dt) => {
     input.update(dt);
     if (input.pressed('debug_overlay')) engine.debugVisible = !engine.debugVisible;
@@ -86,7 +97,17 @@ async function main(): Promise<void> {
       content,
       first,
       saves,
+      audio,
     };
+  }
+}
+
+/** `localStorage`, or undefined where it is blocked (private modes, sandboxed frames). */
+function safeLocalStorage(): Storage | undefined {
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
   }
 }
 

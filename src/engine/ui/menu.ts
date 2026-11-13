@@ -14,6 +14,7 @@ import { GridCursor } from './grid-cursor';
 import { Panel } from './panel';
 import type { UiTheme } from './theme';
 import type { UiInput } from './ui-input';
+import { uiSound } from './ui-sound';
 
 export interface MenuItem {
   readonly label: string;
@@ -128,7 +129,10 @@ export class Menu implements Widget<Container> {
 
   handleInput(input: UiInput): void {
     if (this.pendingHover !== undefined) {
-      if (this.cursor.set(this.pendingHover)) this.highlightChanged();
+      if (this.cursor.set(this.pendingHover)) {
+        uiSound('move');
+        this.highlightChanged();
+      }
       this.pendingHover = undefined;
     }
     if (this.pendingClick !== undefined) {
@@ -137,16 +141,25 @@ export class Menu implements Widget<Container> {
       if (this.enabled(i)) {
         this.cursor.set(i);
         this.redraw();
+        uiSound('select');
         this.options.onSelect(i, this);
         return;
       }
+      uiSound('blocked');
     }
     const dir = input.direction();
-    if (dir && this.cursor.move(dir)) this.highlightChanged();
+    if (dir && this.cursor.move(dir)) {
+      uiSound('move');
+      this.highlightChanged();
+    }
     if (input.confirmPressed() && this.cursor.index >= 0) {
+      uiSound('select');
       this.options.onSelect(this.cursor.index, this);
-    } else if (input.backPressed()) {
-      this.options.onBack?.(this);
+    } else if (input.confirmPressed()) {
+      uiSound('blocked');
+    } else if (input.backPressed() && this.options.onBack) {
+      uiSound('back');
+      this.options.onBack(this);
     }
   }
 

@@ -17,6 +17,7 @@ import type { PixelSprite } from '@engine/render/sdf-sprite';
 import type { MenuItem } from '@engine/ui';
 import { progressText } from '@game/battle/present/text';
 import { answerMoveOffer, evolveMember, memberOf, offerValid, type Offer } from '@game/player';
+import { playSfx, playSpec, speciesCry } from '@game/audio';
 import { displayName, MOVE_SLOTS } from '@game/progression';
 import { typeIdOf } from '@game/style/ids';
 import { TypeBadge } from '@game/ui/badges';
@@ -180,12 +181,14 @@ export class LevelUpFlow {
       return;
     }
     const name = displayName(content, zorling);
+    playSfx('world.evolve');
     const panel = new EvolutionPanel({
       title: `What? ${name} is evolving!`,
       from: this.art(zorling.species),
       into: this.art(evo.into),
       onDone: (p) => {
         this.menus.close(p);
+        playSpec(speciesCry(content, evo.into));
         const result = evolveMember(content, this.host.party, uid);
         this.host.party = result.party;
         const shownName = zorling.nickname ?? content.species.require(zorling.species).name;

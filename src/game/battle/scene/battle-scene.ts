@@ -25,6 +25,7 @@ import {
   type UiTheme,
   type Widget,
 } from '@engine/ui';
+import { playSfx, playSpec, speciesCry } from '@game/audio';
 import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
 import { xpForLevel } from '@game/progression';
@@ -62,11 +63,14 @@ import {
 } from '../logic';
 import {
   applyShown,
+  eventCues,
   eventText,
+  progressCue,
   progressText,
   shownActive,
   shownFrom,
   syncStatuses,
+  type BattleCue,
   type Shown,
   type ShownZorling,
 } from '../present';
@@ -381,6 +385,8 @@ export class BattleScene implements Scene<Container> {
         const name = this.shown.sides[PLAYER].team[i]?.name ?? '';
         for (const e of events) {
           if (e.kind === 'xp') continue;
+          const cue = progressCue(e);
+          if (cue) playSfx(cue);
           for (const line of progressText(content, name, e)) await this.say(line);
         }
       }
@@ -411,6 +417,9 @@ export class BattleScene implements Scene<Container> {
     const sayAll = async (auto = AUTO_EVENTS.has(e.kind)): Promise<void> => {
       for (const line of lines) await this.say(line, !auto);
     };
+    const cues = eventCues(content, before, e);
+    // A move sounds when its VFX launches (after its text); everything else right away.
+    if (e.kind !== 'useMove') this.cue(cues);
 
     switch (e.kind) {
       case 'sendOut': {
@@ -432,7 +441,7 @@ export class BattleScene implements Scene<Container> {
       case 'useMove': {
         await sayAll();
         if (next?.kind === 'fumbled') return;
-        await this.attack(e.side, e.move, next?.kind === 'miss');
+        await this.attack(e.side, e.move, next?.kind === 'miss', cues);
         return;
       }
       case 'damage': {
@@ -558,7 +567,12 @@ export class BattleScene implements Scene<Container> {
 
   // ---- animations ------------------------------------------------------------------------
 
-  private async attack(side: SideId, moveId: string, miss: boolean): Promise<void> {
+  private async attack(
+    side: SideId,
+    moveId: string,
+    miss: boolean,
+    cues: readonly BattleCue[],
+  ): Promise<void> {
     const { content } = this.options;
     const move = content.moves.require(moveId);
     const type = typeIdOf(move.type) ?? 'metal';
@@ -572,8 +586,36 @@ export class BattleScene implements Scene<Container> {
     const to = miss ? { x: target.x + (side === PLAYER ? 30 : -30), y: target.y - 16 } : target;
     const fx = new MoveVfx(type, from, to, move.power === 0, this.vfxSeed++);
     this.vfxLayer.addChild(fx);
+    this.cue(cues, side);
     await this.until(() => fx.impacted || fx.destroyed);
     await lunge;
+  }
+
+  /** Plays sounds; `side` pans them toward the Zorling that makes them. */
+  private cue(cues: readonly BattleCue[], side?: SideId): void {
+    const { content } = this.options;
+    const panOf = (s: SideId): number => (s === PLAYER ? -0.35 : 0.35);
+    for (const c of cues) {
+      if (c.kind === 'sfx') {
+        playSfx(c.id, {
+          ...(c.gain !== undefined ? { gain: c.gain } : {}),
+          ...(c.pitch !== undefined ? { pitch: c.pitch } : {}),
+          ...(side !== undefined ? { pan: panOf(side) * 0.5 } : {}),
+        });
+        continue;
+      }
+      const z = this.state.sides[c.side].team[c.slot];
+      if (!z) continue;
+      const boss = z.boss ? content.bosses.require(z.boss.id).kind : undefined;
+      const cry = speciesCry(content, z.zorling.species, {
+        ...(boss ? { boss } : {}),
+        titanMark: z.zorling.titanMark,
+      });
+      playSpec(cry, {
+        pan: panOf(c.side),
+        ...(c.faint ? { pitch: 0.8, stretch: 1.4, gain: 0.8 } : { delay: 0.12 }),
+      });
+    }
   }
 
   private hitStop(fraction: number): void {
@@ -655,6 +697,7 @@ export class BattleScene implements Scene<Container> {
     orb.rotation = 0;
     // The Zorling is drawn into the orb.
     const foe = this.onField[OPPONENT];
+    playSfx('battle.absorb');
     this.vfxLayer.addChild(new SparkleVfx(target, 0xffffff, this.vfxSeed++));
     if (foe) {
       await this.tween(0.25, (k) => {
@@ -667,9 +710,11 @@ export class BattleScene implements Scene<Container> {
     await this.tween(0.25, (k) => {
       orb.position.set(target.x, Math.round(target.y + (ground.y - 6 - target.y) * k * k));
     });
+    playSfx('battle.drop');
     // Wobbles.
     for (let i = 0; i < wobbles; i++) {
       await this.delay(0.25);
+      playSfx('battle.wobble');
       await this.tween(0.3, (k) => {
         orb.rotation = Math.sin(k * Math.PI * 2) * 0.45;
       });
@@ -677,6 +722,7 @@ export class BattleScene implements Scene<Container> {
     }
     await this.delay(0.25);
     if (success) {
+      playSfx('battle.caught');
       this.vfxLayer.addChild(
         new SparkleVfx({ x: orb.x, y: orb.y - 4 }, semantic.reaction, this.vfxSeed++),
       );
@@ -684,6 +730,7 @@ export class BattleScene implements Scene<Container> {
       return;
     }
     // Breaks free.
+    playSfx('battle.breakFree');
     orb.destroy();
     this.vfxLayer.addChild(new SparkleVfx(target, 0xffffff, this.vfxSeed++));
     if (foe) {
@@ -1007,6 +1054,7 @@ export class BattleScene implements Scene<Container> {
 
   /** Shows a short note in the message box (no turn is used). */
   private flash(text: string): void {
+    playSfx('ui.blocked');
     this.message.set(text, [['E', 'Select']]);
   }
 
@@ -1073,6 +1121,7 @@ export class BattleScene implements Scene<Container> {
       return;
     }
     // Not allowed: say why and stay in the bag.
+    playSfx('ui.blocked');
     const { content } = this.options;
     const effect = content.items.require(item.id).effect;
     const foe = shownActive(this.shown, OPPONENT);

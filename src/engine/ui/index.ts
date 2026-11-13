@@ -10,3 +10,4 @@ export * from './theme';
 export * from './tooltip';
 export * from './typewriter';
 export * from './ui-input';
+export * from './ui-sound';

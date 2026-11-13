@@ -30,7 +30,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C22 | Centers, shops, storage, menus | ✅ | [log](logs/C22-centers-shops-storage-menus.md) |
 | C22b | Level-up choices | ✅ | [log](logs/C22b-level-up-choices.md) |
 | C23 | Save system | ✅ | [log](logs/C23-save-system.md) |
-| C24 | SFX & cries | ⬜ | |
+| C24 | SFX & cries | ✅ | [log](logs/C24-sfx-cries.md) |
 | C25 | Music & ambience | ⬜ | |
 | C26 | Dialogue & quest engine | ⬜ | |
 | C27 | Trials, rival, story bosses, legendary | ⬜ | |

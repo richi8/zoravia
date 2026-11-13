@@ -8,7 +8,7 @@
  */
 
 import { Container, Graphics, Rectangle } from 'pixi.js';
-import { GridCursor, type UiInput, type Widget } from '@engine/ui';
+import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, row } from './badges';
 import type { ItemSprite } from './icons';
@@ -119,6 +119,7 @@ export class ShopPanel implements Widget<Container> {
     if (p) {
       const was = this.cursor.index;
       if (this.cursor.set(p.index)) {
+        uiSound('move');
         this.qty = 1;
         this.build();
       }
@@ -128,6 +129,7 @@ export class ShopPanel implements Widget<Container> {
     const dir = input.direction();
     if (dir === 'up' || dir === 'down') {
       if (this.cursor.move(dir)) {
+        uiSound('move');
         this.qty = 1;
         this.build();
       }
@@ -136,12 +138,16 @@ export class ShopPanel implements Widget<Container> {
       const next =
         dir === 'right' ? (this.qty >= max ? 1 : this.qty + 1) : this.qty <= 1 ? max : this.qty - 1;
       if (next !== this.qty) {
+        uiSound('move');
         this.qty = next;
         this.build();
       }
     }
     if (input.confirmPressed()) this.buy();
-    else if (input.backPressed()) this.options.onBack(this);
+    else if (input.backPressed()) {
+      uiSound('back');
+      this.options.onBack(this);
+    }
   }
 
   /** Most of the selected item the player can buy now (≥ 1 when buyable). */
@@ -160,7 +166,10 @@ export class ShopPanel implements Widget<Container> {
 
   private buy(): void {
     const item = this.selected;
-    if (!item || !this.buyable(this.cursor.index)) return;
+    if (!item || !this.buyable(this.cursor.index)) {
+      uiSound('blocked');
+      return;
+    }
     this.options.onBuy(item, this.qty, this);
   }
 
