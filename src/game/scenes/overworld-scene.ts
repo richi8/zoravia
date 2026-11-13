@@ -28,6 +28,7 @@
  */
 
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
+import { darken, lighten } from '@engine/core/color';
 import type { InputManager } from '@engine/input';
 import type { Engine } from '@engine/render/engine';
 import { blendPacked, packColor, PixelBuffer } from '@engine/render/pixel-buffer';
@@ -63,6 +64,7 @@ import {
 } from '@game/story';
 import type { DialogueBattle } from '@game/data';
 import { paper, surface } from '@game/style/tokens';
+import { ITEM_SPRITES } from '@game/ui/icons';
 import { MoneyLabel } from '@game/ui/panels';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
@@ -164,6 +166,7 @@ export class OverworldScene implements Scene<Container> {
   private readonly npcSheets = new Map<NpcActor, CharacterSheet>();
   /** Which way a Zorling NPC's sprite faces (it keeps its side when facing up or down). */
   private readonly npcSides = new Map<NpcActor, 'left' | 'right'>();
+  private itemFrame: CharacterFrame | undefined;
   private readonly wildSprites = new Map<string, WildSprite>();
   private readonly canvas = document.createElement('canvas');
   private readonly ctx: CanvasRenderingContext2D;
@@ -228,7 +231,9 @@ export class OverworldScene implements Scene<Container> {
     this.stream = new TerrainStream(this.map, BIOMES[this.map.biome]);
     this.sheet = buildCharacterSheet(PLAYER_OUTFIT);
     for (const npc of this.sim.allNpcs) {
-      if (!npc.npc.zorling) this.npcSheets.set(npc, buildCharacterSheet(outfitOf(npc.npc.look)));
+      if (!npc.npc.zorling && !npc.npc.object) {
+        this.npcSheets.set(npc, buildCharacterSheet(outfitOf(npc.npc.look)));
+      }
     }
     this.syncPresence();
     const ctx = this.canvas.getContext('2d');
@@ -603,8 +608,9 @@ export class OverworldScene implements Scene<Container> {
       return true;
     }
     const npc = o.npc;
+    const object = npc.npc.object !== undefined;
     npc.talking = true;
-    npc.faceToward(this.player.destination);
+    if (!object) npc.faceToward(this.player.destination);
     this.clearPath();
     const role = npc.npc.role;
     const after = (): void => {
@@ -618,7 +624,9 @@ export class OverworldScene implements Scene<Container> {
       else this.menus.openShop(role.title ?? 'Shop', role.stock);
       this.setContext();
     };
-    const { dialogue, lines, name } = npc.npc;
+    const { dialogue, lines } = npc.npc;
+    // Signs and items speak without a name tag.
+    const name = object ? undefined : npc.npc.name;
     if (dialogue)
       this.runDialogue(new DialogueRun(this.options.content, dialogue, this.party, name), after);
     else this.say(lines ?? [], name, after);
@@ -952,7 +960,8 @@ export class OverworldScene implements Scene<Container> {
         if (f === 'left' || f === 'right') this.npcSides.set(npc, f);
         const side = this.npcSides.get(npc) ?? 'left';
         list.push(this.zorlingDrawable(npc.mover, npc.npc.zorling, side, 0));
-      }
+      } else if (npc.npc.object === 'item') list.push(this.itemDrawable(npc.mover));
+      // A `sign` object is not drawn: the map's sign or stone prop shows it.
     }
     for (const r of this.sim.roamers) {
       list.push(this.zorlingDrawable(r.mover, r.species, r.side, r.alert));
@@ -1002,6 +1011,25 @@ export class OverworldScene implements Scene<Container> {
         this.blit(sprite, left, top, baseY, camX, camY);
         this.grassOver(m, left, top, sprite.width, sprite.height, baseY, camX, camY);
         if (alert > 0) this.drawAlert(wx + TILE / 2, top + sprite.top - 2, camX, camY);
+      },
+    };
+  }
+
+  /** A hidden item lying on the ground (C30): a small Zorb that glints now and then. */
+  private itemDrawable(m: GridMover): Drawable {
+    return {
+      y: m.y,
+      draw: (camX, camY) => {
+        this.itemFrame ??= itemFrame();
+        const f = this.itemFrame;
+        const wx = Math.round(m.x * TILE);
+        const wy = Math.round(m.y * TILE);
+        const left = wx + (TILE - f.width) / 2;
+        const top = wy + TILE - f.height - 1;
+        this.drawShadow(wx + TILE / 2, wy + TILE - 2, 4.5, wy + BASE, camX, camY);
+        this.blit(f, left, top, wy + BASE, camX, camY);
+        // A glint in the top-left of the orb for a moment every two seconds.
+        if (this.time % 2 < 0.25) this.blit(GLINT, left + 1, top - 1, wy + BASE, camX, camY);
       },
     };
   }
@@ -1201,4 +1229,34 @@ function questSound(notes: readonly string[]): void {
   ) {
     playSfx('world.quest');
   }
+}
+
+/** The bag's Zorb sprite as a world sprite (C30 hidden items), outlined in navy. */
+function itemFrame(): CharacterFrame {
+  const tint = 0xff5c6c;
+  const colors: Record<string, number> = {
+    o: 0x0e0c26,
+    a: tint,
+    b: lighten(tint, 0.45),
+    c: darken(tint, 0.3),
+    w: 0xffffff,
+    g: 0xd8d0c0,
+  };
+  return bitmapFrame(ITEM_SPRITES.orb, colors);
+}
+
+/** A tiny 3×3 sparkle. */
+const GLINT = bitmapFrame('.w./www/.w.', { w: 0xffffff });
+
+function bitmapFrame(bitmap: string, colors: Readonly<Record<string, number>>): CharacterFrame {
+  const rows = bitmap.split('/');
+  const width = Math.max(...rows.map((r) => r.length));
+  const data = new Uint32Array(width * rows.length);
+  rows.forEach((r, y) => {
+    for (let x = 0; x < r.length; x++) {
+      const c = colors[r[x] ?? '.'];
+      if (c !== undefined) data[y * width + x] = packColor(c);
+    }
+  });
+  return { width, height: rows.length, data };
 }

@@ -24,6 +24,7 @@ import { loadGameContent, statBand, statTotal, TIER_LEVELS, trainerTeam } from '
 import { createZorling, type Zorling } from '@game/progression';
 import { loadRegion } from '@game/world/map';
 import { corePack } from '.';
+import { verdaleTrainers } from './verdale-trainers';
 
 const content = loadGameContent([corePack]);
 const map = loadRegion(content, 'core:verdale');
@@ -37,7 +38,10 @@ const zones = Object.values(map.zones);
 const wild = new Set(zones.flatMap((z) => z.spawns.map((s) => s.species)));
 const verdale = content.species.values().filter((s) => !NOT_VERDALE.includes(s.id.slice(5)));
 const verdaleNpcs = content.npcs.values().filter((n) => n.map === 'core:verdale');
-const trainerNpcs = verdaleNpcs.filter((n) => n.dialogue && content.trainers.get(n.dialogue));
+/** Route trainers (C29); the story's trainers are tested in `verdale-story.test.ts`. */
+const trainerNpcs = verdaleNpcs.filter(
+  (n) => n.dialogue && Object.hasOwn(verdaleTrainers, n.dialogue.slice(5)),
+);
 
 let uid = 0;
 const make = (species: string, level: number, moves?: string[]): Zorling => ({

@@ -7,6 +7,7 @@
 
 import type { NpcInput } from '@game/data';
 import { verdaleNpcs } from './verdale-npcs';
+import { verdaleStoryNpcs } from './verdale-story';
 import { verdaleTrainerNpcs } from './verdale-trainers';
 
 export const npcs: Record<string, NpcInput> = {
@@ -134,4 +135,5 @@ export const npcs: Record<string, NpcInput> = {
   },
   ...verdaleNpcs,
   ...verdaleTrainerNpcs,
+  ...verdaleStoryNpcs,
 };

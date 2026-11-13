@@ -3,7 +3,8 @@
  * Hollow, Reed Marsh) and the legendary Verdion (Heartwood Shrine, Old Grove). Each lists the
  * reaction that breaks its Armor. Their aura gives ×2 HP rather than the default ×3: on these
  * bulky species ×3 was out of reach for a team of their level in the C29 simulations (tuned in
- * C31). The Thornwing Titan and Glacivar are the test region's.
+ * C31). The Storm Galehawk is the region boss's (C30). The Thornwing Titan and Glacivar are
+ * the test region's.
  */
 
 import type { BossInput } from '@game/data';
@@ -65,5 +66,18 @@ export const bosses = {
     signatureMove: 'core:verdant-gale',
     armor: { breaks: ['core:shatter'] },
     rematch: { levels: 5, prize: 2000 },
+  },
+  // Region boss (C30): Stormcatcher Vex's Galehawk, charged by her Gale Engine. It fights only
+  // in her team (a trainer battle), so it is never Subdued or caught.
+  'storm-galehawk': {
+    name: 'Storm Galehawk',
+    description: 'Toss it up with Wind, then bring it down with Earth: Slam breaks its Armor.',
+    kind: 'titan',
+    species: 'core:galehawk',
+    level: 38,
+    hpMultiplier: 1.5,
+    signatureMove: 'core:gale-engine',
+    armor: { breaks: ['core:slam'] },
+    theme: 'core:titan-theme',
   },
 } satisfies Record<string, BossInput>;

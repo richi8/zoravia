@@ -7,7 +7,8 @@
  * The Titans wait in their lairs (Mossback at the Hollow Oak in Deepwood, Bogmaw in the
  * Sunken Hollow of the Reed Marsh) and Verdion at the Heartwood Shrine in the Old Grove. Each
  * is a Zorling NPC that leaves once caught, and offers a rematch once beaten. Their hint
- * dialogue around Verdale comes with the campaign (C30).
+ * dialogue around Verdale comes with the campaign (C30): beaten, each Titan shows a vision of
+ * Crown Rock, and Verdion only appears once Stormcatcher Vex is beaten there.
  */
 
 import type { DialogueInput, NpcInput, TrainerInput } from '@game/data';
@@ -247,7 +248,13 @@ function npcOf(id: string, t: RouteTrainer): NpcInput {
 }
 
 /** A boss waiting at its lair: face it, then rematches once it is beaten. */
-function bossDialogue(boss: string, intro: string, beaten: string, back: string): DialogueInput {
+function bossDialogue(
+  boss: string,
+  intro: string,
+  beaten: string,
+  back: string,
+  vision: readonly string[] = [],
+): DialogueInput {
   return {
     start: 'hello',
     nodes: {
@@ -257,7 +264,11 @@ function bossDialogue(boss: string, intro: string, beaten: string, back: string)
         choices: [{ text: 'Face it', goto: 'fight' }, { text: 'Step back' }],
       },
       fight: { battle: { boss: c(boss) }, win: 'after' },
-      after: { branch: [{ if: { boss: c(boss), caught: true }, goto: 'caught' }], goto: 'beaten' },
+      after: {
+        ...(vision.length ? { say: [...vision], speaker: 'Vision' } : {}),
+        branch: [{ if: { boss: c(boss), caught: true }, goto: 'caught' }],
+        goto: 'beaten',
+      },
       caught: { say: ['All is quiet now.'] },
       beaten: { say: [beaten] },
       back: { say: [back], choices: [{ text: 'Face it', goto: 'rematch' }, { text: 'Step back' }] },
@@ -275,6 +286,10 @@ const BOSSES = {
       'The old oak groans and opens its eyes. It is no tree: it is a Titan Mossback!',
       'The Mossback Titan sinks back into the earth. It will wake again.',
       'The Hollow Oak stirs. The Mossback Titan is ready for another fight.',
+      [
+        'As the Mossback settles, its rumble fills your head with a memory…',
+        'A tall rock above the clouds, north of Galecrest. Ropes and sails spin on top, pulling in the wind.',
+      ],
     ),
   },
   'bogmaw-titan': {
@@ -285,6 +300,10 @@ const BOSSES = {
       'Two huge eyes rise from the mud. The Bogmaw Titan blocks the way!',
       'The Bogmaw Titan slips back under the mud. It will be back.',
       'Bubbles rise from the hollow. The Bogmaw Titan wants a rematch.',
+      [
+        'In the bubbles on the mud you glimpse a picture…',
+        'Great sails turning on a crown of rock, high on a ridge. The marsh reeds all lean toward it.',
+      ],
     ),
   },
   verdion: {
@@ -321,7 +340,11 @@ export const verdaleTrainerNpcs: Record<string, NpcInput> = {
         map: MAP,
         anchor: b.anchor,
         zorling: c(b.species),
-        when: { not: { boss: c(id), caught: true } },
+        // Verdion only comes once the Seedwind blows again (C30: Vex beaten at Crown Rock).
+        when:
+          id === 'verdion'
+            ? { all: [{ beat: 'core:stormcatcher-vex' }, { not: { boss: c(id), caught: true } }] }
+            : { not: { boss: c(id), caught: true } },
         dialogue: c(`${id}-lair`),
       } satisfies NpcInput,
     ]),

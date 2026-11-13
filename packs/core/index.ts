@@ -14,9 +14,15 @@ import { npcs } from './npcs';
 import { reactions } from './reactions';
 import { species } from './species';
 import { dialogues as questDialogues, quests } from './story';
-import { badges, dialogues as trialDialogues, trainers } from './trainers';
+import { dialogues as trialDialogues, trainers } from './trainers';
 import { traits } from './traits';
 import { types } from './types';
+import {
+  verdaleBadges,
+  verdaleQuests,
+  verdaleStoryDialogues,
+  verdaleStoryTrainers,
+} from './verdale-story';
 import { verdaleDialogues, verdaleTrainers } from './verdale-trainers';
 
 export const corePack = definePack({
@@ -36,12 +42,17 @@ export const corePack = definePack({
     items,
     music,
     bosses,
-    badges,
-    trainers: { ...trainers, ...verdaleTrainers },
+    badges: verdaleBadges,
+    trainers: { ...trainers, ...verdaleTrainers, ...verdaleStoryTrainers },
     maps,
     npcs,
-    dialogues: { ...questDialogues, ...trialDialogues, ...verdaleDialogues },
-    quests,
+    dialogues: {
+      ...questDialogues,
+      ...trialDialogues,
+      ...verdaleDialogues,
+      ...verdaleStoryDialogues,
+    },
+    quests: { ...quests, ...verdaleQuests },
   },
 });
 

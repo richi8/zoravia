@@ -15,6 +15,11 @@
  *   up after a badge and leaves once beaten; a legendary gone once caught).
  * - `zorling` (C27): drawn as this species' overworld sprite instead of a person (a Titan in
  *   its lair, a legendary at its shrine). It never walks; `look` is ignored.
+ * - `object` (C30): a thing, not a person. `sign` is not drawn at all: it sits on a sign or
+ *   standing-stone prop of the map and makes it readable. `item` is drawn as a small item
+ *   lying on the ground (a hidden item: its dialogue gives the item and sets a flag, and a
+ *   `when` on that flag makes it vanish). Objects never move or turn, and their pages show
+ *   without a name tag.
  */
 
 import { defineRegistry, type CheckContext, type EntryOf, type EntryProblem } from '@engine/packs';
@@ -74,6 +79,7 @@ export const npcSchema = z
     role: npcRoleSchema.optional(),
     when: storyConditionSchema.optional(),
     zorling: ref.optional(),
+    object: z.enum(['sign', 'item']).optional(),
   })
   .superRefine((n, ctx) => {
     if (n.zorling && n.behavior.kind === 'wander') {
@@ -81,6 +87,13 @@ export const npcSchema = z
         code: 'custom',
         path: ['behavior'],
         message: 'A Zorling NPC does not wander',
+      });
+    }
+    if (n.object && (n.zorling || n.role || n.behavior.kind !== 'stand')) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['object'],
+        message: 'An object stands still and has no Zorling or role',
       });
     }
     if ((n.lines === undefined) === (n.dialogue === undefined)) {

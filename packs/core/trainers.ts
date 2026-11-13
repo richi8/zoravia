@@ -1,6 +1,7 @@
 /**
- * Test trial, badge and trainers (C27) for the test region. Region 1's real trial, rival and
- * trainers come with C29–C30.
+ * Test trial and trainers (C27) for the test region, kept as debug content. Region 1's real
+ * trial, rival and region boss are in `verdale-story.ts` (C30); this trial gives the same
+ * Grove Badge.
  *
  * - The **Grove Trial**: beat Apprentice Fern, then Warden Oak, who gives the Grove Badge.
  *   Oak is a story boss: +4 levels for every badge the player already holds when coming here
@@ -11,19 +12,11 @@
  * - Fern and Oak can be fought again once the badge is won (rematches).
  */
 
-import type { BadgeInput, DialogueInput, TrainerInput } from '@game/data';
+import type { DialogueInput, TrainerInput } from '@game/data';
 
 const BADGE = 'core:grove-badge';
 const FERN = 'core:apprentice-fern';
 const OAK = 'core:warden-oak';
-
-export const badges: Record<string, BadgeInput> = {
-  'grove-badge': {
-    name: 'Grove Badge',
-    description: 'Proof of passing the Grove Trial in the test region.',
-    type: 'core:nature',
-  },
-};
 
 export const trainers: Record<string, TrainerInput> = {
   'apprentice-fern': {

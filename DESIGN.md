@@ -47,6 +47,7 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 ### Launch regions
 1. **Verdale** (temperate forest & lakes) — Nature / Water / Wind. Gentlest start. Hub town Willowmere, second town Fernhollow (Grove Trial), outpost Galecrest; exits: Ember Pass (east, to region 2) and a ferry dock (south, to region 3).
    - Zorlings (C29): 23 species. Starters **Sprigling** (Nature), **Drizzlet** (Water) and **Emberkit** (Fire): the Fire > Nature > Water > Fire triangle reads best for a first choice, even though Fire is not one of Verdale's three types. Titans: **Mossback** (Hollow Oak, Deepwood; breaks on Wildfire) and **Bogmaw** (Sunken Hollow, Reed Marsh; breaks on Conducted). Legendary: **Verdion** (Nature/Wind, Heartwood Shrine; breaks on Shatter).
+   - Campaign (C30): every spring the Heartwood breathes out the **Seedwind**, which wakes the forest; this year it has not come. Main quest **The Still Wind** (Elder Rowan): Grove Badge in Fernhollow → face both Titans (each shows a vision of Crown Rock) → beat the region boss **Stormcatcher Vex** on Crown Rock, whose Gale Engine bottles the wind (her Storm Galehawk fights in boss form) → Verdion appears at the Heartwood Shrine → tell Rowan. Rival **Mira** meets the player on Willowmere's north road, at the trial after the badge, and in Galecrest after both Titans. Four side quests, readable signs and lore stones, and hidden items in the secrets and landmarks.
 2. **Volcanic desert** — Fire / Earth / Metal. Ash storms: battles start with Burning.
 3. **Frozen coast islands** — Ice / Water / Electric. Storms: battles start with Wet.
 
@@ -163,6 +164,7 @@ Rules settled in C26 (2026-11-13):
 - What actions do is told to the player right after the node's pages, without a speaker ("You received Super Potion.", "New quest: …", "Quest updated: …", "Quest complete: …!"), with a short chime (a fanfare on completion).
 - A **quest** is a list of steps. A step is done as soon as its condition holds, and quests are checked after every dialogue, battle and menu. So dialogue moves a quest on by setting a flag, and a step like "catch a Voltbat" can already be done when it is reached (the quest moves straight past it). The last step completes the quest and pays its reward once.
 - The quest log (`J`) lists active quests first, then finished ones. It shows only the steps reached so far, never the ones ahead.
+- Signs, lore stones and hidden items are NPC **objects** (C30): a `sign` is not drawn and makes a sign or standing-stone prop readable; an `item` lies on the ground as a small Zorb, gives its item once (a flag) and stays while the bag has no room for it. Neither shows a name tag.
 
 ## Economy
 - Potions: **shop-only, money-only**, tiered prices, **bag cap 5 per type**.

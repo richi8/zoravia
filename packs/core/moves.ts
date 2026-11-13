@@ -172,4 +172,12 @@ export const moves = {
     accuracy: 90,
     applyChance: 0.3,
   },
+  'gale-engine': {
+    name: 'Gale Engine',
+    description: 'The Storm Galehawk’s signature move: a blast of bottled wind.',
+    type: t('wind'),
+    power: 80,
+    accuracy: 90,
+    applyChance: 0.3,
+  },
 } satisfies Record<string, MoveInput>;

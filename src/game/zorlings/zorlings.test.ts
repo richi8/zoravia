@@ -120,7 +120,8 @@ describe('renderZorling', () => {
         }
       }
     }
-  });
+    // Renders ~550 sprites: ~3 s alone, over the 5 s default when the whole suite runs in parallel.
+  }, 20_000);
 
   it('battle sprite uses a limited palette (pixel art, no anti-aliasing)', () => {
     for (let i = 0; i < 10; i++) {
