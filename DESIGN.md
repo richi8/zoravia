@@ -69,6 +69,7 @@ Each region has its own lore, a legendary, a trial/badge, and **its own 3 starte
 - Nicknames (up to 12 characters).
 - **Team-wide shared XP**: every team member that has not fainted gets the full XP of a win (decided 2026-11-12, C13).
 - Evolution is offered on reaching the level; the player may wait, and it is offered again on later level-ups.
+  - Settled in C22b (2026-11-13): the choices are asked after the battle, in the overworld. A new move with all 3 slots full: pick one to forget, or don't learn it (the move relearner can teach it later). Evolution: "Evolve" or "Not now"; a Zorling that waited can also evolve any time from the party screen. Moves the new form learns at its current level are taught (free slot) or offered the same way.
 
 ## Types (8)
 Fire, Water, Nature, Electric, Ice, Earth, Wind, Metal (tank: high HP/DEF, low SPD).

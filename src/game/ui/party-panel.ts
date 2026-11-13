@@ -4,6 +4,8 @@
  * can be changed here.
  *
  * Keyboard: W/S choose, E pick up → W/S → E put down (swap places), Q back / cancel.
+ * With `onSelect` (C22b), E asks the caller instead (an options menu: reorder, evolve…),
+ * which calls `hold` to start reordering. A Zorling that can evolve gets a gold mark.
  * Mouse: hover/click rows; clicking the selected row picks it up or puts it down.
  */
 
@@ -21,6 +23,8 @@ export interface PartyOptions {
   /** Swap two team members (hotbar order). Returns the new views. */
   readonly onSwap: (a: number, b: number) => readonly ZorlingView[];
   readonly onBack: (panel: PartyPanel) => void;
+  /** E on a team member when nothing is held. Default: pick it up to reorder. */
+  readonly onSelect?: (index: number, panel: PartyPanel) => void;
 }
 
 const W = 340;
@@ -97,11 +101,29 @@ export class PartyPanel implements Widget<Container> {
     const i = this.cursor.index;
     if (i < 0) return;
     if (this.held === undefined) {
-      if (this.team.length > 1) this.held = i;
+      if (this.options.onSelect) {
+        this.options.onSelect(i, this);
+        return;
+      }
+      this.hold(i);
+      return;
     } else {
       if (this.held !== i) this.team = this.options.onSwap(this.held, i);
       this.held = undefined;
     }
+    this.build();
+  }
+
+  /** Picks up team member `index` to move it (reorder). */
+  hold(index: number): void {
+    if (this.team.length > 1 && this.team[index]) this.held = index;
+    this.build();
+  }
+
+  /** New team views (after an evolution, a move change…). */
+  setTeam(team: readonly ZorlingView[]): void {
+    this.team = team;
+    this.cursor.reset(team.length);
     this.build();
   }
 
@@ -144,6 +166,19 @@ export class PartyPanel implements Widget<Container> {
       const hp = uiText('label', z.hp <= 0 ? 'Fainted' : `${z.hp}/${z.maxHp}`, paper.inkDim);
       hp.position.set(Math.round(LIST_W - 6 - hp.width), 17);
       r.addChild(name, lv, bar, hp);
+      if (z.evolveInto) {
+        // Gold diamond after the name: ready to evolve.
+        const mark = new Graphics();
+        const mx = Math.round(name.x + name.width + 4);
+        mark
+          .rect(mx + 2, 7, 1, 1)
+          .rect(mx + 1, 8, 3, 1)
+          .rect(mx, 9, 5, 1);
+        mark.rect(mx + 1, 10, 3, 1).rect(mx + 2, 11, 1, 1);
+        mark.fill({ color: paper.cursor });
+        mark.rect(mx + 2, 9, 1, 1).fill({ color: paper.accent });
+        r.addChild(mark);
+      }
       r.hitArea = new Rectangle(0, 0, LIST_W, ROW_H - 2);
       this.pointer.bind(r, 'row', i);
       add(r, 4, TOP + i * ROW_H);
@@ -154,7 +189,10 @@ export class PartyPanel implements Widget<Container> {
 
     const hints =
       this.held === undefined
-        ? [new KeyHint('E', 'Reorder'), new KeyHint('Q', 'Back')]
+        ? [
+            new KeyHint('E', this.options.onSelect ? 'Options' : 'Reorder'),
+            new KeyHint('Q', 'Back'),
+          ]
         : [new KeyHint('E', 'Put here'), new KeyHint('Q', 'Cancel')];
     for (const h of hints) this.dynamic.addChild(h);
     row(hints, 8, 7, H - 13);
@@ -176,6 +214,10 @@ export class PartyPanel implements Widget<Container> {
     for (const t of z.types) {
       const b = add(new TypeBadge(t), bx, TOP + 13);
       bx += Math.ceil(b.width) + 3;
+    }
+    if (z.evolveInto) {
+      const ready = uiText('label', `Can evolve into ${z.evolveInto}`, paper.title);
+      add(ready, Math.round(right - ready.width), TOP + 15);
     }
 
     // Stats.

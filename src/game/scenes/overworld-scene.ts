@@ -32,6 +32,8 @@ import {
   applyBattleResult,
   healTeam,
   markSeen,
+  offersFrom,
+  type Offer,
   teamDown,
   wildPrize,
   type Party,
@@ -151,6 +153,8 @@ export class OverworldScene implements Scene<Container> {
   private talkingTo: NpcActor | undefined;
   private inBattle = false;
   private afterBattle: string[] = [];
+  /** Move and evolution offers the last battle left (asked on return). */
+  private offers: Offer[] = [];
   private time = 0;
   private width = 480;
   private height = 270;
@@ -264,8 +268,17 @@ export class OverworldScene implements Scene<Container> {
     this.inBattle = false;
     this.setContext();
     const pages = this.afterBattle;
+    const offers = this.offers;
     this.afterBattle = [];
-    if (pages.length) this.say(pages);
+    this.offers = [];
+    // Messages first, then the level-up choices (C22b).
+    const choices = (): void => {
+      if (!offers.length) return;
+      this.menus.levelUp.run(offers);
+      this.setContext();
+    };
+    if (pages.length) this.say(pages, undefined, choices);
+    else choices();
   }
 
   exit(): void {
@@ -516,6 +529,7 @@ export class OverworldScene implements Scene<Container> {
       prize: wildPrize(roamer.level),
     });
     this.party = applied.party;
+    this.offers = offersFrom(result.team, result.progress);
     switch (result.outcome) {
       case 'win':
         this.sim.remove(roamer);

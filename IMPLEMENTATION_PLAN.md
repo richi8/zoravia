@@ -168,6 +168,13 @@ User reviews `/lab`. Feedback becomes tweak chunks before Phase 2. Log the decis
 - **Done when:** full loop: catch → storage → swap at center → buy potions → use in battle.
 - **Depends:** C21
 
+### C22b · Level-up choices
+- **Goal:** Level-up results become player choices (DESIGN.md → Creatures).
+- **Deliverables:** after a battle, "replace a move or skip" for move offers and "evolve now or later" for evolution offers; an evolution animation; evolving later from the party screen; moves the new form learns are taught or offered.
+- **Done when:** a level-up past a full move set and an evolution level both lead to the right choices, and the results are kept in the party.
+- **Depends:** C22
+- *(Added 2026-11-13 at the user's request; it was a C22 follow-up.)*
+
 ### C23 · Save system
 - **Deliverables:** IndexedDB saves, versioned schema + migrations, autosave, save slots, one-per-save boss tracking.
 - **Done when:** reload restores exact state; migration test from v1 → v2 fixture.

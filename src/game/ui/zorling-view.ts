@@ -31,6 +31,8 @@ export interface ZorlingView {
   readonly trait?: { readonly name: string; readonly description: string };
   readonly moves: readonly MoveLine[];
   readonly titan: boolean;
+  /** Species name it can evolve into now (it reached the level and waited). */
+  readonly evolveInto?: string;
   /** 32×32 portrait. */
   readonly portrait: Texture;
 }

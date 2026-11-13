@@ -27,7 +27,14 @@ import {
   useItemInField,
   type Party,
 } from '@game/player';
-import { displayName, MOVE_SLOTS, statsOf, xpForLevel, type Zorling } from '@game/progression';
+import {
+  canEvolve,
+  displayName,
+  MOVE_SLOTS,
+  statsOf,
+  xpForLevel,
+  type Zorling,
+} from '@game/progression';
 import { styleTypes, typeIdOf } from '@game/style/ids';
 import { BagPanel, type BagItem, type BagTab } from '@game/ui/bag';
 import { DexPanel, type DexRow } from '@game/ui/dex-panel';
@@ -40,6 +47,7 @@ import type { MoveLine, ZorlingView } from '@game/ui/zorling-view';
 import { BIOMES } from '@game/world/biomes';
 import { buildMinimap, type WorldMap } from '@game/world/map';
 import { speciesLook } from '@game/zorlings/species-look';
+import { LevelUpFlow } from './level-up-flow';
 import { renderZorling } from '@game/zorlings/render';
 
 /** What the menus need from the overworld scene. */
@@ -68,8 +76,12 @@ export class OverworldMenus {
   private readonly art = new Map<string, Texture>();
   private readonly sizes = new Map<Widget<Container>, () => { w: number; h: number }>();
   private mapImage: { texture: Texture; scale: number } | undefined;
+  /** Move offers and evolutions after battles and from the party screen (C22b). */
+  readonly levelUp: LevelUpFlow;
 
-  constructor(private readonly host: MenuHost) {}
+  constructor(readonly host: MenuHost) {
+    this.levelUp = new LevelUpFlow(this);
+  }
 
   /** Re-centers every open screen (after a resize). */
   layout(): void {
@@ -85,6 +97,7 @@ export class OverworldMenus {
   }
 
   dispose(): void {
+    this.levelUp.dispose();
     for (const t of this.portraits.values()) t.destroy(true);
     for (const t of this.art.values()) t.destroy(true);
     this.mapImage?.texture.destroy(true);
@@ -92,22 +105,25 @@ export class OverworldMenus {
     this.art.clear();
   }
 
-  private open(w: Widget<Container>, size: () => { w: number; h: number }): void {
+  /** Pushes a centered screen (kept centered on resize). */
+  open(w: Widget<Container>, size: () => { w: number; h: number }): void {
     this.sizes.set(w, size);
     this.host.stack.push(w);
     this.layout();
   }
 
-  private close(w: Widget<Container>): void {
+  close(w: Widget<Container>): void {
     this.host.stack.remove(w);
     this.sizes.delete(w);
   }
 
-  private menu(
+  /** A centered menu; Q closes it unless `onBack` is given. */
+  menu(
     title: string,
     items: readonly MenuItem[],
     onSelect: (i: number, m: Menu) => void,
     width = 150,
+    onBack?: (m: Menu) => void,
   ): Menu {
     const m: Menu = new Menu({
       theme: this.host.theme,
@@ -115,7 +131,7 @@ export class OverworldMenus {
       width,
       items,
       onSelect,
-      onBack: () => this.close(m),
+      onBack: onBack ?? (() => this.close(m)),
     });
     this.open(m, () => ({ w: m.width, h: m.height }));
     return m;
@@ -154,8 +170,36 @@ export class OverworldMenus {
         return this.teamViews();
       },
       onBack: (p) => this.close(p),
+      onSelect: (i, p) => this.partyOptions(i, p),
     });
     this.open(panel, () => ({ w: PartyPanel.WIDTH, h: PartyPanel.HEIGHT }));
+  }
+
+  /** E on a party member: reorder, or evolve when it waited (C22b). */
+  private partyOptions(index: number, panel: PartyPanel): void {
+    const { content } = this.host;
+    const z = this.host.party.team[index];
+    if (!z) return;
+    const into = content.species.require(z.species).evolution?.into;
+    const entries: [MenuItem, () => void][] = [
+      [{ label: 'Reorder', disabled: this.host.party.team.length < 2 }, () => panel.hold(index)],
+    ];
+    if (into && canEvolve(content, z)) {
+      const name = content.species.require(into).name;
+      entries.push([
+        { label: `Evolve into ${name}` },
+        () => this.levelUp.evolve(z.uid, () => panel.setTeam(this.teamViews())),
+      ]);
+    }
+    const m = this.menu(
+      displayName(content, z),
+      [...entries.map(([item]) => item), { label: 'Cancel' }],
+      (i) => {
+        this.close(m);
+        entries[i]?.[1]();
+      },
+      170,
+    );
   }
 
   // ------------------------------------------------------------ bag
@@ -438,7 +482,7 @@ export class OverworldMenus {
 
   // ------------------------------------------------------------ views
 
-  private teamViews(): ZorlingView[] {
+  teamViews(): ZorlingView[] {
     return this.host.party.team.map((z) => this.zorlingView(z));
   }
 
@@ -472,6 +516,9 @@ export class OverworldMenus {
       ...(trait ? { trait: { name: trait.name, description: trait.description } } : {}),
       moves,
       titan: z.titanMark,
+      ...(s.evolution && canEvolve(content, z)
+        ? { evolveInto: content.species.require(s.evolution.into).name }
+        : {}),
       portrait: this.portrait(z),
     };
   }
