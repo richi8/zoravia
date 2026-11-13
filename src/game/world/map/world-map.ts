@@ -18,7 +18,7 @@ import {
   type ZoneData,
 } from '@game/data/maps';
 import type { BiomeId } from '../biomes';
-import { PROP_INFO } from '../props';
+import { PROP_INFO, propFootprint } from '../props';
 import type { PropPlacement, TerrainMap, TileRect } from '../terrain';
 
 export interface Zone extends ZoneData {
@@ -57,6 +57,7 @@ export class WorldMap {
   anchors: Record<string, AnchorData> = {};
   connections: Record<string, ConnectionData> = {};
   private readonly solid: Uint8Array;
+  private doors: Map<number, 'center' | 'shop'> | undefined;
 
   constructor(init: WorldMapInit) {
     this.name = init.name;
@@ -110,6 +111,18 @@ export class WorldMap {
     return i < 0 || this.solid[i] === 1;
   }
 
+  /** The service behind a building door on this tile (C28), if any. */
+  doorAt(tx: number, ty: number): 'center' | 'shop' | undefined {
+    if (!this.doors) {
+      this.doors = new Map();
+      for (const p of this.props) {
+        const service = PROP_INFO[p.kind].service;
+        if (service) this.doors.set(p.ty * this.width + p.tx, service);
+      }
+    }
+    return this.inside(tx, ty) ? this.doors.get(ty * this.width + tx) : undefined;
+  }
+
   zoneAt(tx: number, ty: number): Zone | undefined {
     const i = this.index(tx, ty);
     const z = i < 0 ? 0 : (this.zoneIndex[i] ?? 0);
@@ -145,20 +158,29 @@ export class WorldMap {
   }
 
   /**
-   * Recomputes collision: a tile is blocked when its liquid blocks (`liquidBlocks`) or it holds a solid prop,
-   * unless its flags force it (`TILE_BLOCK` wins over `TILE_OPEN`).
+   * Recomputes collision: a tile is blocked when its liquid blocks (`liquidBlocks`) or a solid
+   * prop covers it (buildings cover their whole footprint); a walkway (bridge deck) opens its
+   * tile over water. Tile flags still win (`TILE_BLOCK` over `TILE_OPEN`).
    */
   refreshCollision(): void {
     const { width, height, solid, flags } = this;
     solid.fill(0);
+    this.doors = undefined;
     for (let ty = 0; ty < height; ty++) {
       for (let tx = 0; tx < width; tx++) {
         if (this.liquidBlocks(tx, ty)) solid[ty * width + tx] = 1;
       }
     }
     for (const p of this.props) {
-      const i = this.index(p.tx, p.ty);
-      if (i >= 0 && PROP_INFO[p.kind].solid) solid[i] = 1;
+      const info = PROP_INFO[p.kind];
+      if (!info.solid && !info.walkway) continue;
+      const [x0, y0, w, h] = propFootprint(p.kind, p.tx, p.ty, p.variant);
+      for (let y = y0; y < y0 + h; y++) {
+        for (let x = x0; x < x0 + w; x++) {
+          const i = this.index(x, y);
+          if (i >= 0) solid[i] = info.solid ? 1 : 0;
+        }
+      }
     }
     for (let i = 0; i < solid.length; i++) {
       const f = flags[i] ?? 0;

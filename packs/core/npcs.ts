@@ -1,11 +1,12 @@
 /**
  * Test NPCs for the C21 test region (C22: a center attendant and a shop; C26: Ranger Ode and
  * Fisher Lou run the dialogues of the sample quest in `story.ts`; C27: the Grove Trial, Rival
- * Mira's two encounters and Glacivar's shrine, see `trainers.ts`). Region 1's real townsfolk
- * come with C28–C30.
+ * Mira's two encounters and Glacivar's shrine, see `trainers.ts`). Verdale's townsfolk (C28)
+ * are in `verdale-npcs.ts`.
  */
 
 import type { NpcInput } from '@game/data';
+import { verdaleNpcs } from './verdale-npcs';
 
 export const npcs: Record<string, NpcInput> = {
   'test-elder': {
@@ -130,4 +131,5 @@ export const npcs: Record<string, NpcInput> = {
     when: { not: { caught: 'core:glacivar' } },
     dialogue: 'core:glacivar-shrine',
   },
+  ...verdaleNpcs,
 };

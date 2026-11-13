@@ -37,8 +37,15 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 - Wild/zone levels fixed. Only campaign story bosses scale lightly (~+4 Lv per badge held).
 - Badge-based soft level cap: XP gain sharply reduced above cap. Starting values (C13, tuned in C31): cap Lv 30 / 45 / 52 / 60 for 0 / 1 / 2 / 3 badges (+5 per further badge); XP at or above the cap ×0.1.
 
+- Region maps settled in C28 (2026-11-13):
+  - A region's big shapes (towns, roads, rivers, lakes, zone areas, landmark clearings, exits) are placed by hand in its layout; the world tool adds the organic detail (edges, ponds, trees, grass) once, then the overlay places buildings, signs and NPC spots.
+  - Every walkable tile of a shipped region is reachable from its start town.
+  - Towns have no zone, so no wild Zorlings walk between the houses.
+  - Buildings (Zorling center, shop, houses) have **no interiors**: pressing `E` at a center or shop door talks to its attendant, who stands next to the door. Building look: storybook style "A" (C28 preview round), fixed town colors in every region, red-roofed center with a heart emblem.
+  - Roads crossing water get wooden bridges; secrets may hide behind a gap in a tree wall or across walkable lily pads.
+
 ### Launch regions
-1. **Temperate forest & lakes** — Nature / Water / Wind. Gentlest start.
+1. **Verdale** (temperate forest & lakes) — Nature / Water / Wind. Gentlest start. Hub town Willowmere, second town Fernhollow (Grove Trial), outpost Galecrest; exits: Ember Pass (east, to region 2) and a ferry dock (south, to region 3).
 2. **Volcanic desert** — Fire / Earth / Metal. Ash storms: battles start with Burning.
 3. **Frozen coast islands** — Ice / Water / Electric. Storms: battles start with Wet.
 

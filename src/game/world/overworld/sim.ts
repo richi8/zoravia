@@ -20,6 +20,9 @@ import { npcPlace, type Npc } from '@game/data/npcs';
 import type { WorldMap, Zone } from '@game/world/map';
 import type { TileRect } from '@game/world/terrain';
 import { NpcActor, Roamer, ROAM, type Blocked, type Temperament } from './actors';
+
+/** How far (tiles) from a door its service NPC may stand. */
+const DOOR_REACH = 6;
 import { DIR_STEP, GridMover, type Dir, type IntentFn, type MoveEvent, type Tile } from './mover';
 
 /** Starting values, tuned in C31. */
@@ -148,11 +151,30 @@ export class OverworldSim {
   /** Blocked for the player: the map, NPCs and wild Zorlings. */
   readonly blocked: Blocked = (x, y) => this.map.blocked(x, y) || this.occupant(x, y) !== undefined;
 
-  /** The tile in front of the standing player and who is on it. */
+  /**
+   * The tile in front of the standing player and who is on it. A building's door (C28)
+   * counts as the nearest NPC offering its service (the healer by the center's door).
+   */
   facing(): Occupant | undefined {
     if (this.player.moving) return undefined;
     const [dx, dy] = DIR_STEP[this.player.facing];
-    return this.occupant(this.player.tx + dx, this.player.ty + dy);
+    const x = this.player.tx + dx;
+    const y = this.player.ty + dy;
+    const o = this.occupant(x, y);
+    if (o) return o;
+    const service = this.map.doorAt(x, y);
+    if (!service) return undefined;
+    let best: NpcActor | undefined;
+    let bestD = DOOR_REACH + 1;
+    for (const npc of this.npcs) {
+      if (npc.npc.role?.kind !== service) continue;
+      const d = Math.abs(npc.mover.tx - x) + Math.abs(npc.mover.ty - y);
+      if (d < bestD) {
+        best = npc;
+        bestD = d;
+      }
+    }
+    return best ? { kind: 'npc', npc: best } : undefined;
   }
 
   /** A seed for the next battle. */

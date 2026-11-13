@@ -5,7 +5,7 @@ import { packColor, PixelBuffer } from '@engine/render/pixel-buffer';
 import { WeatherSim } from '@engine/render/weather';
 import { TerrainRenderer } from './animate';
 import { BIOME_IDS, BIOMES, TILE } from './biomes';
-import { buildProp, Painter, PROP_INFO, type PropKind } from './props';
+import { buildProp, Painter, PROP_INFO, propFootprint, type PropKind } from './props';
 import { bakeTerrain, LIQUID_STRIDE, type TerrainMap } from './terrain';
 import { WEATHER, WEATHER_IDS } from './weather';
 
@@ -64,6 +64,32 @@ describe('props', () => {
     // The tree has a tinted outline (darker than any of its fill tones).
     const tree = buildProp(painter, 'tree', 0);
     expect(tree.data.includes(painter.outline('foliage'))).toBe(true);
+  });
+
+  it('town buildings fill their footprint and keep town colors in every biome (C28)', () => {
+    expect(propFootprint('center', 10, 10)).toEqual([8, 7, 5, 4]);
+    expect(propFootprint('shop', 10, 10)).toEqual([10, 7, 4, 4]);
+    expect(propFootprint('house', 10, 10, 1)).toEqual([9, 7, 4, 4]);
+    expect(propFootprint('house', 10, 10, 5)).toEqual([8, 7, 4, 4]);
+    expect(propFootprint('rock', 10, 10)).toEqual([10, 10, 1, 1]);
+    for (const kind of ['center', 'shop', 'house'] as const) {
+      const f = PROP_INFO[kind].footprint;
+      const sprite = buildProp(new Painter(BIOMES.forest), kind, 0);
+      expect(Math.abs(sprite.width - (f?.w ?? 0) * TILE)).toBeLessThanOrEqual(6);
+      expect(sprite.height).toBeGreaterThan(((f?.h ?? 0) - 1) * TILE);
+      // Same pixels in the desert: buildings use fixed town ramps.
+      expect(buildProp(new Painter(BIOMES.desert), kind, 0).data).toEqual(sprite.data);
+    }
+    // House roof colors differ by variant.
+    const p = new Painter(BIOMES.forest);
+    expect(buildProp(p, 'house', 0).data).not.toEqual(buildProp(p, 'house', 2).data);
+  });
+
+  it('bridge decks lie flat: they never hide a character (C28)', () => {
+    const map: TerrainMap = { ...testMap(), props: [{ kind: 'bridge-v', tx: 4, ty: 2 }] };
+    const bake = bakeTerrain(map, BIOMES.forest);
+    expect(bake.overlay.some((c) => c !== 0)).toBe(true);
+    expect(bake.depth.every((d) => d === 0)).toBe(true);
   });
 });
 

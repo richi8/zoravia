@@ -5,8 +5,11 @@
  */
 
 import testRegion from './maps/test-region/map.json';
+import verdale from './maps/verdale/map.json';
 
 export const maps = {
-  /** C19 test region: forest, 96×96 tiles, 3×3 chunks. Real Region 1 comes in C28. */
+  /** C19 test region: forest, 96×96 tiles, 3×3 chunks (debug content of C21–C27). */
   'test-region': testRegion,
+  /** Region 1 (C28): Verdale, temperate forest & lakes, 200×200 tiles. */
+  verdale,
 };

@@ -10,6 +10,11 @@ import { mix } from '@engine/core/color';
 import { packColor } from '@engine/render/pixel-buffer';
 import { rampIndex } from '@engine/render/ramp';
 import { TILE_STYLE, type Biome, type Material } from './biomes';
+import * as town from './buildings';
+import { TOWN_RAMPS, type TownMaterial } from './buildings';
+
+/** A biome material or a fixed town material (buildings, C28). */
+export type PaintMaterial = Material | TownMaterial;
 
 export const PROP_KINDS = [
   'tree',
@@ -24,6 +29,17 @@ export const PROP_KINDS = [
   'pad',
   'floe',
   'vent',
+  // Town pieces (C28).
+  'center',
+  'shop',
+  'house',
+  'well',
+  'sign',
+  'fence',
+  'lamp',
+  'menhir',
+  'bridge-v',
+  'bridge-h',
 ] as const;
 
 export type PropKind = (typeof PROP_KINDS)[number];
@@ -39,6 +55,18 @@ export interface PropInfo {
   readonly lift?: number;
   /** Puffs smoke/steam (animated). */
   readonly vent?: boolean;
+  /**
+   * Buildings (C28): tiles it covers, `w`×`h` with the prop's tile in the bottom row at
+   * column `left` (its door). The sprite is centered on the footprint; every footprint tile
+   * is blocked when `solid`.
+   */
+  readonly footprint?: { readonly w: number; readonly h: number; readonly left: number };
+  /** Lies flat on the ground (bridge decks): never drawn in front of characters. */
+  readonly flat?: boolean;
+  /** Makes its tile walkable even over water (bridge decks). */
+  readonly walkway?: boolean;
+  /** Its door opens a service: talking to the door talks to the nearest NPC with that role. */
+  readonly service?: 'center' | 'shop';
 }
 
 export const PROP_INFO: Readonly<Record<PropKind, PropInfo>> = {
@@ -54,7 +82,33 @@ export const PROP_INFO: Readonly<Record<PropKind, PropInfo>> = {
   pad: { shadow: false, solid: false, onLiquid: true, lift: -4 },
   floe: { shadow: false, solid: false, onLiquid: true, lift: -5 },
   vent: { shadow: false, solid: true, lift: -3, vent: true },
+  center: { shadow: true, solid: true, footprint: { w: 5, h: 4, left: 2 }, service: 'center' },
+  shop: { shadow: true, solid: true, footprint: { w: 4, h: 4, left: 0 }, service: 'shop' },
+  house: { shadow: true, solid: true, footprint: { w: 4, h: 4, left: 1 } },
+  well: { shadow: true, solid: true },
+  sign: { shadow: false, solid: true },
+  fence: { shadow: false, solid: true },
+  lamp: { shadow: false, solid: true },
+  menhir: { shadow: true, solid: true },
+  'bridge-v': { shadow: false, solid: false, onLiquid: true, flat: true, walkway: true },
+  'bridge-h': { shadow: false, solid: false, onLiquid: true, flat: true, walkway: true },
 };
+
+/**
+ * Tiles a prop covers as `[x, y, w, h]` (one tile for small props). Houses with
+ * `variant & 4` have their door in the third column instead of the second.
+ */
+export function propFootprint(
+  kind: PropKind,
+  tx: number,
+  ty: number,
+  variant = 0,
+): readonly [number, number, number, number] {
+  const f = PROP_INFO[kind].footprint;
+  if (!f) return [tx, ty, 1, 1];
+  const left = kind === 'house' && variant & 4 ? 2 : f.left;
+  return [tx - left, ty - f.h + 1, f.w, f.h];
+}
 
 /** Sprite pixels are packed RGBA (see `packColor`); 0 = transparent. */
 export interface PropSprite {
@@ -68,30 +122,33 @@ type Field = (x: number, y: number) => Px;
 
 /** Snaps materials to a biome's ramps, with storybook outlines. Caches per material. */
 export class Painter {
-  private readonly ramps = new Map<Material, number[]>();
-  private readonly outlines = new Map<Material, number>();
+  private readonly ramps = new Map<PaintMaterial, number[]>();
+  private readonly outlines = new Map<PaintMaterial, number>();
 
   constructor(readonly biome: Biome) {}
 
-  ramp(m: Material): number[] {
+  ramp(m: PaintMaterial): number[] {
     let r = this.ramps.get(m);
     if (!r) {
-      r = this.biome.ramps[m].map(packColor);
+      r = (m in TOWN_RAMPS ? TOWN_RAMPS[m as TownMaterial] : this.biome.ramps[m as Material]).map(
+        packColor,
+      );
       this.ramps.set(m, r);
     }
     return r;
   }
 
   /** Packed tone of `m` for `light` at pixel (x, y), dithered at band edges. */
-  tone(m: Material, light: number, x: number, y: number): number {
+  tone(m: PaintMaterial, light: number, x: number, y: number): number {
     const r = this.ramp(m);
     return r[rampIndex(r.length, light, x, y, TILE_STYLE.sharpness)] ?? 0;
   }
 
-  outline(m: Material): number {
+  outline(m: PaintMaterial): number {
     let c = this.outlines.get(m);
     if (c === undefined) {
-      const darkest = this.biome.ramps[m][0] ?? 0;
+      const darkest =
+        (m in TOWN_RAMPS ? TOWN_RAMPS[m as TownMaterial] : this.biome.ramps[m as Material])[0] ?? 0;
       c = packColor(mix(darkest, TILE_STYLE.outlineInk, TILE_STYLE.outlineMix));
       this.outlines.set(m, c);
     }
@@ -343,5 +400,25 @@ export function buildProp(p: Painter, kind: PropKind, variant: number): PropSpri
       return floe(p, s);
     case 'vent':
       return vent(p);
+    case 'center':
+      return town.center(p);
+    case 'shop':
+      return town.shop(p);
+    case 'house':
+      return town.house(p, variant);
+    case 'well':
+      return town.well(p);
+    case 'sign':
+      return town.sign(p);
+    case 'fence':
+      return town.fence(p);
+    case 'lamp':
+      return town.lamp(p);
+    case 'menhir':
+      return town.menhir(p, s);
+    case 'bridge-v':
+      return town.bridgeV(p, variant);
+    case 'bridge-h':
+      return town.bridgeH(p, variant);
   }
 }

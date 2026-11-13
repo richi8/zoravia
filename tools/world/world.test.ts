@@ -80,6 +80,118 @@ describe('region generator', () => {
   });
 });
 
+describe('authored layout (C28)', () => {
+  const LAYOUT: RegionConfigInput = {
+    name: 'Layout test',
+    biome: 'forest',
+    seed: 5,
+    width: 64,
+    height: 64,
+    zones: {
+      near: { name: 'Near', tier: 't1' },
+      far: { name: 'Far', tier: 't3' },
+    },
+    layout: {
+      towns: { hub: { name: 'Hub', at: [32, 32], radius: 5 } },
+      routes: [
+        {
+          points: [
+            [32, 32],
+            [32, 63],
+          ],
+        },
+        {
+          points: [
+            [32, 32],
+            [10, 12],
+          ],
+        },
+      ],
+      rivers: [
+        {
+          points: [
+            [0, 44],
+            [63, 44],
+          ],
+          width: 3,
+        },
+      ],
+      lakes: [{ at: [50, 14], radius: [7, 6] }],
+      islands: [{ at: [50, 14], radius: [2.5, 2] }],
+      ponds: 0,
+      clearings: [
+        { id: 'lair', kind: 'lair', at: [10, 12], radius: 3 },
+        { id: 'glade', kind: 'secret', at: [50, 30], radius: 2, ring: true, gap: 'west' },
+      ],
+      fords: [
+        {
+          points: [
+            [41, 15],
+            [48, 14],
+          ],
+        },
+      ],
+      zones: {
+        near: { seeds: [[32, 32]] },
+        far: {
+          seeds: [
+            [8, 8],
+            [56, 56],
+            [8, 56],
+            [56, 8],
+          ],
+        },
+      },
+      exits: { south: { at: [32, 63], kind: 'pass' } },
+    },
+  };
+  const make = (patch: Partial<RegionConfigInput> = {}): WorldMap =>
+    generateRegion(regionConfigSchema.parse({ ...LAYOUT, ...patch }));
+  const m = make();
+  const spawn = m.anchors['spawn'] ?? { x: -1, y: -1 };
+  const reach = m.reachableFrom(spawn.x, spawn.y);
+
+  it('is deterministic per seed', () => {
+    expect(encodeRegion(make())).toEqual(encodeRegion(m));
+    expect(encodeRegion(make({ seed: 6 }))).not.toEqual(encodeRegion(m));
+  });
+
+  it('places towns, clearings and exits as anchors and connections', () => {
+    expect(spawn).toMatchObject({ x: 32, y: 33, kind: 'spawn' });
+    expect(m.anchors['town-hub']).toMatchObject({ x: 32, y: 32, kind: 'town' });
+    expect(m.anchors['lair']).toMatchObject({ kind: 'lair' });
+    expect(m.connections['south']).toMatchObject({ x: 32, y: 63, kind: 'pass' });
+    expect(m.zoneAt(32, 32)).toBeUndefined();
+    expect(m.zoneAt(32, 40)?.key).toBe('near');
+    expect(m.zoneAt(4, 4)?.key).toBe('far');
+  });
+
+  it('bridges routes over rivers and makes fords walkable', () => {
+    const bridges = m.props.filter((p) => p.kind === 'bridge-v');
+    expect(bridges.length).toBeGreaterThan(0);
+    expect(bridges.every((b) => Math.abs(b.tx - 32) <= 2)).toBe(true);
+    expect(m.liquidCorners(32, 44)).toBe(4);
+    expect(m.blocked(32, 44)).toBe(false);
+    expect(reach[(m.connections['south']?.y ?? 0) * m.width + 32]).toBe(1);
+    // The island is reached over the ford's lily pads.
+    expect(reach[14 * m.width + 50]).toBe(1);
+    expect(m.props.some((p) => p.kind === 'pad' && p.tx === 44)).toBe(true);
+  });
+
+  it('leaves every walkable tile reachable from the spawn', () => {
+    for (let i = 0; i < reach.length; i++) {
+      if (!m.blocked(i % m.width, Math.floor(i / m.width))) expect(reach[i]).toBe(1);
+    }
+    expect(reach[(m.anchors['glade']?.y ?? 0) * m.width + 50]).toBe(1);
+  });
+
+  it('rejects layout zones missing from "zones"', () => {
+    const bad = structuredClone(LAYOUT);
+    if (bad.layout) bad.layout.zones = { ...bad.layout.zones, nope: { seeds: [[1, 1]] } };
+    expect(() => generateRegion(regionConfigSchema.parse(bad))).toThrow(/nope/);
+  });
+});
+
 function buildFrom(m: WorldMap, overlay: OverlayInput): WorldMap {
   return decodeRegion(encodeRegion(applyOverlay(m, overlay)));
 }

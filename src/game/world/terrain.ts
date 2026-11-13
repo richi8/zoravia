@@ -10,7 +10,14 @@
 import { fbm, hash2, valueNoise } from '@engine/core/noise';
 import { coverage, type CornerGrid } from '@engine/world/autotile';
 import { TILE, TILE_STYLE, type Biome, type Material } from './biomes';
-import { buildProp, Painter, PROP_INFO, type PropKind, type PropSprite } from './props';
+import {
+  buildProp,
+  Painter,
+  PROP_INFO,
+  propFootprint,
+  type PropKind,
+  type PropSprite,
+} from './props';
 
 export interface PropPlacement {
   readonly kind: PropKind;
@@ -112,7 +119,9 @@ function placeProps(map: TerrainMap, painter: Painter): Placed[] {
     const info = PROP_INFO[p.kind];
     const dx = p.dx ?? 0;
     const dy = (p.dy ?? 0) + (info.lift ?? 0);
-    const bx = p.tx * TILE + TILE / 2 + dx;
+    // Buildings center on their footprint, not on their (door) tile.
+    const [fx, , fw] = propFootprint(p.kind, p.tx, p.ty, variant);
+    const bx = fx * TILE + (fw * TILE) / 2 + dx;
     return {
       sprite,
       info,
@@ -234,7 +243,7 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
         const i = local(p.x + x, p.y + y);
         if (i >= 0) {
           overlay[i] = c;
-          depth[i] = p.by;
+          depth[i] = p.info.flat ? 0 : p.by;
         }
       }
     }

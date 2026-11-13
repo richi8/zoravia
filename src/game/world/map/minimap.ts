@@ -1,12 +1,14 @@
 /**
  * Region minimap (C19 viewer, shared with the overworld map screen in C22): one flat color per
- * tile from the biome's ramps (water, props, paths, tall grass, high ground, ground), drawn at
+ * tile from the biome's ramps (water, props, paths, tall grass, high ground, ground) plus roof
+ * colors for buildings and path color for bridges (C28), drawn at
  * a whole number of game pixels per tile.
  */
 
 import { packColor, PixelBuffer } from '@engine/render/pixel-buffer';
 import type { Biome } from '../biomes';
-import { PROP_INFO } from '../props';
+import { TOWN_RAMPS } from '../buildings';
+import { PROP_INFO, propFootprint } from '../props';
 import type { WorldMap } from './world-map';
 
 /** Packed color of one tile; `tint` may change it (overlays). */
@@ -44,9 +46,12 @@ export function buildMinimap(
   const s = Math.max(1, Math.floor(scale));
   const mini = new PixelBuffer(m.width * s, m.height * s);
   const props = new Map(m.props.map((p) => [p.ty * m.width + p.tx, p.kind]));
+  const towns = townColors(m, biome);
   for (let ty = 0; ty < m.height; ty++) {
     for (let tx = 0; tx < m.width; tx++) {
-      let c = minimapColor(m, biome, tx, ty, props.get(ty * m.width + tx));
+      let c =
+        towns.get(ty * m.width + tx) ??
+        minimapColor(m, biome, tx, ty, props.get(ty * m.width + tx));
       if (tint) c = tint(c, tx, ty);
       for (let y = 0; y < s; y++) {
         const row = (ty * s + y) * mini.width + tx * s;
@@ -55,4 +60,30 @@ export function buildMinimap(
     }
   }
   return mini;
+}
+
+/** Roof colors of houses by `variant & 3` (same order as the sprites). */
+const HOUSE_ROOFS = [
+  TOWN_RAMPS.roofTeal,
+  TOWN_RAMPS.roofMustard,
+  TOWN_RAMPS.roofRed,
+  TOWN_RAMPS.roofPlum,
+] as const;
+
+/** Buildings fill their footprint with their roof color; bridge decks read as path (C28). */
+function townColors(m: WorldMap, biome: Biome): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const p of m.props) {
+    let rgb: number | undefined;
+    if (p.kind === 'center') rgb = TOWN_RAMPS.roofRed[2];
+    else if (p.kind === 'shop') rgb = TOWN_RAMPS.roofBlue[2];
+    else if (p.kind === 'house') rgb = HOUSE_ROOFS[(p.variant ?? 0) & 3]?.[2];
+    else if (PROP_INFO[p.kind].walkway) rgb = biome.ramps.path[1];
+    if (rgb === undefined) continue;
+    const [x0, y0, w, h] = propFootprint(p.kind, p.tx, p.ty, p.variant);
+    for (let y = y0; y < y0 + h; y++)
+      for (let x = x0; x < x0 + w; x++)
+        if (m.inside(x, y)) out.set(y * m.width + x, packColor(rgb));
+  }
+  return out;
 }

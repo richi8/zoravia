@@ -37,6 +37,29 @@ second ground, props and tall grass by per-biome rules, and a solid prop border.
 cuts a path and nothing solid stands on one, so every exit is reachable from the spawn.
 Zones start with the tier's full level range and no spawns. The overlay fills them in.
 
+### Authored layout (C28)
+
+A `region.json` with a `layout` (Region 1, `core/verdale`) is laid out by hand instead of in
+rings: the generator only adds the organic detail. See `layoutSchema` in
+`tools/world/config.ts`.
+
+- `towns`: cleared ground with a path plaza and no zone; the first is where the player
+  starts (`spawn` anchor). Each gets a `town-<key>` anchor.
+- `routes`: path polylines (`width`, `wobble`). Where a route crosses water it gets bridge
+  decks (`bridge-v` / `bridge-h` props, walkable).
+- `rivers` (polylines), `lakes` and `islands` (noisy ellipses), `ponds` (random pond
+  threshold, 0 = none).
+- `clearings`: cleared spots that become anchors (`id`, `kind`: lair, shrine, arena,
+  landmark, secret). `ring: true` walls one with trees, open toward `gap`.
+- `fords`: walkable lily-pad crossings over water.
+- `zones`: per zone, `seeds` (each tile joins the zone of the nearest seed, noise-warped)
+  and `trees` / `grass` / `wet` density shifts.
+- `exits`: connection points on the edge (`edge`, `pass`, `ferry`, `sea`); the tree border
+  stays open there.
+
+Last, walkable pockets the spawn cannot reach are opened by removing the props in the way,
+and whatever is still cut off is marked blocked, so every walkable tile is reachable.
+
 ### Overlay (`overlay.json`)
 
 All positions are tiles from the map's top-left. Rects are `{ "x", "y", "w", "h" }`.
@@ -77,9 +100,15 @@ All positions are tiles from the map's top-left. Rects are `{ "x", "y", "w", "h"
 - Errors list every problem at once, e.g.
   `edits[0] (tall: too wide): rect (6, 0, 4×1) leaves the 8×6 map`.
 
+Town pieces are props too (C28): `center`, `shop` and `house` cover several tiles (their
+tile is the door, in the bottom row; houses with `variant & 4` have the door on the right,
+`variant & 3` picks the roof color), plus `well`, `sign`, `fence`, `lamp` and `menhir`.
+Clear the footprint first (`clearProps`). Talking to a center or shop door talks to the
+nearest NPC with that role. `packs/core/maps/verdale/overlay.json` places three towns.
+
 ### Map format
 
 See `src/game/data/maps.ts` (schema, validated when packs load) and
 `src/game/world/map/` (`WorldMap`, `decodeRegion`, `loadRegion`). Collision is not stored:
-it follows from terrain and props (a tile with 3+ liquid corners or a solid prop is
-blocked), plus the overlay's forced tiles.
+it follows from terrain and props (a tile with 3+ liquid corners or under a solid prop's
+footprint is blocked, a bridge deck opens water), plus the overlay's forced tiles.

@@ -1,0 +1,426 @@
+{
+  "name": "Verdale",
+  "biome": "forest",
+  "seed": 2828,
+  "width": 200,
+  "height": 200,
+  "chunkSize": 32,
+  "zones": {
+    "meadow": {
+      "name": "Sunny Meadow",
+      "tier": "t1"
+    },
+    "willow-shore": {
+      "name": "Willow Shore",
+      "tier": "t1"
+    },
+    "brookside": {
+      "name": "Brookside Trail",
+      "tier": "t1"
+    },
+    "reedmarsh": {
+      "name": "Reed Marsh",
+      "tier": "t2"
+    },
+    "fernwood": {
+      "name": "Fernwood",
+      "tier": "t2"
+    },
+    "deepwood": {
+      "name": "Deepwood",
+      "tier": "t2"
+    },
+    "downs": {
+      "name": "Breezy Downs",
+      "tier": "t2"
+    },
+    "bramble": {
+      "name": "Bramble Thicket",
+      "tier": "t2"
+    },
+    "oldgrove": {
+      "name": "Old Grove",
+      "tier": "t3"
+    },
+    "mistmere": {
+      "name": "Mistmere",
+      "tier": "t3"
+    },
+    "galeback": {
+      "name": "Galeback Ridge",
+      "tier": "t3"
+    }
+  },
+  "layout": {
+    "towns": {
+      "willowmere": {
+        "name": "Willowmere",
+        "at": [100, 118],
+        "radius": 9,
+        "plaza": 3.5
+      },
+      "fernhollow": {
+        "name": "Fernhollow",
+        "at": [104, 62],
+        "radius": 8
+      },
+      "galecrest": {
+        "name": "Galecrest",
+        "at": [160, 110],
+        "radius": 6,
+        "plaza": 2.5
+      }
+    },
+    "routes": [
+      {
+        "points": [
+          [100, 118],
+          [97, 96],
+          [101, 80],
+          [104, 62]
+        ]
+      },
+      {
+        "points": [
+          [100, 118],
+          [124, 117],
+          [140, 114],
+          [160, 110],
+          [182, 106],
+          [199, 104]
+        ]
+      },
+      {
+        "points": [
+          [100, 118],
+          [98, 146],
+          [92, 168],
+          [88, 186],
+          [88, 199]
+        ]
+      },
+      {
+        "points": [
+          [100, 118],
+          [80, 112],
+          [64, 110],
+          [50, 116],
+          [40, 124]
+        ]
+      },
+      {
+        "points": [
+          [50, 117],
+          [54, 136],
+          [50, 150],
+          [45, 156]
+        ],
+        "wobble": 2
+      },
+      {
+        "points": [
+          [104, 62],
+          [82, 57],
+          [66, 51],
+          [52, 46]
+        ]
+      },
+      {
+        "points": [
+          [104, 62],
+          [100, 40],
+          [103, 26],
+          [100, 18]
+        ]
+      },
+      {
+        "points": [
+          [160, 110],
+          [164, 86],
+          [170, 66],
+          [168, 47]
+        ]
+      },
+      {
+        "points": [
+          [104, 62],
+          [132, 70],
+          [150, 80],
+          [164, 86]
+        ]
+      },
+      {
+        "points": [
+          [100, 118],
+          [120, 140],
+          [140, 156],
+          [152, 168]
+        ]
+      },
+      {
+        "points": [
+          [52, 46],
+          [40, 54],
+          [34, 68],
+          [30, 76]
+        ],
+        "wobble": 2
+      },
+      {
+        "points": [
+          [45, 156],
+          [32, 168],
+          [22, 182]
+        ],
+        "wobble": 2
+      },
+      {
+        "points": [
+          [152, 168],
+          [168, 160],
+          [182, 152]
+        ],
+        "wobble": 2
+      },
+      {
+        "points": [
+          [66, 51],
+          [64, 36],
+          [70, 27]
+        ],
+        "wobble": 2
+      }
+    ],
+    "rivers": [
+      {
+        "points": [
+          [124, 2],
+          [120, 24],
+          [116, 44],
+          [122, 58],
+          [118, 80],
+          [116, 100],
+          [116, 118],
+          [112, 140],
+          [106, 166],
+          [104, 199]
+        ],
+        "width": 3.5
+      },
+      {
+        "points": [
+          [66, 134],
+          [60, 148],
+          [52, 166],
+          [46, 184],
+          [42, 199]
+        ],
+        "width": 2.5
+      }
+    ],
+    "lakes": [
+      {
+        "at": [72, 128],
+        "radius": [10, 7]
+      },
+      {
+        "at": [22, 100],
+        "radius": [14, 26]
+      },
+      {
+        "at": [70, 22],
+        "radius": [6, 4]
+      }
+    ],
+    "islands": [
+      {
+        "at": [20, 96],
+        "radius": [4.5, 3.5]
+      }
+    ],
+    "ponds": 0.25,
+    "clearings": [
+      {
+        "id": "hollow-oak",
+        "kind": "lair",
+        "at": [48, 44],
+        "radius": 4
+      },
+      {
+        "id": "sunken-hollow",
+        "kind": "lair",
+        "at": [44, 158],
+        "radius": 4
+      },
+      {
+        "id": "heartwood-shrine",
+        "kind": "shrine",
+        "at": [100, 13],
+        "radius": 5
+      },
+      {
+        "id": "crown-rock",
+        "kind": "arena",
+        "at": [168, 42],
+        "radius": 5
+      },
+      {
+        "id": "stone-circle",
+        "kind": "landmark",
+        "at": [132, 28],
+        "radius": 4
+      },
+      {
+        "id": "lookout",
+        "kind": "landmark",
+        "at": [184, 150],
+        "radius": 3
+      },
+      {
+        "id": "hidden-glade",
+        "kind": "secret",
+        "at": [30, 30],
+        "radius": 3,
+        "ring": true,
+        "gap": "east"
+      },
+      {
+        "id": "old-orchard",
+        "kind": "secret",
+        "at": [156, 180],
+        "radius": 4,
+        "ring": true,
+        "gap": "north"
+      },
+      {
+        "id": "mist-isle",
+        "kind": "secret",
+        "at": [20, 96],
+        "radius": 2
+      },
+      {
+        "id": "drowned-ruins",
+        "kind": "landmark",
+        "at": [20, 186],
+        "radius": 3
+      }
+    ],
+    "fords": [
+      {
+        "points": [
+          [37, 104],
+          [30, 100],
+          [24, 97]
+        ]
+      }
+    ],
+    "zones": {
+      "meadow": {
+        "seeds": [
+          [100, 140],
+          [112, 150],
+          [86, 148]
+        ],
+        "trees": -0.4,
+        "grass": 0.3
+      },
+      "willow-shore": {
+        "seeds": [
+          [72, 116],
+          [82, 104],
+          [62, 134]
+        ],
+        "trees": -0.2
+      },
+      "brookside": {
+        "seeds": [
+          [100, 90],
+          [116, 96],
+          [124, 124]
+        ],
+        "trees": -0.1
+      },
+      "reedmarsh": {
+        "seeds": [
+          [50, 124],
+          [52, 146],
+          [64, 160]
+        ],
+        "grass": 0.3,
+        "wet": 1
+      },
+      "fernwood": {
+        "seeds": [
+          [104, 44],
+          [84, 46],
+          [124, 44]
+        ],
+        "trees": 0.2
+      },
+      "deepwood": {
+        "seeds": [
+          [66, 58],
+          [52, 48],
+          [78, 74]
+        ],
+        "trees": 0.5
+      },
+      "downs": {
+        "seeds": [
+          [146, 114],
+          [150, 136],
+          [140, 92],
+          [136, 74]
+        ],
+        "trees": -0.5,
+        "grass": 0.3
+      },
+      "bramble": {
+        "seeds": [
+          [126, 168],
+          [150, 172],
+          [96, 186]
+        ],
+        "trees": 0.2
+      },
+      "oldgrove": {
+        "seeds": [
+          [100, 16],
+          [70, 16],
+          [132, 18],
+          [40, 14]
+        ],
+        "trees": 0.4
+      },
+      "mistmere": {
+        "seeds": [
+          [22, 100],
+          [24, 140],
+          [28, 64],
+          [24, 176],
+          [24, 30]
+        ],
+        "wet": 0.5
+      },
+      "galeback": {
+        "seeds": [
+          [172, 50],
+          [184, 84],
+          [184, 150],
+          [182, 184]
+        ],
+        "trees": -0.2
+      }
+    },
+    "exits": {
+      "ember-pass": {
+        "at": [199, 104],
+        "kind": "pass"
+      },
+      "ferry": {
+        "at": [88, 199],
+        "kind": "ferry"
+      }
+    }
+  }
+}

@@ -277,9 +277,15 @@ describe('npc roles', () => {
     definePack({ manifest: { id: 'm', version: '1.0.0', dependsOn: ['core'] }, content: { npcs } });
   const base: NpcInput = { name: 'X', map: 'core:test-region', x: 50, y: 50, lines: ['Hi'] };
 
-  it('core has a center and a shop on the test region', () => {
-    const roles = content.npcs.values().flatMap((n) => (n.role ? [n.role.kind] : []));
-    expect(roles.sort()).toEqual(['center', 'shop']);
+  it('core has a center and a shop on the test region, and Verdale has one per town', () => {
+    const roles = (map: string): string[] =>
+      content.npcs
+        .values()
+        .filter((n) => n.map === map)
+        .flatMap((n) => (n.role ? [n.role.kind] : []))
+        .sort();
+    expect(roles('core:test-region')).toEqual(['center', 'shop']);
+    expect(roles('core:verdale')).toEqual(['center', 'center', 'center', 'shop', 'shop']);
   });
 
   it('rejects unknown, unsold or repeated stock', () => {

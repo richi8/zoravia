@@ -1,0 +1,1509 @@
+{
+  "zones": {
+    "meadow": {
+      "levels": [3, 7],
+      "spawns": [
+        {
+          "species": "core:sproutle",
+          "weight": 3
+        },
+        {
+          "species": "core:emberkit",
+          "weight": 2
+        },
+        {
+          "species": "core:puddlit",
+          "weight": 2
+        },
+        {
+          "species": "core:voltbat",
+          "weight": 1,
+          "levels": [5, 7]
+        }
+      ]
+    },
+    "willow-shore": {
+      "levels": [5, 9],
+      "spawns": [
+        {
+          "species": "core:puddlit",
+          "weight": 3
+        },
+        {
+          "species": "core:sproutle",
+          "weight": 1
+        },
+        {
+          "species": "core:voltbat",
+          "weight": 1
+        }
+      ]
+    },
+    "brookside": {
+      "levels": [8, 13],
+      "spawns": [
+        {
+          "species": "core:voltbat",
+          "weight": 2
+        },
+        {
+          "species": "core:emberkit",
+          "weight": 2
+        },
+        {
+          "species": "core:puddlit",
+          "weight": 1
+        },
+        {
+          "species": "core:sproutle",
+          "weight": 1
+        }
+      ]
+    },
+    "reedmarsh": {
+      "levels": [15, 20],
+      "spawns": [
+        {
+          "species": "core:torrentoad",
+          "weight": 3
+        },
+        {
+          "species": "core:voltbat",
+          "weight": 2
+        },
+        {
+          "species": "core:puddlit",
+          "weight": 1
+        }
+      ]
+    },
+    "fernwood": {
+      "levels": [16, 22],
+      "spawns": [
+        {
+          "species": "core:thornwing",
+          "weight": 2
+        },
+        {
+          "species": "core:blazekit",
+          "weight": 1
+        },
+        {
+          "species": "core:sproutle",
+          "weight": 1
+        }
+      ]
+    },
+    "deepwood": {
+      "levels": [19, 25],
+      "spawns": [
+        {
+          "species": "core:thornwing",
+          "weight": 2
+        },
+        {
+          "species": "core:ironshell",
+          "weight": 1
+        },
+        {
+          "species": "core:blazekit",
+          "weight": 1
+        }
+      ]
+    },
+    "downs": {
+      "levels": [21, 27],
+      "spawns": [
+        {
+          "species": "core:voltbat",
+          "weight": 2
+        },
+        {
+          "species": "core:thornwing",
+          "weight": 2
+        },
+        {
+          "species": "core:blazekit",
+          "weight": 1
+        }
+      ]
+    },
+    "bramble": {
+      "levels": [17, 23],
+      "spawns": [
+        {
+          "species": "core:thornwing",
+          "weight": 2
+        },
+        {
+          "species": "core:ironshell",
+          "weight": 1
+        },
+        {
+          "species": "core:torrentoad",
+          "weight": 1
+        }
+      ]
+    },
+    "oldgrove": {
+      "levels": [32, 38],
+      "spawns": [
+        {
+          "species": "core:thornwing",
+          "weight": 2
+        },
+        {
+          "species": "core:ironshell",
+          "weight": 2
+        },
+        {
+          "species": "core:infernyx",
+          "weight": 1
+        }
+      ]
+    },
+    "mistmere": {
+      "levels": [30, 36],
+      "spawns": [
+        {
+          "species": "core:torrentoad",
+          "weight": 3
+        },
+        {
+          "species": "core:voltbat",
+          "weight": 1
+        }
+      ]
+    },
+    "galeback": {
+      "levels": [36, 42],
+      "spawns": [
+        {
+          "species": "core:ironshell",
+          "weight": 2
+        },
+        {
+          "species": "core:thornwing",
+          "weight": 2
+        },
+        {
+          "species": "core:infernyx",
+          "weight": 1
+        }
+      ]
+    }
+  },
+  "anchors": {
+    "spawn": {
+      "x": 100,
+      "y": 119,
+      "kind": "spawn",
+      "facing": "down"
+    },
+    "center": {
+      "x": 94,
+      "y": 115,
+      "kind": "center",
+      "facing": "down"
+    },
+    "shop": {
+      "x": 103,
+      "y": 115,
+      "kind": "shop",
+      "facing": "down"
+    },
+    "elder": {
+      "x": 88,
+      "y": 109,
+      "kind": "npc",
+      "facing": "right"
+    },
+    "town-fernhollow": {
+      "x": 104,
+      "y": 62,
+      "kind": "town"
+    },
+    "center-fernhollow": {
+      "x": 101,
+      "y": 61,
+      "kind": "center",
+      "facing": "down"
+    },
+    "shop-fernhollow": {
+      "x": 110,
+      "y": 61,
+      "kind": "shop",
+      "facing": "down"
+    },
+    "trial": {
+      "x": 97,
+      "y": 70,
+      "kind": "npc",
+      "facing": "down"
+    },
+    "center-galecrest": {
+      "x": 154,
+      "y": 109,
+      "kind": "center",
+      "facing": "down"
+    },
+    "ranger": {
+      "x": 167,
+      "y": 108,
+      "kind": "npc",
+      "facing": "left"
+    },
+    "ferryman": {
+      "x": 90,
+      "y": 197,
+      "kind": "npc",
+      "facing": "left"
+    },
+    "legendary": {
+      "x": 100,
+      "y": 13,
+      "kind": "legendary",
+      "facing": "down"
+    },
+    "titan-hollow-oak": {
+      "x": 48,
+      "y": 44,
+      "kind": "titan",
+      "facing": "down"
+    },
+    "titan-sunken-hollow": {
+      "x": 44,
+      "y": 158,
+      "kind": "titan",
+      "facing": "down"
+    },
+    "boss-crown-rock": {
+      "x": 168,
+      "y": 42,
+      "kind": "boss",
+      "facing": "down"
+    }
+  },
+  "edits": [
+    {
+      "op": "clearProps",
+      "note": "Willowmere: cleared town ground",
+      "rect": {
+        "x": 86,
+        "y": 104,
+        "w": 28,
+        "h": 28
+      }
+    },
+    {
+      "op": "zone",
+      "note": "No wild Zorlings in town",
+      "rect": {
+        "x": 86,
+        "y": 104,
+        "w": 28,
+        "h": 28
+      },
+      "zone": null
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 86,
+        "y": 104,
+        "w": 28,
+        "h": 28
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": false,
+      "rect": {
+        "x": 86,
+        "y": 104,
+        "w": 28,
+        "h": 28
+      },
+      "note": "Willowmere: replace the generated roads with streets"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 86,
+        "y": 116,
+        "w": 28,
+        "h": 2
+      },
+      "note": "Willowmere main street (east-west)"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 86,
+        "y": 114,
+        "w": 3,
+        "h": 4
+      },
+      "note": "West road joins the main street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 97,
+        "y": 104,
+        "w": 3,
+        "h": 2
+      },
+      "note": "North road joins"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 98,
+        "y": 104,
+        "w": 2,
+        "h": 28
+      },
+      "note": "Willowmere north-south street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 98,
+        "y": 130,
+        "w": 3,
+        "h": 2
+      },
+      "note": "South road joins"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 95,
+        "y": 114,
+        "w": 9,
+        "h": 7
+      },
+      "note": "Willowmere square"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 90,
+        "y": 109,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the elder's house"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 100,
+        "y": 109,
+        "w": 6,
+        "h": 1
+      },
+      "note": "Lane to the teal house"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 90,
+        "y": 125,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the red house"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 100,
+        "y": 125,
+        "w": 6,
+        "h": 1
+      },
+      "note": "Lane to the plum house"
+    },
+    {
+      "op": "clearProps",
+      "note": "Willowmere Zorling center",
+      "rect": {
+        "x": 89,
+        "y": 112,
+        "w": 5,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "center",
+      "at": [91, 115]
+    },
+    {
+      "op": "clearProps",
+      "note": "Willowmere shop",
+      "rect": {
+        "x": 104,
+        "y": 112,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "shop",
+      "at": [104, 115]
+    },
+    {
+      "op": "clearProps",
+      "note": "Elder's house (mustard roof)",
+      "rect": {
+        "x": 89,
+        "y": 105,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [90, 108],
+      "variant": 1
+    },
+    {
+      "op": "clearProps",
+      "note": "Teal house, door on the right",
+      "rect": {
+        "x": 103,
+        "y": 105,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [105, 108],
+      "variant": 4
+    },
+    {
+      "op": "clearProps",
+      "note": "Red house",
+      "rect": {
+        "x": 89,
+        "y": 121,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [90, 124],
+      "variant": 2
+    },
+    {
+      "op": "clearProps",
+      "note": "Plum house, door on the right",
+      "rect": {
+        "x": 103,
+        "y": 121,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [105, 124],
+      "variant": 7
+    },
+    {
+      "op": "prop",
+      "kind": "well",
+      "at": [96, 121],
+      "note": "Square well"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [94, 113]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [104, 113]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [103, 121]
+    },
+    {
+      "op": "prop",
+      "kind": "tree",
+      "at": [110, 107],
+      "variant": 2,
+      "note": "Willowmere garden trees"
+    },
+    {
+      "op": "prop",
+      "kind": "tree",
+      "at": [111, 110],
+      "variant": 5,
+      "note": "Willowmere garden trees"
+    },
+    {
+      "op": "prop",
+      "kind": "tree",
+      "at": [111, 122],
+      "variant": 1,
+      "note": "Willowmere garden trees"
+    },
+    {
+      "op": "prop",
+      "kind": "tree",
+      "at": [110, 128],
+      "variant": 6,
+      "note": "Willowmere garden trees"
+    },
+    {
+      "op": "prop",
+      "kind": "tree",
+      "at": [92, 129],
+      "variant": 3,
+      "note": "Willowmere garden trees"
+    },
+    {
+      "op": "prop",
+      "kind": "tree",
+      "at": [106, 129],
+      "variant": 4,
+      "note": "Willowmere garden trees"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [96, 103],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [112, 115],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [87, 118],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [101, 130],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [88, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [89, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [90, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [91, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [92, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [93, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [103, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [104, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [105, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [106, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [107, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [108, 126]
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [93, 110],
+      "variant": 1
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [107, 110],
+      "variant": 3
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [94, 126],
+      "variant": 5
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [102, 126],
+      "variant": 2
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [89, 119],
+      "variant": 4
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [110, 119],
+      "variant": 6
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [109, 113]
+    },
+    {
+      "op": "clearProps",
+      "note": "Fernhollow: cleared town ground",
+      "rect": {
+        "x": 93,
+        "y": 52,
+        "w": 23,
+        "h": 21
+      }
+    },
+    {
+      "op": "zone",
+      "note": "No wild Zorlings in town",
+      "rect": {
+        "x": 93,
+        "y": 52,
+        "w": 23,
+        "h": 21
+      },
+      "zone": null
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 93,
+        "y": 52,
+        "w": 23,
+        "h": 21
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": false,
+      "rect": {
+        "x": 93,
+        "y": 52,
+        "w": 23,
+        "h": 21
+      },
+      "note": "Fernhollow: replace the generated roads with streets"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 93,
+        "y": 62,
+        "w": 23,
+        "h": 2
+      },
+      "note": "Fernhollow main street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 93,
+        "y": 58,
+        "w": 3,
+        "h": 6
+      },
+      "note": "West road joins"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 112,
+        "y": 62,
+        "w": 4,
+        "h": 5
+      },
+      "note": "East road (to the bridge) joins"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 101,
+        "y": 52,
+        "w": 3,
+        "h": 3
+      },
+      "note": "North road joins"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 102,
+        "y": 52,
+        "w": 2,
+        "h": 21
+      },
+      "note": "Fernhollow north-south street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 100,
+        "y": 68,
+        "w": 4,
+        "h": 5
+      },
+      "note": "South road joins"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 96,
+        "y": 56,
+        "w": 6,
+        "h": 1
+      },
+      "note": "Lane to the mustard house"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 96,
+        "y": 70,
+        "w": 6,
+        "h": 1
+      },
+      "note": "Lane to the trial hall"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 104,
+        "y": 70,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the teal house"
+    },
+    {
+      "op": "clearProps",
+      "note": "Fernhollow Zorling center",
+      "rect": {
+        "x": 96,
+        "y": 58,
+        "w": 5,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "center",
+      "at": [98, 61]
+    },
+    {
+      "op": "clearProps",
+      "note": "Fernhollow shop",
+      "rect": {
+        "x": 106,
+        "y": 58,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "shop",
+      "at": [106, 61]
+    },
+    {
+      "op": "clearProps",
+      "note": "Mustard house",
+      "rect": {
+        "x": 95,
+        "y": 52,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [96, 55],
+      "variant": 1
+    },
+    {
+      "op": "clearProps",
+      "note": "Open the nook behind the mustard house (was a closed pocket)",
+      "rect": {
+        "x": 93,
+        "y": 49,
+        "w": 4,
+        "h": 3
+      }
+    },
+    {
+      "op": "clearProps",
+      "note": "Grove Trial hall (plum roof)",
+      "rect": {
+        "x": 95,
+        "y": 66,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [96, 69],
+      "variant": 3
+    },
+    {
+      "op": "clearProps",
+      "note": "Teal house, door on the right",
+      "rect": {
+        "x": 106,
+        "y": 66,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [108, 69],
+      "variant": 4
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [101, 57]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [104, 57]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [101, 65]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [111, 60]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [100, 52]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [94, 57]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [104, 72]
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [99, 70],
+      "note": "Trial stone by the hall door"
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [110, 65],
+      "variant": 1
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [94, 66],
+      "variant": 3
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [105, 55],
+      "variant": 2
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [113, 68],
+      "variant": 5
+    },
+    {
+      "op": "clearProps",
+      "note": "Galecrest: cleared outpost ground",
+      "rect": {
+        "x": 152,
+        "y": 103,
+        "w": 17,
+        "h": 15
+      }
+    },
+    {
+      "op": "zone",
+      "note": "No wild Zorlings in town",
+      "rect": {
+        "x": 152,
+        "y": 103,
+        "w": 17,
+        "h": 15
+      },
+      "zone": null
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 152,
+        "y": 103,
+        "w": 17,
+        "h": 15
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": false,
+      "rect": {
+        "x": 152,
+        "y": 103,
+        "w": 17,
+        "h": 15
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 152,
+        "y": 110,
+        "w": 17,
+        "h": 2
+      },
+      "note": "Galecrest street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 152,
+        "y": 111,
+        "w": 3,
+        "h": 3
+      },
+      "note": "West road joins"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 161,
+        "y": 103,
+        "w": 3,
+        "h": 9
+      },
+      "note": "North road joins"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 165,
+        "y": 107,
+        "w": 4,
+        "h": 5
+      },
+      "note": "East road joins"
+    },
+    {
+      "op": "clearProps",
+      "note": "Galecrest Zorling center",
+      "rect": {
+        "x": 155,
+        "y": 106,
+        "w": 5,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "center",
+      "at": [157, 109]
+    },
+    {
+      "op": "clearProps",
+      "note": "Ranger hut (mustard roof), door on the right",
+      "rect": {
+        "x": 164,
+        "y": 103,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [166, 106],
+      "variant": 5
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [160, 108]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [160, 113]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [153, 109]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [164, 103]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [155, 113]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [156, 113]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [157, 113]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [158, 113]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [159, 113]
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [135, 28],
+      "variant": 3,
+      "note": "Stone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [134, 31],
+      "variant": 5,
+      "note": "Stone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [130, 31],
+      "variant": 1,
+      "note": "Stone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [129, 28],
+      "variant": 5,
+      "note": "Stone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [130, 25],
+      "variant": 3,
+      "note": "Stone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [134, 25],
+      "variant": 7,
+      "note": "Stone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [104, 13],
+      "variant": 5,
+      "note": "Heartwood Shrine stones"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [103, 10],
+      "variant": 7,
+      "note": "Heartwood Shrine stones"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [100, 9],
+      "variant": 5,
+      "note": "Heartwood Shrine stones"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [97, 10],
+      "variant": 5,
+      "note": "Heartwood Shrine stones"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [96, 13],
+      "variant": 5,
+      "note": "Heartwood Shrine stones"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [97, 16],
+      "variant": 3,
+      "note": "Heartwood Shrine stones"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [103, 16],
+      "variant": 5,
+      "note": "Heartwood Shrine stones"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 99,
+        "y": 14,
+        "w": 2,
+        "h": 5
+      },
+      "note": "Shrine approach"
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [98, 12],
+      "variant": 3
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [102, 14],
+      "variant": 6
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [18, 184],
+      "variant": 2,
+      "note": "Drowned Ruins"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [22, 185],
+      "variant": 3,
+      "note": "Drowned Ruins"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [19, 188],
+      "variant": 7,
+      "note": "Drowned Ruins"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [23, 188],
+      "variant": 3,
+      "note": "Drowned Ruins"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [21, 183],
+      "note": "Drowned Ruins"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [163, 40],
+      "variant": 3,
+      "note": "Crown Rock boulders"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [164, 45],
+      "variant": 1,
+      "note": "Crown Rock boulders"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [172, 45],
+      "variant": 1,
+      "note": "Crown Rock boulders"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [173, 40],
+      "variant": 5,
+      "note": "Crown Rock boulders"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [168, 37],
+      "variant": 5,
+      "note": "Crown Rock boulders"
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [182, 147]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [183, 147]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [184, 147]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [185, 147]
+    },
+    {
+      "op": "prop",
+      "kind": "fence",
+      "at": [186, 147]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [183, 151],
+      "note": "Lookout sign"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [46, 42],
+      "variant": 2
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [51, 46],
+      "variant": 5
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [49, 45],
+      "variant": 1
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [42, 157],
+      "variant": 2
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [46, 160],
+      "variant": 4
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [155, 179],
+      "variant": 1
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [157, 181],
+      "variant": 5
+    },
+    {
+      "op": "prop",
+      "kind": "flowers",
+      "at": [154, 182],
+      "variant": 3
+    },
+    {
+      "op": "prop",
+      "kind": "bush",
+      "at": [158, 178],
+      "variant": 2
+    },
+    {
+      "op": "clearProps",
+      "note": "Ferry dock clearing",
+      "rect": {
+        "x": 85,
+        "y": 194,
+        "w": 7,
+        "h": 6
+      }
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 85,
+        "y": 194,
+        "w": 7,
+        "h": 6
+      }
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [86, 196],
+      "note": "Ferry dock sign"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [90, 196]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [86, 198]
+    }
+  ]
+}

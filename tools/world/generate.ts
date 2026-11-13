@@ -20,6 +20,7 @@ import type { PropKind } from '@game/world/props';
 import type { PropPlacement } from '@game/world/terrain';
 import { WorldMap, type Zone } from '@game/world/map';
 import type { Exit, RegionConfig } from './config';
+import { generateLayout } from './layout';
 
 type Pt = readonly [number, number];
 
@@ -30,9 +31,9 @@ const TOWN = 6.5;
 const PATH_HALF = 0.95;
 const PATH_CLEAR = 2.6;
 /** Solid border thickness (tiles). */
-const BORDER = 2;
+export const BORDER = 2;
 
-interface BiomeRules {
+export interface BiomeRules {
   /** Lake noise below this is liquid. */
   readonly lakes: number;
   /** Frozen coast: sea on the east side. */
@@ -46,7 +47,7 @@ interface BiomeRules {
   decorate(c: DecorCtx): PropKind | 'tall' | undefined;
 }
 
-interface DecorCtx {
+export interface DecorCtx {
   readonly wet: boolean;
   readonly onAlt: boolean;
   readonly h: number;
@@ -55,7 +56,7 @@ interface DecorCtx {
   readonly ring: number;
 }
 
-const RULES: Readonly<Record<BiomeId, BiomeRules>> = {
+export const RULES: Readonly<Record<BiomeId, BiomeRules>> = {
   forest: {
     lakes: 0.33,
     alt: 0.6,
@@ -109,7 +110,7 @@ const RULES: Readonly<Record<BiomeId, BiomeRules>> = {
 };
 
 /** Distance from a point to a polyline. */
-function lineDist(px: number, py: number, pts: readonly Pt[]): number {
+export function lineDist(px: number, py: number, pts: readonly Pt[]): number {
   let best = Infinity;
   for (let i = 0; i < pts.length - 1; i++) {
     const [ax, ay] = pts[i] ?? [0, 0];
@@ -124,7 +125,7 @@ function lineDist(px: number, py: number, pts: readonly Pt[]): number {
 }
 
 /** Glyph for each zone: first free letter of its key, then digits. */
-function glyphs(keys: readonly string[]): string[] {
+export function glyphs(keys: readonly string[]): string[] {
   const used = new Set<string>();
   return keys.map((k) => {
     const pick = [...k.replace(/[^a-z0-9]/g, ''), ...'abcdefghijklmnopqrstuvwxyz0123456789'].find(
@@ -182,6 +183,7 @@ function pathLine(from: Pt, exit: Exit, to: Pt, size: Pt, s: number, n: number):
 }
 
 export function generateRegion(cfg: RegionConfig): WorldMap {
+  if (cfg.layout) return generateLayout(cfg, cfg.layout);
   const { width: W, height: H, seed: s } = cfg;
   const rules = RULES[cfg.biome];
   const m = new WorldMap({ ...cfg });

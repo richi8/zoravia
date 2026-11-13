@@ -72,6 +72,8 @@ export class DebugLauncherScene implements Scene<Container> {
   private readonly stack: FocusStack<Container>;
   private menu!: Menu;
   private speed = 0;
+  /** Map a new game starts on (C28: Verdale, or the C19 test region with the C21–C27 content). */
+  private newGameMap = 'core:verdale';
   private confirmSwitch = false;
   private biome: BiomeId = 'forest';
   private seed = 1;
@@ -202,7 +204,9 @@ export class DebugLauncherScene implements Scene<Container> {
     const battles = this.battles;
     const items: MenuItem[] = [
       ...battles.map((b) => ({ label: b.label, hint: b.hint })),
+      { label: 'Play: Verdale', hint: 'Saves' },
       { label: 'Play: test region', hint: 'Saves' },
+      { label: 'Map viewer: Verdale', hint: 'C28' },
       { label: 'Map viewer: test region', hint: 'C19' },
       { label: 'Battle speed', hint: `${BATTLE_SPEEDS[this.speed] ?? 1}×` },
       { label: 'Confirm 1 2 3 switch', hint: this.confirmSwitch ? 'On' : 'Off' },
@@ -219,15 +223,18 @@ export class DebugLauncherScene implements Scene<Container> {
       onSelect: (i) => {
         const b = battles[i];
         if (b) void this.start(b);
-        else if (i === battles.length) void this.openSlots();
-        else if (i === battles.length + 1) void this.openMap('core:test-region');
-        else if (i === battles.length + 2) {
+        else if (i === battles.length || i === battles.length + 1) {
+          this.newGameMap = i === battles.length ? 'core:verdale' : 'core:test-region';
+          void this.openSlots();
+        } else if (i === battles.length + 2) void this.openMap('core:verdale');
+        else if (i === battles.length + 3) void this.openMap('core:test-region');
+        else if (i === battles.length + 4) {
           this.speed = (this.speed + 1) % BATTLE_SPEEDS.length;
           this.buildMenu(i);
-        } else if (i === battles.length + 3) {
+        } else if (i === battles.length + 5) {
           this.confirmSwitch = !this.confirmSwitch;
           this.buildMenu(i);
-        } else if (i === battles.length + 4) {
+        } else if (i === battles.length + 6) {
           this.openSound(i);
         } else {
           // Battle music and ambience of another biome (C25).
@@ -362,7 +369,7 @@ export class DebugLauncherScene implements Scene<Container> {
 
   private async newGame(slot: number): Promise<void> {
     const { saves, content } = this.options;
-    const map = content.maps.require('core:test-region');
+    const map = content.maps.require(this.newGameMap);
     const spawn = map.anchors['spawn'];
     const state: GameState = {
       party: this.startParty(),
