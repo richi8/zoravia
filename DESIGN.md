@@ -171,6 +171,9 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
   - **Cries** (C24) come from the species' genome, so a species always sounds the same: the body plan picks the voice (a canine barks, a feline meows, an insect buzzes, a golem rumbles), size lowers the pitch (later evolution stages sound deeper), mood shapes it (cute higher with a rising end, fierce harsher, dark lower and detuned) and the first type adds a texture. Titans and legendaries in boss form sound deeper and longer.
   - Every battle action and UI action has a sound; turn markers are silent. A cry plays on send-out, and a low, slow one on faint.
   - **Volume settings** (master, music, sound effects; 10 % steps) belong to the device, not to a save slot.
+  - **Music** (C25): each biome has a field theme and a battle theme, composed by a seeded composer from the biome's style (key, mode, tempo, instruments), so they never change between runs. Forest is a swung D-major flute piece, the volcanic desert a reed in E Phrygian dominant over hand drums, the frozen coast slow Lydian bells. Bosses play a hand-written theme from their pack (`theme` on the boss), or boss music composed from the biome's battle style when they have none.
+  - Field music resumes where it was left after a battle; battle music always starts from the top. Changes crossfade. When a battle is decided, the music stops for the victory or defeat jingle.
+  - **Ambience** plays under the music: biome beds (wind, brook, lava rumble, surf) with occasional sounds (birds, crackles, ice creaks, gulls), plus rain in wet weather. It is turned down in battle. It follows the music volume.
 
 ## Controls
 **The whole game must be fully playable with the keyboard alone.** Mouse is optional (click-to-move, click menu items), never required. All keys rebindable; gamepad later.

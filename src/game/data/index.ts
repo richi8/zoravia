@@ -6,6 +6,7 @@ export * from './content';
 export * from './items';
 export * from './maps';
 export * from './moves';
+export * from './music';
 export * from './npcs';
 export * from './reactions';
 export * from './species';

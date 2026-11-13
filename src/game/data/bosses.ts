@@ -29,6 +29,8 @@ export const bossSchema = z.strictObject({
   signatureMove: ref,
   /** Armor: reduced damage until one of these reactions breaks it. Omitted = no Armor. */
   armor: z.strictObject({ breaks: z.array(ref).min(1) }).optional(),
+  /** Hand-written theme (`music`); omitted = boss music composed from the biome's battle music. */
+  theme: ref.optional(),
 });
 
 export type Boss = EntryOf<typeof bosses>;
@@ -41,6 +43,7 @@ export const bosses = defineRegistry('bosses', bossSchema, {
     refTo('species', b.species, 'species'),
     refTo('moves', b.signatureMove, 'signatureMove'),
     ...(b.armor?.breaks.map((r, i) => refTo('reactions', r, 'armor', 'breaks', i)) ?? []),
+    ...(b.theme ? [refTo('music', b.theme, 'theme')] : []),
   ],
   check: (b, ctx) => checkBoss(b, ctx),
 });

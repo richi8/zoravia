@@ -148,6 +148,24 @@ export async function renderSpec(spec: SoundSpec, sampleRate = 44_100): Promise<
   return ctx.startRendering();
 }
 
+/**
+ * Schedules a spec at audio time `t0` into `out` (music and ambience players use this with
+ * their own gain nodes). Calls `ended` once per tone when it stops.
+ */
+export function scheduleSpec(
+  ctx: BaseAudioContext,
+  out: AudioNode,
+  spec: SoundSpec,
+  t0: number,
+  opts: { readonly gain?: number; readonly pan?: number; readonly ended?: () => void } = {},
+): void {
+  const gain = (spec.gain ?? 1) * (opts.gain ?? 1);
+  const noise = noiseBuffer(ctx);
+  for (const tone of spec.tones) {
+    scheduleTone(ctx, out, tone, t0, gain, opts.pan ?? 0, noise, opts.ended ?? (() => {}));
+  }
+}
+
 function scheduleTone(
   ctx: BaseAudioContext,
   out: AudioNode,
@@ -225,20 +243,39 @@ function scheduleTone(
 }
 
 const noiseBuffers = new WeakMap<BaseAudioContext, AudioBuffer>();
+const longNoiseBuffers = new WeakMap<BaseAudioContext, AudioBuffer>();
 
 /** One second of white noise per context (a fixed LCG, so it is the same every run). */
 function noiseBuffer(ctx: BaseAudioContext): AudioBuffer {
   let buf = noiseBuffers.get(ctx);
   if (!buf) {
-    const len = ctx.sampleRate;
-    buf = ctx.createBuffer(1, len, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    let s = 0x2545f491;
-    for (let i = 0; i < len; i++) {
-      s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-      data[i] = s / 0x80000000 - 1;
-    }
+    buf = makeNoise(ctx, 1, 0x2545f491);
     noiseBuffers.set(ctx, buf);
+  }
+  return buf;
+}
+
+/**
+ * Five seconds of white noise per context, for continuous beds (wind, rain, surf): a long loop
+ * so its repeat can't be heard.
+ */
+export function longNoiseBuffer(ctx: BaseAudioContext): AudioBuffer {
+  let buf = longNoiseBuffers.get(ctx);
+  if (!buf) {
+    buf = makeNoise(ctx, 5, 0x6a09e667);
+    longNoiseBuffers.set(ctx, buf);
+  }
+  return buf;
+}
+
+function makeNoise(ctx: BaseAudioContext, seconds: number, seed: number): AudioBuffer {
+  const len = Math.round(ctx.sampleRate * seconds);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  let s = seed;
+  for (let i = 0; i < len; i++) {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    data[i] = s / 0x80000000 - 1;
   }
   return buf;
 }

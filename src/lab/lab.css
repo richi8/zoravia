@@ -587,3 +587,30 @@ a {
   font: inherit;
   cursor: pointer;
 }
+
+/* Music (C25) */
+.mus-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--z-space-xs);
+}
+.mus-now {
+  margin: 0;
+  color: var(--z-surface-text-dim);
+  font-size: var(--z-text-sm);
+}
+.mus-roll {
+  display: block;
+  width: 100%;
+  height: 120px;
+  margin: var(--z-space-xs) 0 var(--z-space-sm);
+  background: var(--z-surface-raised);
+  border: 1px solid var(--z-surface-border);
+  border-radius: var(--z-radius-md);
+  color: var(--z-surface-text-dim);
+}
+.snd-btn small {
+  color: var(--z-surface-text-dim);
+  font-size: var(--z-text-xs, 11px);
+}

@@ -29,7 +29,7 @@ import { DialogBox, FocusStack, type UiInput, type UiTheme } from '@engine/ui';
 import type { BattleResult } from '@game/battle/logic';
 import { BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
-import { playSfx } from '@game/audio';
+import { fieldAudio, playSfx } from '@game/audio';
 import type { GameContent } from '@game/data';
 import { MOVE_DIRECTIONS, type Action } from '@game/input/actions';
 import {
@@ -353,6 +353,7 @@ export class OverworldScene implements Scene<Container> {
 
   enter(): void {
     this.setContext();
+    fieldAudio(this.map.biome);
   }
 
   pause(): void {
@@ -365,6 +366,7 @@ export class OverworldScene implements Scene<Container> {
     this.ui.visible = true;
     this.inBattle = false;
     this.setContext();
+    fieldAudio(this.map.biome);
     const pages = this.afterBattle;
     const offers = this.offers;
     this.afterBattle = [];
@@ -615,6 +617,7 @@ export class OverworldScene implements Scene<Container> {
       speed: this.options.battleSpeed ?? 1,
       money: this.party.money,
       confirmHotbarSwitch: this.options.confirmHotbarSwitch ?? false,
+      biome: this.map.biome,
       onEnd: (result) => {
         this.finishBattle(roamer, result);
         void engine.scenes.pop({ transition: engine.fade({ duration: 0.3 }) });

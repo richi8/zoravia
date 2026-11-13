@@ -14,7 +14,8 @@ import { FocusStack, Menu, type MenuItem, type UiInput, type UiTheme } from '@en
 import { bossZorling, type BattleResult, type BattleSetup } from '@game/battle/logic';
 import { BATTLE_SPEEDS, BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
-import { audioSettings, formatVolume } from '@game/audio';
+import { audioSettings, formatVolume, stopAllMusic } from '@game/audio';
+import { BIOME_IDS, BIOMES, type BiomeId } from '@game/world/biomes';
 import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
 import { newParty, type Party } from '@game/player';
@@ -72,6 +73,7 @@ export class DebugLauncherScene implements Scene<Container> {
   private menu!: Menu;
   private speed = 0;
   private confirmSwitch = false;
+  private biome: BiomeId = 'forest';
   private seed = 1;
   /** The open overworld, saved when the tab is hidden. */
   private world: OverworldScene | undefined;
@@ -110,6 +112,8 @@ export class DebugLauncherScene implements Scene<Container> {
     this.view.visible = true;
     this.ui.visible = true;
     this.enter();
+    // Back from a battle or the world: the launcher is quiet (C25).
+    stopAllMusic(0.8);
   }
 
   update(dt: number): void {
@@ -203,6 +207,7 @@ export class DebugLauncherScene implements Scene<Container> {
       { label: 'Battle speed', hint: `${BATTLE_SPEEDS[this.speed] ?? 1}×` },
       { label: 'Confirm 1 2 3 switch', hint: this.confirmSwitch ? 'On' : 'Off' },
       { label: 'Sound', hint: formatVolume(audioSettings().master) },
+      { label: 'Battle place', hint: BIOMES[this.biome].label.split(' ')[0] ?? '' },
     ];
     const old = this.menu as Menu | undefined;
     if (old) this.stack.remove(old);
@@ -222,8 +227,13 @@ export class DebugLauncherScene implements Scene<Container> {
         } else if (i === battles.length + 3) {
           this.confirmSwitch = !this.confirmSwitch;
           this.buildMenu(i);
-        } else {
+        } else if (i === battles.length + 4) {
           this.openSound(i);
+        } else {
+          // Battle music and ambience of another biome (C25).
+          this.biome =
+            BIOME_IDS[(BIOME_IDS.indexOf(this.biome) + 1) % BIOME_IDS.length] ?? 'forest';
+          this.buildMenu(i);
         }
       },
     });
@@ -261,6 +271,7 @@ export class DebugLauncherScene implements Scene<Container> {
       speed: BATTLE_SPEEDS[this.speed] ?? 1,
       money: 1240,
       confirmHotbarSwitch: this.confirmSwitch,
+      biome: this.biome,
       onEnd: (result) => {
         this.report(b, seed, result);
         void engine.scenes.pop({ transition: engine.fade({ duration: 0.3 }) });

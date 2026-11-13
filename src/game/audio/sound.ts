@@ -4,7 +4,17 @@
  * don't need the engine passed through their options.
  */
 
-import { scaleSpec, type AudioEngine, type PlayOptions, type SoundSpec } from '@engine/audio';
+import {
+  AmbiencePlayer,
+  MusicPlayer,
+  scaleSpec,
+  type Ambience,
+  type AudioEngine,
+  type MusicPlayOptions,
+  type PlayOptions,
+  type Song,
+  type SoundSpec,
+} from '@engine/audio';
 import { setUiSoundSink, type UiSound } from '@engine/ui';
 import {
   DEFAULT_AUDIO,
@@ -23,6 +33,8 @@ export interface SoundOptions extends PlayOptions {
 }
 
 let audio: AudioEngine | undefined;
+let music: MusicPlayer | undefined;
+let ambience: AmbiencePlayer | undefined;
 let storage: SettingsStorage | undefined;
 let settings: AudioSettings = DEFAULT_AUDIO;
 
@@ -40,7 +52,11 @@ export function installAudio(
   engine: AudioEngine,
   opts: { readonly settings?: AudioSettings; readonly storage?: SettingsStorage } = {},
 ): void {
+  music?.dispose();
+  ambience?.dispose();
   audio = engine;
+  music = new MusicPlayer(engine);
+  ambience = new AmbiencePlayer(engine);
   storage = opts.storage;
   applySettings(opts.settings ?? DEFAULT_AUDIO);
   setUiSoundSink((s) => playSfx(`ui.${s}`, { key: `ui.${s}`, throttle: UI_THROTTLE[s] }));
@@ -82,4 +98,48 @@ export function playSpec(spec: SoundSpec, opts: SoundOptions = {}): void {
         })
       : spec;
   audio.play(scaled, opts);
+}
+
+// ─── Music and ambience (C25) ───────────────────────────────────────────────────────────
+
+/** Plays a song on the music bus, crossfading from the one playing. */
+export function playMusic(song: Song, opts: MusicPlayOptions = {}): void {
+  music?.play(song, opts);
+}
+
+export function stopMusic(fade = 1): void {
+  music?.stop(fade);
+}
+
+/** Id of the song playing (or waiting for the first key press). */
+export function currentMusic(): string | undefined {
+  return music?.current;
+}
+
+/** Scales the music, e.g. under a jingle. 1 = normal. */
+export function setMusicLevel(level: number, seconds = 0.5): void {
+  music?.setLevel(level, seconds);
+}
+
+export function playAmbience(a: Ambience, opts: { readonly fade?: number } = {}): void {
+  ambience?.play(a, opts);
+}
+
+export function stopAmbience(fade = 2): void {
+  ambience?.stop(fade);
+}
+
+export function currentAmbience(): string | undefined {
+  return ambience?.current;
+}
+
+/** Scales the ambience (quieter in battle). 1 = normal. */
+export function setAmbienceLevel(level: number, seconds = 1): void {
+  ambience?.setLevel(level, seconds);
+}
+
+/** Stops music and ambience (back to a menu). */
+export function stopAllMusic(fade = 1): void {
+  stopMusic(fade);
+  stopAmbience(fade);
 }

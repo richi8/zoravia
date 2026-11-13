@@ -11,6 +11,7 @@ export const bosses = {
     level: 24,
     signatureMove: 'core:bramble-gale',
     armor: { breaks: ['core:overload'] },
+    theme: 'core:titan-theme',
   },
   glacivar: {
     name: 'Glacivar',
@@ -20,5 +21,6 @@ export const bosses = {
     level: 40,
     signatureMove: 'core:whiteout',
     armor: { breaks: ['core:slam'] },
+    theme: 'core:glacivar-theme',
   },
 } satisfies Record<string, BossInput>;

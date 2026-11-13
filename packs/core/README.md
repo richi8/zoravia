@@ -11,7 +11,8 @@ The base content pack. The engine loads it like any other pack (`loadGameContent
 | `traits.ts` | `traits` | 4 test traits |
 | `species.ts` | `species` | 10 test species (1-, 2-, 3-stage lines, a legendary); replaced by Region 1 content in C29 |
 | `items.ts` | `items` | 3 potion tiers (bag cap 5) and the Zorb capture item |
-| `bosses.ts` | `bosses` | test Titan and legendary boss forms |
+| `music.ts` | `music` | hand-written boss themes (format in `src/game/data/music.ts`) |
+| `bosses.ts` | `bosses` | test Titan and legendary boss forms, each with its theme |
 | `maps.ts` | `maps` | region maps built by the world tool (`maps/<region>/map.json`); `test-region` for now. See `tools/README.md` |
 | `npcs.ts` | `npcs` | 5 test NPCs in the test region (anchor or x/y, look, behavior, lines) |
 

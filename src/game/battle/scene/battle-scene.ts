@@ -25,7 +25,8 @@ import {
   type UiTheme,
   type Widget,
 } from '@engine/ui';
-import { playSfx, playSpec, speciesCry } from '@game/audio';
+import { battleAudio, battleOverAudio, playSfx, playSpec, speciesCry } from '@game/audio';
+import type { BiomeId } from '@game/world/biomes';
 import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
 import { xpForLevel } from '@game/progression';
@@ -104,6 +105,8 @@ export interface BattleSceneOptions {
   readonly money?: number;
   /** Ask before switching with `1 2 3`. Default false. */
   readonly confirmHotbarSwitch?: boolean;
+  /** Where the battle happens: picks the battle music and ambience. Default forest. */
+  readonly biome?: BiomeId;
   /** Called once after the battle ended and its results were shown. */
   readonly onEnd: (result: BattleResult, state: BattleState) => void;
 }
@@ -260,6 +263,11 @@ export class BattleScene implements Scene<Container> {
     const { content, setup } = this.options;
     const { state, events } = createBattle(content, setup);
     this.state = state;
+    battleAudio(content, {
+      biome: this.options.biome ?? 'forest',
+      ...(setup.boss ? { boss: setup.boss.id } : {}),
+      ...(setup.weather ? { weather: setup.weather } : {}),
+    });
     this.shown = shownFrom(content, state, this.xpOf, true);
     this.refreshHud(false);
     this.message.set('');
@@ -417,6 +425,7 @@ export class BattleScene implements Scene<Container> {
     const sayAll = async (auto = AUTO_EVENTS.has(e.kind)): Promise<void> => {
       for (const line of lines) await this.say(line, !auto);
     };
+    if (e.kind === 'end') battleOverAudio();
     const cues = eventCues(content, before, e);
     // A move sounds when its VFX launches (after its text); everything else right away.
     if (e.kind !== 'useMove') this.cue(cues);
