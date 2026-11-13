@@ -3,7 +3,11 @@
  * roaming wild Zorlings.
  *
  * - Keyboard: W A S D / arrows walk (tap to turn), `E` talks to the NPC in front (or touches
- *   the wild Zorling there), Esc leaves (until the pause menu, C22).
+ *   the wild Zorling there). `Esc` opens the pause menu; `P I B M J` open the party, bag,
+ *   Dex, map and quests directly (C22, see `overworld-menus.ts`).
+ * - NPCs with a role open the Zorling center or their shop after talking (C22). Losing a
+ *   battle wakes the player up at the last center used (the map's first one until then).
+ * - Wild Zorlings in view are logged in the Dex as seen; a win pays a little money.
  * - Mouse (optional): click a tile to walk there along an A* path. Clicking an NPC or a wild
  *   Zorling walks next to it, faces it and talks / battles. Any direction key cancels the path.
  * - Walking into a roaming Zorling (or one catching the player) starts a wild battle with the
@@ -24,9 +28,17 @@ import { BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
 import type { GameContent } from '@game/data';
 import { MOVE_DIRECTIONS, type Action } from '@game/input/actions';
-import { applyBattleResult, healTeam, teamDown, type Party } from '@game/player';
+import {
+  applyBattleResult,
+  healTeam,
+  markSeen,
+  teamDown,
+  wildPrize,
+  type Party,
+} from '@game/player';
 import { createZorling, displayName } from '@game/progression';
 import { paper, surface } from '@game/style/tokens';
+import { MoneyLabel } from '@game/ui/panels';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
 import { BIOMES, TILE } from '@game/world/biomes';
@@ -55,6 +67,7 @@ import { OverworldSim, type Occupant } from '@game/world/overworld/sim';
 import { TerrainStream } from '@game/world/overworld/stream';
 import { speciesLook } from '@game/zorlings/species-look';
 import { renderZorling, SPRITE_SIZE } from '@game/zorlings/render';
+import { OverworldMenus } from './overworld-menus';
 
 export interface OverworldOptions {
   readonly engine: Engine;
@@ -65,7 +78,7 @@ export interface OverworldOptions {
   readonly mapId: string;
   /** The player's Zorlings, bag and money when entering. */
   readonly party: Party;
-  /** Called after every battle with the updated party. */
+  /** Called whenever the party changes (battles, menus, center, shop). */
   onParty?(party: Party): void;
   /** Battle speed (1, 1.5, 2) and confirm-before-switch, until settings (C33). */
   readonly battleSpeed?: number;
@@ -120,16 +133,22 @@ export class OverworldScene implements Scene<Container> {
   private readonly panel = new Graphics();
   private readonly place = uiText('name', '', paper.title);
   private readonly help = uiText('label', '', paper.inkDim);
+  private readonly money = new MoneyLabel();
   private readonly layer = new Container({ label: 'dialogs' });
   private readonly stack: FocusStack<Container>;
-  /** The current party (updated after each battle). */
-  party: Party;
+  private current: Party;
+  readonly menus: OverworldMenus;
+  /** Where the player wakes up after losing: in front of the last center used. */
+  private respawn: { x: number; y: number; facing: Dir };
   private path: Tile[] | undefined;
   private target: Tile | undefined;
   private faceAfter: Dir | undefined;
   /** Talk to / touch what the player faces once the click path ends. */
   private interactAfter = false;
   private encounter: { roamer: Roamer; t: number } | undefined;
+  private context = '';
+  /** The NPC whose center or shop is open. */
+  private talkingTo: NpcActor | undefined;
   private inBattle = false;
   private afterBattle: string[] = [];
   private time = 0;
@@ -139,7 +158,7 @@ export class OverworldScene implements Scene<Container> {
 
   constructor(private readonly options: OverworldOptions) {
     this.map = loadRegion(options.content, options.mapId);
-    this.party = options.party;
+    this.current = options.party;
     this.sim = new OverworldSim({
       content: options.content,
       mapId: options.mapId,
@@ -158,13 +177,72 @@ export class OverworldScene implements Scene<Container> {
     this.texture = Texture.from(this.canvas);
     this.texture.source.scaleMode = 'nearest';
     this.view.addChild(new Sprite(this.texture));
-    this.ui.addChild(this.panel, this.place, this.help, this.layer);
+    this.ui.addChild(this.panel, this.place, this.help, this.money, this.layer);
     this.stack = new FocusStack<Container>(
       { attach: (v) => this.layer.addChild(v), detach: (v) => this.layer.removeChild(v) },
       options.ui,
     );
-    this.stack.onEmpty = () => this.setContext();
-    this.help.text = 'WASD move · E talk · click to walk · Esc back';
+    this.stack.onEmpty = () => {
+      if (this.talkingTo) this.talkingTo.talking = false;
+      this.talkingTo = undefined;
+      this.setContext();
+    };
+    this.help.text = 'WASD move · E talk · click to walk · Esc menu';
+    this.respawn = this.firstRespawn();
+    this.menus = new OverworldMenus(this.menuHost());
+  }
+
+  /** The current party. Setting it reports the change (`onParty`). */
+  get party(): Party {
+    return this.current;
+  }
+
+  set party(p: Party) {
+    if (p === this.current) return;
+    this.current = p;
+    this.lastZone = '-';
+    this.options.onParty?.(p);
+  }
+
+  private menuHost(): ConstructorParameters<typeof OverworldMenus>[0] {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const scene = this;
+    return {
+      content: this.options.content,
+      theme: this.options.theme,
+      stack: this.stack,
+      map: this.map,
+      get party() {
+        return scene.party;
+      },
+      set party(p: Party) {
+        scene.party = p;
+      },
+      size: () => ({ width: this.width, height: this.height }),
+      where: () => {
+        const z = this.map.zoneAt(this.player.tx, this.player.ty);
+        const place = z ? `${z.name} · Lv ${z.levels[0]}–${z.levels[1]}` : 'Town';
+        return { x: this.player.tx, y: this.player.ty, place };
+      },
+      services: () =>
+        this.sim.npcs.flatMap((n) =>
+          n.npc.role ? [{ x: n.mover.tx, y: n.mover.ty, role: n.npc.role.kind }] : [],
+        ),
+      say: (pages, speaker, done) => this.say(pages, speaker, done),
+      centerUsed: () => {
+        const npc = this.talkingTo;
+        if (npc) this.respawn = inFront(npc.mover.destination, npc.mover.facing);
+      },
+      quit: () => this.options.onExit(),
+    };
+  }
+
+  /** In front of the map's first center NPC, else the spawn point. */
+  private firstRespawn(): { x: number; y: number; facing: Dir } {
+    const center = this.sim.npcs.find((n) => n.npc.role?.kind === 'center');
+    if (center) return inFront(center.mover.destination, center.mover.facing);
+    const spot = this.map.anchors['spawn'] ?? { x: this.player.tx, y: this.player.ty };
+    return { x: spot.x, y: spot.y, facing: 'down' };
   }
 
   get player(): GridMover {
@@ -191,6 +269,7 @@ export class OverworldScene implements Scene<Container> {
   }
 
   exit(): void {
+    this.menus.dispose();
     this.view.destroy({ children: true });
     this.ui.destroy({ children: true });
     this.texture.destroy(true);
@@ -209,13 +288,21 @@ export class OverworldScene implements Scene<Container> {
     this.lastZone = '-';
     this.layoutHud();
     this.layoutDialog();
+    this.menus.layout();
   }
 
-  private setContext(): void {
-    // The dialog box takes the HUD's place at the bottom of the screen.
-    const talking = this.stack.size > 0;
-    this.panel.visible = this.place.visible = this.help.visible = !talking;
-    this.options.input.setContexts([talking ? 'dialog' : 'overworld']);
+  /**
+   * Input context for what is on top: the world, a dialog or a menu. Held keys are
+   * suppressed only when it changes (or `force`), so menu auto-repeat and "hold E" work.
+   */
+  private setContext(force = true): void {
+    // Dialogs and menus take the HUD's place.
+    const open = this.stack.size > 0;
+    this.panel.visible = this.place.visible = this.help.visible = this.money.visible = !open;
+    const context = !open ? 'overworld' : this.stack.top instanceof DialogBox ? 'dialog' : 'menu';
+    if (!force && context === this.context) return;
+    this.context = context;
+    this.options.input.setContexts([context]);
     this.options.input.suppressHeld();
   }
 
@@ -234,6 +321,8 @@ export class OverworldScene implements Scene<Container> {
     if (this.inBattle) return;
     if (this.stack.size) {
       this.stack.update(dt);
+      // A dialog over a menu (or a menu after a dialog) changes the input context.
+      if (this.stack.size) this.setContext(false);
       return;
     }
     if (this.encounter) {
@@ -241,10 +330,7 @@ export class OverworldScene implements Scene<Container> {
       if (this.encounter.t <= 0) this.startBattle(this.encounter.roamer);
       return;
     }
-    if (input.pressed('pause')) {
-      this.options.onExit();
-      return;
-    }
+    if (this.openMenuKey()) return;
     const key = input.direction(MOVE_DIRECTIONS);
     if (key) this.clearPath();
     else if (input.rawPressed('Mouse0') && input.pointer.inside) this.clickTo(input.pointer);
@@ -257,11 +343,45 @@ export class OverworldScene implements Scene<Container> {
     for (const e of this.sim.update(dt, intent, this.viewTiles())) {
       if (e.kind === 'encounter') this.touch(e.roamer);
     }
+    this.logSeen();
 
     const [cx, cy] = this.focus();
     this.camera.follow(cx, cy, this.width, this.height, this.bounds, dt);
     this.stream.prefetch(this.viewRect());
     this.layoutHud();
+  }
+
+  /** `Esc` and the menu keys (`P I B M J`). */
+  private openMenuKey(): boolean {
+    const { input } = this.options;
+    const keys = [
+      ['pause', () => this.menus.openPause()],
+      ['party', () => this.menus.openParty()],
+      ['inventory', () => this.menus.openBag()],
+      ['dex', () => this.menus.openDex()],
+      ['map', () => this.menus.openMap()],
+      ['quests', () => this.menus.openQuests()],
+    ] as const;
+    for (const [action, open] of keys) {
+      if (!input.pressed(action)) continue;
+      this.clearPath();
+      open();
+      this.setContext();
+      return true;
+    }
+    return false;
+  }
+
+  /** Wild Zorlings in view count as seen in the Dex. */
+  private logSeen(): void {
+    const v = this.viewTiles();
+    const species: string[] = [];
+    for (const r of this.sim.roamers) {
+      const { tx, ty } = r.mover;
+      if (tx < v.x || ty < v.y || tx >= v.x + v.width || ty >= v.y + v.height) continue;
+      if (!this.party.dex.seen.includes(r.species)) species.push(r.species);
+    }
+    if (species.length) this.party = { ...this.party, dex: markSeen(this.party.dex, species) };
   }
 
   private viewRect(): { x: number; y: number; width: number; height: number } {
@@ -298,7 +418,18 @@ export class OverworldScene implements Scene<Container> {
     npc.talking = true;
     npc.faceToward(this.player.destination);
     this.clearPath();
-    this.say(npc.npc.lines, npc.npc.name, () => (npc.talking = false));
+    const role = npc.npc.role;
+    this.say(npc.npc.lines, npc.npc.name, () => {
+      if (!role) {
+        npc.talking = false;
+        return;
+      }
+      // The NPC keeps facing the player while its service is open.
+      this.talkingTo = npc;
+      if (role.kind === 'center') this.menus.openCenter(npc.npc.name);
+      else this.menus.openShop(role.title ?? 'Shop', role.stock);
+      this.setContext();
+    });
     return true;
   }
 
@@ -380,7 +511,10 @@ export class OverworldScene implements Scene<Container> {
 
   private finishBattle(roamer: Roamer, result: BattleResult): void {
     const { content } = this.options;
-    const applied = applyBattleResult(this.party, result);
+    const applied = applyBattleResult(this.party, result, {
+      opponents: [roamer.species],
+      prize: wildPrize(roamer.level),
+    });
     this.party = applied.party;
     switch (result.outcome) {
       case 'win':
@@ -398,19 +532,20 @@ export class OverworldScene implements Scene<Container> {
         roamer.spook(RAN_COOLDOWN);
         break;
       case 'lose': {
-        // No Zorling centers yet (C22): heal and wake up at the town's spawn point.
+        // Wake up at the last Zorling center used, team healed.
         this.party = healTeam(content, this.party);
         this.sim.clearWild();
-        const spot = this.map.anchors['spawn'] ?? { x: this.player.tx, y: this.player.ty };
-        this.player.place({ x: spot.x, y: spot.y }, 'down');
+        const spot = this.respawn;
+        this.player.place({ x: spot.x, y: spot.y }, spot.facing);
         this.clearPath();
         const [cx, cy] = this.focus();
         this.camera.snap(cx, cy, this.width, this.height, this.bounds);
-        this.afterBattle.push('Your team fainted… You hurried back to town, and they rested up.');
+        this.afterBattle.push(
+          'Your team fainted… You hurried back to the Zorling center, and they rested up.',
+        );
         break;
       }
     }
-    this.options.onParty?.(this.party);
   }
 
   // ------------------------------------------------------------ click-to-move
@@ -650,18 +785,23 @@ export class OverworldScene implements Scene<Container> {
 
   private layoutHud(): void {
     const z = this.map.zoneAt(this.player.tx, this.player.ty);
-    const key = `${z?.key ?? ''}|${this.width}|${this.height}`;
+    const key = `${z?.key ?? ''}|${this.width}|${this.height}|${this.party.money}`;
     if (key === this.lastZone) return;
     this.lastZone = key;
-    this.place.text = z
-      ? `${z.name} · Lv ${z.levels[0]}–${z.levels[1]}`
-      : `${this.map.name} · town`;
-    const w = Math.max(this.place.width, this.help.width) + 16;
+    this.place.text = this.placeLabel();
+    this.money.set(this.party.money);
+    const w = Math.max(this.place.width + this.money.width + 16, this.help.width) + 16;
     const x = 6;
     const y = this.height - HUD_H - 6;
     drawPaper(this.panel.clear(), x, y, Math.round(w), HUD_H);
     this.place.position.set(x + 8, y + 2);
     this.help.position.set(x + 8, y + 14);
+    this.money.position.set(Math.round(x + w - 8 - this.money.width), y + 4);
+  }
+
+  private placeLabel(): string {
+    const z = this.map.zoneAt(this.player.tx, this.player.ty);
+    return z ? `${z.name} · Lv ${z.levels[0]}–${z.levels[1]}` : `${this.map.name} · town`;
   }
 }
 
@@ -693,4 +833,11 @@ function mirror(p: Packed): Packed {
     }
   }
   return { ...p, data, left: p.width - p.right, right: p.width - p.left };
+}
+
+/** The tile in front of an NPC (where the player stands to talk), facing it. */
+function inFront(at: Tile, facing: Dir): { x: number; y: number; facing: Dir } {
+  const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[facing];
+  const back = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
+  return { x: at.x + (d[0] ?? 0), y: at.y + (d[1] ?? 0), facing: back[facing] };
 }

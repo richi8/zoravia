@@ -3,7 +3,7 @@ import { Rng } from '@engine/core/rng';
 import { definePack } from '@engine/packs';
 import type { BattleResult } from '@game/battle/logic';
 import { loadGameContent, type NpcInput } from '@game/data';
-import { applyBattleResult, healTeam, teamDown, type Party } from '@game/player';
+import { applyBattleResult, healTeam, newParty, teamDown, type Party } from '@game/player';
 import { createZorling } from '@game/progression';
 import { corePack } from '@packs/core';
 import { loadRegion, type WorldMap } from '../map';
@@ -274,12 +274,11 @@ describe('encounters', () => {
 
 describe('party', () => {
   const z = (s: string, uid: string) => createZorling(content, { uid, species: s, level: 8 });
-  const party: Party = {
+  const party: Party = newParty({
     team: [z('core:puddlit', 'a'), z('core:emberkit', 'b')],
-    storage: [],
     bag: { 'core:zorb': 2 },
     money: 100,
-  };
+  });
   const result = (over: Partial<BattleResult>): BattleResult => ({
     outcome: 'win',
     team: party.team,

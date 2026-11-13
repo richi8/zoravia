@@ -8,6 +8,8 @@
  * - `behavior`: `stand` (never moves), `look` (turns around now and then), `wander` (walks
  *   within `radius` tiles of its spot).
  * - `lines`: what it says, one dialog page each. The dialogue engine (C26) builds on this.
+ * - `role` (C22): after talking, a `center` NPC opens the Zorling center (heal, storage,
+ *   move relearner) and a `shop` NPC opens its shop with `stock` (items with a price).
  */
 
 import { defineRegistry, type CheckContext, type EntryOf, type EntryProblem } from '@engine/packs';
@@ -34,6 +36,17 @@ export const npcBehaviorSchema = z.discriminatedUnion('kind', [
 ]);
 export type NpcBehavior = z.output<typeof npcBehaviorSchema>;
 
+export const npcRoleSchema = z.discriminatedUnion('kind', [
+  z.strictObject({ kind: z.literal('center') }),
+  z.strictObject({
+    kind: z.literal('shop'),
+    /** Shop name shown as the panel title. Default "Shop". */
+    title: name.optional(),
+    stock: z.array(ref).min(1).max(8),
+  }),
+]);
+export type NpcRole = z.output<typeof npcRoleSchema>;
+
 export const npcLookSchema = z.strictObject({
   outfit: z.enum(OUTFIT_IDS).default('red'),
   hair: z.enum(HAIR_IDS).default('brown'),
@@ -51,6 +64,7 @@ export const npcSchema = z
     look: npcLookSchema.default({ outfit: 'red', hair: 'brown', skin: 'warm' }),
     behavior: npcBehaviorSchema.default({ kind: 'stand' }),
     lines: z.array(z.string().min(1).max(240)).min(1),
+    role: npcRoleSchema.optional(),
   })
   .superRefine((n, ctx) => {
     const xy = n.x !== undefined && n.y !== undefined;
@@ -62,8 +76,13 @@ export const npcSchema = z
   });
 
 export const npcs = defineRegistry('npcs', npcSchema, {
-  refs: (n) => [refTo('maps', n.map, 'map')],
-  check: (n, ctx) => checkPlace(n, ctx),
+  refs: (n) => [
+    refTo('maps', n.map, 'map'),
+    ...(n.role?.kind === 'shop'
+      ? n.role.stock.map((id, i) => refTo('items', id, 'role', 'stock', i))
+      : []),
+  ],
+  check: (n, ctx) => [...checkPlace(n, ctx), ...checkStock(n, ctx)],
 });
 
 export type NpcData = z.output<typeof npcSchema>;
@@ -83,6 +102,21 @@ function checkPlace(n: NpcData, ctx: CheckContext): EntryProblem[] {
   return x < m.width && y < m.height
     ? []
     : [{ path: ['x'], message: `(${x}, ${y}) is outside map "${n.map}"` }];
+}
+
+function checkStock(n: NpcData, ctx: CheckContext): EntryProblem[] {
+  if (n.role?.kind !== 'shop') return [];
+  const out: EntryProblem[] = [];
+  n.role.stock.forEach((id, i) => {
+    const item = ctx.get('items', id) as { price: number } | undefined;
+    if (item && item.price <= 0) {
+      out.push({ path: ['role', 'stock', i], message: `"${id}" has no price, so it is not sold` });
+    }
+  });
+  if (new Set(n.role.stock).size !== n.role.stock.length) {
+    out.push({ path: ['role', 'stock'], message: 'An item is listed twice' });
+  }
+  return out;
 }
 
 /** Where an NPC stands and faces at the start. */

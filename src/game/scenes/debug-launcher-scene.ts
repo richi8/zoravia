@@ -15,7 +15,7 @@ import { BATTLE_SPEEDS, BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
 import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
-import type { Party } from '@game/player';
+import { newParty, type Party } from '@game/player';
 import { createZorling, displayName, statsOf, type Zorling } from '@game/progression';
 import { paper, surface } from '@game/style/tokens';
 import { drawPaper } from '@game/ui/skin';
@@ -177,7 +177,7 @@ export class DebugLauncherScene implements Scene<Container> {
     const battles = this.battles;
     const items: MenuItem[] = [
       ...battles.map((b) => ({ label: b.label, hint: b.hint })),
-      { label: 'Overworld: test region', hint: 'C21' },
+      { label: 'Overworld: test region', hint: 'C22' },
       { label: 'Map viewer: test region', hint: 'C19' },
       { label: 'Battle speed', hint: `${BATTLE_SPEEDS[this.speed] ?? 1}×` },
       { label: 'Confirm 1 2 3 switch', hint: this.confirmSwitch ? 'On' : 'Off' },
@@ -237,12 +237,11 @@ export class DebugLauncherScene implements Scene<Container> {
     const { content } = this.options;
     const z = (species: string, uid: string): Zorling =>
       createZorling(content, { uid, species: `core:${species}`, level: 9 });
-    return {
+    return newParty({
       team: [z('puddlit', 'p1'), z('emberkit', 'p2'), z('sproutle', 'p3')],
-      storage: [],
       bag: BAG,
       money: 1240,
-    };
+    });
   }
 
   private async openWorld(mapId: string): Promise<void> {

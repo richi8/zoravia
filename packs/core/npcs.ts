@@ -1,5 +1,6 @@
 /**
- * Test NPCs for the C21 test region. Region 1's real townsfolk come with C28–C30.
+ * Test NPCs for the C21 test region (C22: a center attendant and a shop). Region 1's real
+ * townsfolk come with C28–C30.
  */
 
 import type { NpcInput } from '@game/data';
@@ -21,7 +22,20 @@ export const npcs: Record<string, NpcInput> = {
     map: 'core:test-region',
     anchor: 'shop',
     look: { outfit: 'mustard', hair: 'blonde', skin: 'light' },
-    lines: ["The shop isn't open yet. Come back soon!"],
+    lines: ['Welcome! Potions and Zorbs, fresh today.'],
+    role: {
+      kind: 'shop',
+      title: "Ida's Shop",
+      stock: ['core:potion', 'core:super-potion', 'core:max-potion', 'core:zorb'],
+    },
+  },
+  'test-healer': {
+    name: 'Healer Wren',
+    map: 'core:test-region',
+    anchor: 'center',
+    look: { outfit: 'white', hair: 'red', skin: 'light' },
+    lines: ['Welcome to the Zorling center! How can I help?'],
+    role: { kind: 'center' },
   },
   'test-kid': {
     name: 'Pip',

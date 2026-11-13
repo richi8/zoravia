@@ -46,6 +46,12 @@ Each region has its own lore, a legendary, a trial/badge, and **its own 3 starte
 - **Storage** holds all other owned creatures; swapping only at a creature center.
 - **Dex** tracks seen/caught species.
 - Captures with a full team go to storage.
+- Rules settled in C22 (2026-11-13; starting values, tuned in C31):
+  - The team always keeps at least one Zorling (the last one can be swapped, not deposited). The hotbar order can be changed anywhere from the party screen.
+  - A center heals the team and storage for free. The move relearner costs 100 coins per move.
+  - A Zorling counts as seen when it is on screen in the overworld or met in battle.
+  - Losing a battle (whole team fainted) sends the player back to the last Zorling center they used (the region's first center until then), team healed. No money is lost.
+  - Potions can be used outside battle on a team member that has not fainted (no revives).
 
 ## Creatures
 - **3 move slots**, moves learned by level-up only. Learning a 4th → replace or skip.
@@ -137,7 +143,7 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 
 ## Economy
 - Potions: **shop-only, money-only**, tiered prices, **bag cap 5 per type**.
-- Money: trainers (one-time, good), quests (one-time, good), wild creatures (small change).
+- Money: trainers (one-time, good), quests (one-time, good), wild creatures (small change: 4 + 2 × level per win, C22 starting value).
 - Brute-forcing a Titan ≈ 4–5 good potions ≈ one route of trainer income: doable sometimes, not always.
 
 ## Presentation

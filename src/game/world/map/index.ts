@@ -5,6 +5,7 @@ import { decodeRegion } from './codec';
 import type { WorldMap } from './world-map';
 
 export * from './codec';
+export * from './minimap';
 export * from './world-map';
 
 const cache = new WeakMap<GameContent, Map<string, WorldMap>>();

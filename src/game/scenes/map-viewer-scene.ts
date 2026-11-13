@@ -12,7 +12,7 @@
 
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import type { InputManager } from '@engine/input';
-import { blendPacked, packColor, PixelBuffer } from '@engine/render/pixel-buffer';
+import { blendPacked, PixelBuffer } from '@engine/render/pixel-buffer';
 import type { Scene } from '@engine/scenes/scene-manager';
 import type { GameContent, Tier } from '@game/data';
 import type { Action } from '@game/input/actions';
@@ -21,8 +21,7 @@ import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
 import { TerrainRenderer } from '@game/world/animate';
 import { BIOMES, TILE, type Biome } from '@game/world/biomes';
-import { loadRegion, type WorldMap } from '@game/world/map';
-import { PROP_INFO } from '@game/world/props';
+import { buildMinimap, loadRegion, type WorldMap } from '@game/world/map';
 import { bakeTerrain, type TerrainMap } from '@game/world/terrain';
 
 export interface MapViewerOptions {
@@ -152,49 +151,17 @@ export class MapViewerScene implements Scene<Container> {
     return Math.max(1, Math.floor(room / Math.max(this.map.width, this.map.height)));
   }
 
-  private tileColor(tx: number, ty: number, prop: string | undefined): number {
-    const m = this.map;
-    const r = this.biome.ramps;
-    const corners = (g: WorldMap['alt']): number =>
-      g.get(tx, ty) + g.get(tx + 1, ty) + g.get(tx, ty + 1) + g.get(tx + 1, ty + 1);
-    let c: number;
-    if (corners(m.liquid) >= 2) c = r.liquid[1] ?? 0;
-    else if (prop)
-      c = (PROP_INFO[prop as keyof typeof PROP_INFO].solid ? r.foliage[1] : r.accent[2]) ?? 0;
-    else if (corners(m.path) >= 2) c = r.path[2] ?? 0;
-    else if (m.tall(tx, ty)) c = r.tall[1] ?? 0;
-    else if (corners(m.alt) >= 2) c = r.alt[2] ?? 0;
-    else c = r.ground[2] ?? 0;
-    let p = packColor(c);
-    if (this.overlay === 'zones') {
-      const z = m.zoneAt(tx, ty);
-      if (z) {
-        const shade = m.zones.indexOf(z) % 2 ? 0.32 : 0.5;
-        p = blendPacked(p, TIER_TINT[z.tier], shade);
-      }
-    } else if (this.overlay === 'collision' && m.blocked(tx, ty)) {
-      p = blendPacked(p, BLOCK_TINT, 0.55);
-    }
-    return p;
-  }
-
   private buildMini(): PixelBuffer {
     const m = this.map;
-    const s = this.scale;
-    const mini = new PixelBuffer(m.width * s, m.height * s);
-    const props = new Map(m.props.map((p) => [p.ty * m.width + p.tx, p.kind]));
-    for (let ty = 0; ty < m.height; ty++) {
-      for (let tx = 0; tx < m.width; tx++) {
-        const c = this.tileColor(tx, ty, props.get(ty * m.width + tx));
-        for (let y = 0; y < s; y++)
-          mini.data.fill(
-            c,
-            (ty * s + y) * mini.width + tx * s,
-            (ty * s + y) * mini.width + tx * s + s,
-          );
+    return buildMinimap(m, this.biome, this.scale, (p, tx, ty) => {
+      if (this.overlay === 'zones') {
+        const z = m.zoneAt(tx, ty);
+        if (z) return blendPacked(p, TIER_TINT[z.tier], m.zones.indexOf(z) % 2 ? 0.32 : 0.5);
+      } else if (this.overlay === 'collision' && m.blocked(tx, ty)) {
+        return blendPacked(p, BLOCK_TINT, 0.55);
       }
-    }
-    return mini;
+      return p;
+    });
   }
 
   private drawOverview(): void {
