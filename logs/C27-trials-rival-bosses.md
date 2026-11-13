@@ -1,7 +1,7 @@
 # C27 · Trials, rival, story bosses, legendary — Log
 
 - **Date:** 2026-11-13
-- **Status:** done (legendary shrine checked by unit test only, not in the browser)
+- **Status:** done
 - **Depends on:** C26, C17
 
 ## Summary
@@ -34,17 +34,17 @@ Packs can now define badges and trainers, and a dialogue node can start a traine
 ## Issues & known limitations
 - Boss rematches use the trainer AI, which is much stronger: a Lv 60 team that catches Glacivar (Lv 40, wild AI) loses its Lv 45 rematch. Tune in C31.
 - Badges are not shown anywhere yet except in dialogue (no badge case/HUD).
-- The legendary shrine (Zorling NPC, wild boss → capture → it disappears) was verified by unit tests, not in the browser.
+- In battle, the bag opens on the Potions tab even when the boss is Subdued and only a capture item can be used (one extra `D` press).
 - Zorling NPCs play no cry when talked to.
 
 ## Verification
 - `npm run check`: typecheck, lint, format, 615 tests (57 files) pass.
-- Browser (headless Chrome, 960×540 at DPR 2, keyboard driven, team set to Lv 40 through the dev handle): Rival Mira: talk → battle → "See you at the trial!", +300 coins, she leaves. Keeper Bryn's intro; Oak sends you to Fern first; Fern battle +240; Oak battle +900, "You received the Grove Badge!" (screenshot), badges saved in the party; Keeper's line changes; the second Mira appears after the badge, battle +600, she leaves; Fern rematch choice → battle +200 (wins 2); "Not now" skips. No console errors.
+- Browser (headless Chrome, 960×540 at DPR 2, keyboard driven, team set to Lv 40 through the dev handle): Rival Mira: talk → battle → "See you at the trial!", +300 coins, she leaves. Keeper Bryn's intro; Oak sends you to Fern first; Fern battle +240; Oak battle +900, "You received the Grove Badge!" (screenshot), badges saved in the party; Keeper's line changes; the second Mira appears after the badge, battle +600, she leaves; Fern rematch choice → battle +200 (wins 2); "Not now" skips. Glacivar's shrine (Lv 70 team): the Zorling NPC in the Old Grove, "Face it / Step back" over the box, the wild boss battle to Subdued, a Zorb from the Capture tab → "sent to storage" (Lv 40, 1 HP, Whiteout kept), "The shrine is quiet now.", the NPC gone, boss log `caught`, slot on disk v4. No console errors.
 - Done when "a sample trial and rival fight work end-to-end from data": ✅ (unit tests through the real engine + browser).
 
 ## Follow-ups
 - C29/C30: line-of-sight trainers that walk up; real trial, rival and story bosses; rival starter counter-pick once a starter choice exists (C33).
-- C32: a badge case / HUD badge, a trainer intro splash, cries for Zorling NPCs.
+- C32: open the battle bag on the Capture tab while the foe is Subdued; a badge case / HUD badge, a trainer intro splash, cries for Zorling NPCs.
 - C31: rematch levels/prizes, boss rematch difficulty (trainer AI), `perBadge`.
 
 ## Notes for the next chunk
