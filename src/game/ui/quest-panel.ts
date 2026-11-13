@@ -34,6 +34,8 @@ const LIST_W = 120;
 const ROW_H = 15;
 const TOP = 20;
 const VISIBLE = 10;
+/** Height of the right column (quest details). */
+const DETAIL_H = H - TOP - 6;
 
 export class QuestPanel implements Widget<Container> {
   static readonly WIDTH = W;
@@ -132,51 +134,73 @@ export class QuestPanel implements Widget<Container> {
     }
 
     const d = rows[this.cursor.index];
-    const dx = LIST_W + 16;
-    const wrap = W - dx - 8;
     if (d) {
-      let y = TOP;
-      add(uiText('name', d.name), dx, y);
-      y += 14;
-      const status = d.done ? 'Done' : d.from ? `From ${d.from}` : 'Active';
-      add(uiText('label', status, d.done ? paper.title : paper.inkDim), dx, y);
-      y += 11;
-      if (d.summary) {
-        const s = add(
-          uiText('body', d.summary, paper.ink, { wordWrap: true, wordWrapWidth: wrap }),
-          dx,
-          y,
-        );
-        y += Math.ceil(s.height) + 5;
+      // All steps if they fit; else the finished ones fold into one line, so the current
+      // step and the reward always show. Anything still too tall is clipped.
+      let detail = detailOf(d, false);
+      if (detail.height > DETAIL_H) {
+        detail.destroy({ children: true });
+        detail = detailOf(d, true);
       }
-      for (const step of d.steps) {
-        const g = add(new Graphics(), dx, y + 2);
-        drawTick(g, 0, 0, step.done, !step.done);
-        const t = add(
-          uiText('body', step.text, step.done ? paper.inkDim : paper.ink, {
-            wordWrap: true,
-            wordWrapWidth: wrap - 12,
-          }),
-          dx + 12,
-          y,
-        );
-        y += Math.ceil(t.height) + 2;
-      }
-      if (d.reward) {
-        const ry = Math.max(y + 4, H - 44);
-        add(uiText('label', 'Reward', paper.title), dx, ry);
-        add(
-          uiText('body', d.reward, paper.ink, { wordWrap: true, wordWrapWidth: wrap }),
-          dx,
-          ry + 9,
-        );
-      }
+      const clip = new Graphics().rect(0, 0, W - LIST_W - 16 - 6, DETAIL_H).fill(0xffffff);
+      add(clip, LIST_W + 16, TOP);
+      detail.mask = clip;
+      add(detail, LIST_W + 16, TOP);
     }
 
     const hints = [new KeyHint('W S', 'Choose'), new KeyHint('Q', 'Back')];
     for (const h of hints) this.dynamic.addChild(h);
     row(hints, 8, 7, H - 13);
   }
+}
+
+/** The right column for one quest; `fold`: finished steps as a single line. */
+function detailOf(d: QuestRow, fold: boolean): Container {
+  const out = new Container();
+  const add = <T extends Container>(c: T, x: number, y: number): T => {
+    c.position.set(Math.round(x), Math.round(y));
+    out.addChild(c);
+    return c;
+  };
+  const wrap = W - LIST_W - 16 - 8;
+  let y = 0;
+  add(uiText('name', d.name), 0, y);
+  y += 14;
+  const status = d.done ? 'Done' : d.from ? `From ${d.from}` : 'Active';
+  add(uiText('label', status, d.done ? paper.title : paper.inkDim), 0, y);
+  y += 11;
+  if (d.summary) {
+    const s = add(
+      uiText('body', d.summary, paper.ink, { wordWrap: true, wordWrapWidth: wrap }),
+      0,
+      y,
+    );
+    y += Math.ceil(s.height) + 5;
+  }
+  const done = d.steps.filter((st) => st.done);
+  const steps =
+    fold && done.length > 1
+      ? [{ text: `${done.length} steps done`, done: true }, ...d.steps.filter((st) => !st.done)]
+      : d.steps;
+  for (const step of steps) {
+    const g = add(new Graphics(), 0, y + 2);
+    drawTick(g, 0, 0, step.done, !step.done);
+    const t = add(
+      uiText('body', step.text, step.done ? paper.inkDim : paper.ink, {
+        wordWrap: true,
+        wordWrapWidth: wrap - 12,
+      }),
+      12,
+      y,
+    );
+    y += Math.ceil(t.height) + 2;
+  }
+  if (d.reward) {
+    y += 4;
+    add(uiText('label', 'Reward', paper.title), 0, y);
+    add(uiText('body', d.reward, paper.ink, { wordWrap: true, wordWrapWidth: wrap }), 0, y + 9);
+  }
+  return out;
 }
 
 /** A 7×7 pixel box: ticked when done; the current step's box is gold. */

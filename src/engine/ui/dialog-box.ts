@@ -3,7 +3,8 @@
  * `E` advances (hold to speed up), `Q` finishes the current page.
  * A left click anywhere on screen while the dialog is focused works like `Q` while the page
  * is typing and like `E` once it is finished — so click once to show the page, again to go on.
- * Pages are word-wrapped up front so words never jump lines while typing.
+ * Pages are word-wrapped up front so words never jump lines while typing; a page longer than
+ * the box continues on extra pages.
  * With `onLastPage`, the box stays on its last page once it is shown (for a choice menu on
  * top) and the owner removes it.
  */
@@ -56,10 +57,14 @@ export class DialogBox implements Widget<Container> {
       wordWrap: true,
       wordWrapWidth: width - pad * 2,
     });
-    // Pre-wrap each page with the real font metrics, then reveal the wrapped string.
-    this.wrapped = options.pages.map((p) =>
-      CanvasTextMetrics.measureText(p, style).lines.join('\n'),
-    );
+    // Pre-wrap each page with the real font metrics, then reveal the wrapped string. A page
+    // that wraps to more lines than the box shows goes on over the next pages.
+    this.wrapped = options.pages.flatMap((p) => {
+      const all = CanvasTextMetrics.measureText(p, style).lines;
+      const out: string[] = [];
+      for (let i = 0; i < all.length; i += lines) out.push(all.slice(i, i + lines).join('\n'));
+      return out.length ? out : [''];
+    });
     this.typewriter = new Typewriter(this.wrapped, {
       charsPerSecond: theme.motion.textSpeed,
       fastMultiplier: theme.motion.textFastMultiplier,

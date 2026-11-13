@@ -40,6 +40,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C31 | Balance & playtest pass | ✅ | [log](logs/C31-balance-playtest.md) |
 | G2 | 🚦 Fun gate | 🟨 | in progress |
 | G2a | Battle screen (G2 feedback) | ✅ | [log](logs/G2a-battle-screen.md) |
+| G2b | Text overflow fixes (G2 feedback) | ✅ | [log](logs/G2b-text-overflow.md) |
 | C32 | Juice & presentation | ⬜ | |
 | C33 | Title, settings, start flow | ⬜ | |
 | C34 | Region 2: Volcanic desert | ⬜ | |
