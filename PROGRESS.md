@@ -41,6 +41,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | G2 | 🚦 Fun gate | 🟨 | in progress |
 | G2a | Battle screen (G2 feedback) | ✅ | [log](logs/G2a-battle-screen.md) |
 | G2b | Text overflow fixes (G2 feedback) | ✅ | [log](logs/G2b-text-overflow.md) |
+| G2c | Fewer battle captions (G2 feedback) | ✅ | [log](logs/G2c-fewer-captions.md) |
 | C32 | Juice & presentation | ⬜ | |
 | C33 | Title, settings, start flow | ⬜ | |
 | C34 | Region 2: Volcanic desert | ⬜ | |

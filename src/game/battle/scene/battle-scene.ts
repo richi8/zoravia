@@ -125,6 +125,21 @@ const AUTO_EVENTS: ReadonlySet<BattleEvent['kind']> = new Set([
   'itemUsed',
 ]);
 
+/**
+ * Events whose text only goes to the battle log, because the screen already shows them: a
+ * condition's chip on the card, damage over time and heals as numbers, a reaction's or an
+ * Armor break's callout, Armor's badge.
+ */
+const LOG_ONLY_EVENTS: ReadonlySet<BattleEvent['kind']> = new Set([
+  'conditionApplied',
+  'statusEnded',
+  'statusDamage',
+  'heal',
+  'reaction',
+  'armorBroken',
+  'armorRestored',
+]);
+
 interface Tween {
   readonly end: number;
   readonly start: number;
@@ -471,6 +486,11 @@ export class BattleScene implements Scene<Container> {
       this.shown = applyShown(content, this.shown, e);
     };
     const sayAll = async (short = AUTO_EVENTS.has(e.kind)): Promise<void> => {
+      // What the screen already shows goes to the log only (G2 feedback: too many captions).
+      if (LOG_ONLY_EVENTS.has(e.kind)) {
+        this.log.push(...lines);
+        return;
+      }
       for (const line of lines) await this.say(line, short);
     };
     if (e.kind === 'end') {
