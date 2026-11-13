@@ -1,6 +1,7 @@
 /**
  * Test NPCs for the C21 test region (C22: a center attendant and a shop; C26: Ranger Ode and
- * Fisher Lou run the dialogues of the sample quest in `story.ts`). Region 1's real townsfolk
+ * Fisher Lou run the dialogues of the sample quest in `story.ts`; C27: the Grove Trial, Rival
+ * Mira's two encounters and Glacivar's shrine, see `trainers.ts`). Region 1's real townsfolk
  * come with C28–C30.
  */
 
@@ -68,5 +69,65 @@ export const npcs: Record<string, NpcInput> = {
     facing: 'up',
     look: { outfit: 'navy', hair: 'brown', skin: 'light' },
     dialogue: 'core:fisher-lou',
+  },
+  'trial-keeper': {
+    name: 'Keeper Bryn',
+    map: 'core:test-region',
+    x: 54,
+    y: 43,
+    facing: 'down',
+    look: { outfit: 'forest', hair: 'grey', skin: 'warm' },
+    dialogue: 'core:keeper-bryn',
+  },
+  'trial-fern': {
+    name: 'Apprentice Fern',
+    map: 'core:test-region',
+    x: 45,
+    y: 46,
+    facing: 'right',
+    look: { outfit: 'mustard', hair: 'dark', skin: 'tan' },
+    behavior: { kind: 'look' },
+    dialogue: 'core:apprentice-fern',
+  },
+  'trial-oak': {
+    name: 'Warden Oak',
+    map: 'core:test-region',
+    x: 48,
+    y: 53,
+    facing: 'up',
+    look: { outfit: 'maroon', hair: 'dark', skin: 'deep' },
+    dialogue: 'core:warden-oak',
+  },
+  'rival-mira': {
+    name: 'Rival Mira',
+    map: 'core:test-region',
+    x: 56,
+    y: 49,
+    facing: 'left',
+    look: { outfit: 'purple', hair: 'blonde', skin: 'light' },
+    when: { not: { beat: 'core:rival-mira' } },
+    dialogue: 'core:rival-mira',
+  },
+  'rival-mira-grove': {
+    name: 'Rival Mira',
+    map: 'core:test-region',
+    x: 53,
+    y: 53,
+    facing: 'left',
+    look: { outfit: 'purple', hair: 'blonde', skin: 'light' },
+    when: {
+      all: [{ badge: 'core:grove-badge' }, { not: { beat: 'core:rival-mira-grove' } }],
+    },
+    dialogue: 'core:rival-mira-grove',
+  },
+  glacivar: {
+    name: 'Glacivar',
+    map: 'core:test-region',
+    x: 48,
+    y: 12,
+    facing: 'down',
+    zorling: 'core:glacivar',
+    when: { not: { caught: 'core:glacivar' } },
+    dialogue: 'core:glacivar-shrine',
   },
 };

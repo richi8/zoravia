@@ -1,13 +1,14 @@
 /**
- * The player's Zorlings, bag, money, Dex, boss log, story flags and quests between battles
- * (C21–C23, C26). Saved by `@game/save`. Pure.
+ * The player's Zorlings, bag, money, Dex, boss log, story flags and quests, badges and
+ * trainers beaten between battles (C21–C23, C26, C27). Saved by `@game/save`. Pure.
  */
 
 import type { BattleResult } from '@game/battle/logic';
 import type { GameContent } from '@game/data';
 import type { Bag } from '@game/inventory';
 import { statsOf, type Zorling } from '@game/progression';
-import { EMPTY_BOSS_LOG, recordBoss, type BossLog } from './bosses';
+import { EMPTY_BOSS_LOG, recordBoss, recordBossRematch, type BossLog } from './bosses';
+import { EMPTY_TRAINER_LOG, recordTrainerWin, type TrainerLog } from './trainers';
 import { EMPTY_DEX, markCaught, markSeen, type Dex } from './dex';
 
 /** Hotbar size (DESIGN.md → Team). */
@@ -27,6 +28,10 @@ export interface Party {
   readonly flags: Flags;
   /** Quests started, by id (C26); a quest not listed is not started. */
   readonly quests: QuestLog;
+  /** Badges held, in the order won (C27). */
+  readonly badges: readonly string[];
+  /** Trainers beaten (C27). */
+  readonly trainers: TrainerLog;
 }
 
 export type Flags = Readonly<Record<string, number>>;
@@ -57,6 +62,8 @@ export function newParty(p: NewParty): Party {
     bosses: EMPTY_BOSS_LOG,
     flags: {},
     quests: {},
+    badges: [],
+    trainers: EMPTY_TRAINER_LOG,
   };
 }
 
@@ -73,6 +80,10 @@ export interface ApplyOptions {
   readonly prize?: number;
   /** The boss fought, if any (logged on a win or a catch). */
   readonly boss?: string;
+  /** The boss fight was a rematch: a win counts as a rematch won (C27). */
+  readonly rematch?: boolean;
+  /** The trainer fought, if any (a win is logged, C27). */
+  readonly trainer?: string;
 }
 
 /**
@@ -97,9 +108,23 @@ export function applyBattleResult(
     dex = markCaught(dex, [caught.species]);
   }
   const prize = result.outcome === 'win' ? Math.max(0, Math.floor(opts.prize ?? 0)) : 0;
-  const bosses = opts.boss ? recordBoss(party.bosses, opts.boss, result.outcome) : party.bosses;
+  const won = result.outcome === 'win';
+  let bosses = party.bosses;
+  if (opts.boss && opts.rematch) bosses = won ? recordBossRematch(bosses, opts.boss) : bosses;
+  else if (opts.boss) bosses = recordBoss(bosses, opts.boss, result.outcome);
+  const trainers =
+    opts.trainer && won ? recordTrainerWin(party.trainers, opts.trainer) : party.trainers;
   const money = party.money + prize;
-  const next: Party = { ...party, team, storage, bag: result.bag, money, dex, bosses };
+  const next: Party = {
+    ...party,
+    team,
+    storage,
+    bag: result.bag,
+    money,
+    dex,
+    bosses,
+    trainers,
+  };
   return caughtTo ? { party: next, caughtTo } : { party: next };
 }
 

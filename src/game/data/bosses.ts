@@ -31,6 +31,16 @@ export const bossSchema = z.strictObject({
   armor: z.strictObject({ breaks: z.array(ref).min(1) }).optional(),
   /** Hand-written theme (`music`); omitted = boss music composed from the biome's battle music. */
   theme: ref.optional(),
+  /**
+   * Rematches (C27) once it is beaten or caught: a boss battle again, `levels` higher, that it
+   * cannot be caught in. The first rematch win pays `prize`; later wins pay only XP.
+   */
+  rematch: z
+    .strictObject({
+      levels: z.number().int().min(0).max(30),
+      prize: z.number().int().min(0).default(0),
+    })
+    .optional(),
 });
 
 export type Boss = EntryOf<typeof bosses>;

@@ -13,6 +13,7 @@ import { createZorling, statsOf } from '@game/progression';
 import { corePack } from '@packs/core';
 import v1 from '../../../tests/fixtures/saves/v1.json';
 import v2 from '../../../tests/fixtures/saves/v2.json';
+import v3 from '../../../tests/fixtures/saves/v3.json';
 import {
   formatPlaytime,
   MemoryStore,
@@ -58,6 +59,8 @@ function state(over: Partial<GameState> = {}): GameState {
     bosses: { 'core:thornwing-titan': { result: 'defeated' } },
     flags: { 'core:pond-ode': 1, 'core:count': 3 },
     quests: { 'core:nothing-biting': { state: 'active', step: 'catch-voltbat' } },
+    badges: ['core:grove-badge'],
+    trainers: { 'core:apprentice-fern': { wins: 2 }, 'core:warden-oak': { wins: 1 } },
   };
   return {
     party,
@@ -105,7 +108,7 @@ describe('save format', () => {
   it('migrates the v2 fixture: story flags and quests start empty', () => {
     expect(v2.version).toBe(2);
     const data = migrate(v2);
-    expect(data.version).toBe(3);
+    expect(data.version).toBe(SAVE_VERSION);
     expect(data.party.flags).toEqual({});
     expect(data.party.quests).toEqual({});
     // Everything v2 had is kept.
@@ -116,6 +119,39 @@ describe('save format', () => {
     const s = readSave(content, v2);
     expect(s.party.team[1]?.nickname).toBe('Sparky');
     expect(s.party.money).toBe(580);
+  });
+
+  it('migrates the v3 fixture: no badges, no trainers beaten', () => {
+    expect(v3.version).toBe(3);
+    const data = migrate(v3);
+    expect(data.version).toBe(SAVE_VERSION);
+    expect(data.party.badges).toEqual([]);
+    expect(data.party.trainers).toEqual({});
+    // Everything v3 had is kept.
+    expect(data.party.flags).toEqual({ 'core:pond-ode': 1 });
+    expect(data.party.quests).toEqual({
+      'core:nothing-biting': { state: 'active', step: 'catch-voltbat' },
+    });
+    expect(data.party.bosses).toEqual({ 'core:thornwing-titan': { result: 'defeated' } });
+    const s = readSave(content, v3);
+    expect(s.party.money).toBe(580);
+    expect(s.party.badges).toEqual([]);
+  });
+
+  it('keeps boss rematches and refuses unknown badges or trainers', () => {
+    const base = state();
+    const s = state({
+      party: { ...base.party, bosses: { 'core:glacivar': { result: 'caught', rematches: 2 } } },
+    });
+    expect(readSave(content, raw(s)).party.bosses).toEqual({
+      'core:glacivar': { result: 'caught', rematches: 2 },
+    });
+    const badge = raw() as Raw & { party: { badges: string[] } };
+    badge.party.badges = ['gone:badge'];
+    expect(() => readSave(content, badge)).toThrow(/gone:badge/);
+    const trainer = raw() as Raw & { party: { trainers: Record<string, unknown> } };
+    trainer.party.trainers = { 'gone:trainer': { wins: 1 } };
+    expect(() => readSave(content, trainer)).toThrow(/gone:trainer/);
   });
 
   it('refuses saves with unknown quests and restarts quests at a removed step', () => {

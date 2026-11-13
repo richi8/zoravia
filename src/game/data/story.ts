@@ -5,10 +5,13 @@
  *   them: a flag exists once an action sets it. A set flag is 1 unless given a value, and
  *   counters go up with `add`.
  * - **Conditions** test the save: flags, quest progress, items in the bag, money, the Dex
- *   and the boss log. `not`, `all` and `any` combine them.
- * - **Actions** change it: set or clear flags, give or take items and money, start quests.
+ *   and the boss log; badges and trainers beaten (C27). `not`, `all` and `any` combine them.
+ * - **Actions** change it: set or clear flags, give or take items and money, start quests,
+ *   give badges (C27).
  * - **Dialogues** (`dialogues` registry) are graphs of nodes. A node says some pages, runs
  *   its actions, then offers choices, branches on conditions, goes to another node, or ends.
+ *   A node can also start a battle (C27): a trainer or a boss. After a win (or a catch) the
+ *   dialogue goes on at `win`; any other outcome ends it.
  * - **Quests** (`quests` registry) are steps in order. A step is done when its condition
  *   holds (checked after every change), so dialogue moves a quest on by setting a flag. The
  *   last step done completes the quest and pays its reward.
@@ -45,6 +48,12 @@ export type StoryCondition =
   | { readonly seen: string }
   /** The boss is beaten or caught. */
   | { readonly boss: string }
+  /** The badge is held. */
+  | { readonly badge: string }
+  /** At least this many badges are held. */
+  | { readonly badges: number }
+  /** The trainer was beaten at least `times` (default 1) times. */
+  | { readonly beat: string; readonly times?: number | undefined }
   | { readonly not: StoryCondition }
   | { readonly all: readonly StoryCondition[] }
   | { readonly any: readonly StoryCondition[] };
@@ -60,6 +69,9 @@ export const storyConditionSchema: z.ZodType<StoryCondition> = z.lazy(() =>
     z.strictObject({ caught: ref }),
     z.strictObject({ seen: ref }),
     z.strictObject({ boss: ref }),
+    z.strictObject({ badge: ref }),
+    z.strictObject({ badges: z.number().int().min(0) }),
+    z.strictObject({ beat: ref, times: positive.optional() }),
     z.strictObject({ not: storyConditionSchema }),
     z.strictObject({ all: z.array(storyConditionSchema).min(1) }),
     z.strictObject({ any: z.array(storyConditionSchema).min(1) }),
@@ -82,6 +94,8 @@ export const storyActionSchema = z.union([
   z.strictObject({ money: z.number().int() }),
   /** Starts a quest (nothing happens if it was started before). */
   z.strictObject({ start: ref }),
+  /** Gives a badge (nothing happens if it is held already). */
+  z.strictObject({ badge: ref }),
 ]);
 export type StoryAction = z.output<typeof storyActionSchema>;
 /** An action as written in pack data (plain-string ids); every `StoryAction` is one. */
@@ -92,6 +106,13 @@ const actions = z.array(storyActionSchema).max(16);
 // ------------------------------------------------------------------ dialogues
 
 const nodeId = z.string().min(1).max(40);
+
+/** A battle a dialogue node starts: a trainer, or a boss (wild-style; a rematch once done). */
+export const dialogueBattleSchema = z.union([
+  z.strictObject({ trainer: ref }),
+  z.strictObject({ boss: ref }),
+]);
+export type DialogueBattle = z.output<typeof dialogueBattleSchema>;
 const page = z.string().min(1).max(240);
 
 export const dialogueChoiceSchema = z.strictObject({
@@ -118,10 +139,19 @@ export const dialogueNodeSchema = z
     branch: z.array(z.strictObject({ if: storyConditionSchema, goto: nodeId })).optional(),
     /** …else this node (or the end, when left out). */
     goto: nodeId.optional(),
+    /** After the pages, a battle (C27). Won (or caught): on to `win`; else the dialogue ends. */
+    battle: dialogueBattleSchema.optional(),
+    win: nodeId.optional(),
   })
   .superRefine((n, ctx) => {
     if (n.choices && (n.branch || n.goto)) {
       ctx.addIssue({ code: 'custom', path: ['choices'], message: 'Choices end a node' });
+    }
+    if (n.battle && (n.choices || n.branch || n.goto)) {
+      ctx.addIssue({ code: 'custom', path: ['battle'], message: 'A battle ends a node (use win)' });
+    }
+    if (n.win && !n.battle) {
+      ctx.addIssue({ code: 'custom', path: ['win'], message: 'win needs a battle' });
     }
   });
 export type DialogueNode = z.output<typeof dialogueNodeSchema>;
@@ -137,6 +167,7 @@ export const dialogueSchema = z
     for (const [id, n] of Object.entries(d.nodes)) {
       const targets: [string, PropertyKey[]][] = [];
       if (n.goto) targets.push([n.goto, ['goto']]);
+      if (n.win) targets.push([n.win, ['win']]);
       n.branch?.forEach((b, i) => targets.push([b.goto, ['branch', i, 'goto']]));
       n.choices?.forEach((c, i) => c.goto && targets.push([c.goto, ['choices', i, 'goto']]));
       for (const [t, path] of targets) {
@@ -151,6 +182,7 @@ export const dialogues = defineRegistry('dialogues', dialogueSchema, {
   refs: (d) =>
     Object.entries(d.nodes).flatMap(([id, n]) => [
       ...(n.do ?? []).flatMap((a, i) => actionRefs(a, 'nodes', id, 'do', i)),
+      ...(n.battle ? [battleRef(n.battle, 'nodes', id, 'battle')] : []),
       ...(n.branch ?? []).flatMap((b, i) => conditionRefs(b.if, 'nodes', id, 'branch', i, 'if')),
       ...(n.choices ?? []).flatMap((c, i) => [
         ...(c.if ? conditionRefs(c.if, 'nodes', id, 'choices', i, 'if') : []),
@@ -230,13 +262,15 @@ export function eachCondition(c: StoryCondition): StoryCondition[] {
   return [c];
 }
 
-function conditionRefs(c: StoryCondition, ...path: PropertyKey[]): EntryRef[] {
+export function conditionRefs(c: StoryCondition, ...path: PropertyKey[]): EntryRef[] {
   return eachCondition(c).flatMap((x): EntryRef[] => {
     if ('quest' in x) return [refTo('quests', x.quest, ...path)];
     if ('has' in x) return [refTo('items', x.has, ...path)];
     if ('caught' in x) return [refTo('species', x.caught, ...path)];
     if ('seen' in x) return [refTo('species', x.seen, ...path)];
     if ('boss' in x) return [refTo('bosses', x.boss, ...path)];
+    if ('badge' in x) return [refTo('badges', x.badge, ...path)];
+    if ('beat' in x) return [refTo('trainers', x.beat, ...path)];
     return [];
   });
 }
@@ -245,7 +279,12 @@ function actionRefs(a: StoryAction, ...path: PropertyKey[]): EntryRef[] {
   if ('give' in a) return [refTo('items', a.give, ...path)];
   if ('take' in a) return [refTo('items', a.take, ...path)];
   if ('start' in a) return [refTo('quests', a.start, ...path)];
+  if ('badge' in a) return [refTo('badges', a.badge, ...path)];
   return [];
+}
+
+function battleRef(b: DialogueBattle, ...path: PropertyKey[]): EntryRef {
+  return 'trainer' in b ? refTo('trainers', b.trainer, ...path) : refTo('bosses', b.boss, ...path);
 }
 
 /** `{ quest, step }` conditions must name a step the quest has. */

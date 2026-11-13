@@ -11,5 +11,6 @@ export * from './npcs';
 export * from './reactions';
 export * from './species';
 export * from './story';
+export * from './trainers';
 export * from './traits';
 export * from './types';

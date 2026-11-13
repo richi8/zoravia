@@ -21,6 +21,7 @@ import { reactions, type Reaction } from './reactions';
 import { species, type Species } from './species';
 import { dialogues, quests, type Dialogue, type Quest } from './story';
 import { traits, type Trait } from './traits';
+import { badges, trainers, type Badge, type Trainer } from './trainers';
 import { STRONG_MULTIPLIER, types, WEAK_MULTIPLIER, type ZorlingType } from './types';
 
 export const GAME_REGISTRIES = [
@@ -33,6 +34,8 @@ export const GAME_REGISTRIES = [
   items,
   music,
   bosses,
+  badges,
+  trainers,
   maps,
   npcs,
   dialogues,
@@ -55,6 +58,8 @@ export class GameContent<H extends HookMap = HookMap> {
   readonly species: Registry<Species>;
   readonly items: Registry<Item>;
   readonly bosses: Registry<Boss>;
+  readonly badges: Registry<Badge>;
+  readonly trainers: Registry<Trainer>;
   readonly music: Registry<Music>;
   readonly maps: Registry<RegionMap>;
   readonly npcs: Registry<Npc>;
@@ -71,6 +76,8 @@ export class GameContent<H extends HookMap = HookMap> {
     this.species = loaded.registry(species);
     this.items = loaded.registry(items);
     this.bosses = loaded.registry(bosses);
+    this.badges = loaded.registry(badges);
+    this.trainers = loaded.registry(trainers);
     this.music = loaded.registry(music);
     this.maps = loaded.registry(maps);
     this.npcs = loaded.registry(npcs);

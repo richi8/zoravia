@@ -2,7 +2,7 @@
 
 import type { GameContent, QuestState, StoryCondition } from '@game/data';
 import { bagCount } from '@game/inventory';
-import { bossDone, type Party } from '@game/player';
+import { bossDone, trainerWins, type Party } from '@game/player';
 
 /** A flag's value (0 when not set). */
 export function flagValue(party: Party, flag: string): number {
@@ -32,6 +32,9 @@ export function holds(content: GameContent, party: Party, c: StoryCondition): bo
   if ('caught' in c) return party.dex.caught.includes(c.caught);
   if ('seen' in c) return party.dex.seen.includes(c.seen);
   if ('boss' in c) return bossDone(party.bosses, c.boss);
+  if ('badge' in c) return party.badges.includes(c.badge);
+  if ('badges' in c) return party.badges.length >= c.badges;
+  if ('beat' in c) return trainerWins(party.trainers, c.beat) >= (c.times ?? 1);
   if ('not' in c) return !holds(content, party, c.not);
   if ('all' in c) return c.all.every((x) => holds(content, party, x));
   return c.any.some((x) => holds(content, party, x));

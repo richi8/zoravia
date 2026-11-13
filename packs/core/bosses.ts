@@ -12,6 +12,7 @@ export const bosses = {
     signatureMove: 'core:bramble-gale',
     armor: { breaks: ['core:overload'] },
     theme: 'core:titan-theme',
+    rematch: { levels: 8, prize: 1200 },
   },
   glacivar: {
     name: 'Glacivar',
@@ -22,5 +23,6 @@ export const bosses = {
     signatureMove: 'core:whiteout',
     armor: { breaks: ['core:slam'] },
     theme: 'core:glacivar-theme',
+    rematch: { levels: 5, prize: 2000 },
   },
 } satisfies Record<string, BossInput>;

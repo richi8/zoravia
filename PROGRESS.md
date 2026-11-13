@@ -33,7 +33,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C24 | SFX & cries | ✅ | [log](logs/C24-sfx-cries.md) |
 | C25 | Music & ambience | ✅ | [log](logs/C25-music-ambience.md) |
 | C26 | Dialogue & quest engine | ✅ | [log](logs/C26-dialogue-quests.md) |
-| C27 | Trials, rival, story bosses, legendary | ⬜ | |
+| C27 | Trials, rival, story bosses, legendary | ✅ | [log](logs/C27-trials-rival-bosses.md) |
 | C28 | Region 1 map | ⬜ | |
 | C29 | Region 1 Zorlings & trainers | ⬜ | |
 | C30 | Region 1 campaign & lore | ⬜ | |

@@ -7,7 +7,8 @@
  *   map, tile and facing, all at the top level.
  * - v2: `place` and `respawn` (the last center used) as map + tile + facing, the boss log
  *   (one per save), play time, and the packs the save was made with.
- * - v3 (current, C26): story flags and quest progress in the party.
+ * - v3 (C26): story flags and quest progress in the party.
+ * - v4 (current, C27): badges held, trainers beaten, and rematches won in the boss log.
  */
 
 import { z } from 'zod';
@@ -16,7 +17,7 @@ import { TEAM_SIZE } from '@game/player';
 import { zorlingSchema } from '@game/progression';
 
 export const SAVE_FORMAT = 'zoravia-save';
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 const count = z.number().int().min(0);
 
@@ -33,7 +34,13 @@ export const partySchema = z.strictObject({
   bag: z.record(ref, z.number().int().min(1)),
   money: count,
   dex: z.strictObject({ seen: z.array(ref), caught: z.array(ref) }),
-  bosses: z.record(ref, z.strictObject({ result: z.enum(['defeated', 'caught']) })),
+  bosses: z.record(
+    ref,
+    z.strictObject({
+      result: z.enum(['defeated', 'caught']),
+      rematches: z.number().int().min(1).optional(),
+    }),
+  ),
   flags: z.record(ref, z.number().int()),
   quests: z.record(
     ref,
@@ -42,6 +49,8 @@ export const partySchema = z.strictObject({
       z.strictObject({ state: z.literal('done') }),
     ]),
   ),
+  badges: z.array(ref),
+  trainers: z.record(ref, z.strictObject({ wins: z.number().int().min(1) })),
 });
 
 export const saveSchema = z.strictObject({

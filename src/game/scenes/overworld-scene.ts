@@ -10,6 +10,10 @@
  *   dialogue, battle and menu, with a note and a chime.
  * - NPCs with a role open the Zorling center or their shop after talking (C22). Losing a
  *   battle wakes the player up at the last center used (the map's first one until then).
+ * - Story battles (C27): a dialogue node can start a trainer or boss battle. A win (or a
+ *   catch) goes on with the dialogue; losing ends it. NPCs with `when` come and go as the
+ *   story moves on (checked whenever nothing is open), and `zorling` NPCs are drawn as a
+ *   Zorling (a legendary at its shrine). Badges held set the battles' soft level cap.
  * - Wild Zorlings in view are logged in the Dex as seen; a win pays a little money.
  * - Saves (C23): starts at a saved place, keeps play time, and autosaves through `save` after
  *   battles, when menus and dialogs close with something changed, every `AUTOSAVE_EVERY`
@@ -29,7 +33,7 @@ import type { Engine } from '@engine/render/engine';
 import { blendPacked, packColor, PixelBuffer } from '@engine/render/pixel-buffer';
 import type { Scene } from '@engine/scenes/scene-manager';
 import { DialogBox, FocusStack, Menu, type UiInput, type UiTheme } from '@engine/ui';
-import type { BattleResult } from '@game/battle/logic';
+import type { BattleResult, BattleSetup } from '@game/battle/logic';
 import { BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
 import { fieldAudio, playSfx } from '@game/audio';
@@ -47,7 +51,17 @@ import {
 } from '@game/player';
 import { createZorling, displayName } from '@game/progression';
 import type { GameState, Place } from '@game/save';
-import { advanceQuests, DialogueRun, QUEST_NOTE, type DialogueView } from '@game/story';
+import {
+  advanceQuests,
+  BADGE_NOTE,
+  DialogueRun,
+  holds,
+  QUEST_NOTE,
+  storyBattle,
+  type DialogueView,
+  type StoryBattle,
+} from '@game/story';
+import type { DialogueBattle } from '@game/data';
 import { paper, surface } from '@game/style/tokens';
 import { MoneyLabel } from '@game/ui/panels';
 import { drawPaper } from '@game/ui/skin';
@@ -148,6 +162,8 @@ export class OverworldScene implements Scene<Container> {
   private readonly camera = new Camera();
   private readonly sheet: CharacterSheet;
   private readonly npcSheets = new Map<NpcActor, CharacterSheet>();
+  /** Which way a Zorling NPC's sprite faces (it keeps its side when facing up or down). */
+  private readonly npcSides = new Map<NpcActor, 'left' | 'right'>();
   private readonly wildSprites = new Map<string, WildSprite>();
   private readonly canvas = document.createElement('canvas');
   private readonly ctx: CanvasRenderingContext2D;
@@ -180,6 +196,10 @@ export class OverworldScene implements Scene<Container> {
   private heldBox: DialogBox | undefined;
   private inBattle = false;
   private afterBattle: string[] = [];
+  /** The dialogue waiting on a story battle, and whether that battle was won. */
+  private battleRun: { run: DialogueRun; step: () => void; won: boolean } | undefined;
+  /** NPC `when` conditions may have changed (checked when nothing is open). */
+  private presenceDirty = true;
   /** Move and evolution offers the last battle left (asked on return). */
   private offers: Offer[] = [];
   private time = 0;
@@ -207,9 +227,10 @@ export class OverworldScene implements Scene<Container> {
     });
     this.stream = new TerrainStream(this.map, BIOMES[this.map.biome]);
     this.sheet = buildCharacterSheet(PLAYER_OUTFIT);
-    for (const npc of this.sim.npcs) {
-      this.npcSheets.set(npc, buildCharacterSheet(outfitOf(npc.npc.look)));
+    for (const npc of this.sim.allNpcs) {
+      if (!npc.npc.zorling) this.npcSheets.set(npc, buildCharacterSheet(outfitOf(npc.npc.look)));
     }
+    this.syncPresence();
     const ctx = this.canvas.getContext('2d');
     if (!ctx) throw new Error('2D canvas not available');
     this.ctx = ctx;
@@ -307,6 +328,7 @@ export class OverworldScene implements Scene<Container> {
     if (p === this.current) return;
     this.current = p;
     this.lastZone = '-';
+    this.presenceDirty = true;
     this.options.onParty?.(p);
   }
 
@@ -383,18 +405,37 @@ export class OverworldScene implements Scene<Container> {
     this.party = quests.party;
     const pages = [...this.afterBattle, ...quests.notes];
     if (quests.notes.length) questSound(quests.notes);
-    const offers = this.offers;
     this.afterBattle = [];
-    this.offers = [];
-    // Messages first, then the level-up choices (C22b).
-    const choices = (): void => {
-      if (!offers.length) return;
-      this.menus.levelUp.run(offers);
-      this.setContext();
+    // Messages first, then the rest of a story battle's dialogue, then the level-up choices.
+    const story = this.battleRun;
+    this.battleRun = undefined;
+    const then = (): void => {
+      if (!story) {
+        this.levelUpChoices();
+        return;
+      }
+      story.run.battleOver(this.party, story.won);
+      story.step();
     };
-    if (pages.length) this.say(pages, undefined, choices);
-    else choices();
+    if (pages.length) this.say(pages, undefined, then);
+    else then();
     this.autosave();
+  }
+
+  /** The move and evolution offers the last battle left (C22b). */
+  private levelUpChoices(): void {
+    const offers = this.offers;
+    this.offers = [];
+    if (!offers.length) return;
+    this.menus.levelUp.run(offers);
+    this.setContext();
+  }
+
+  /** Shows the NPCs whose `when` holds (C27). */
+  private syncPresence(): void {
+    this.presenceDirty = false;
+    const { content } = this.options;
+    this.sim.present((n) => !n.when || holds(content, this.party, n.when));
   }
 
   exit(): void {
@@ -461,6 +502,7 @@ export class OverworldScene implements Scene<Container> {
       if (this.encounter.t <= 0) this.startBattle(this.encounter.roamer);
       return;
     }
+    if (this.presenceDirty && !this.inDialogue) this.syncPresence();
     if (this.openMenuKey()) return;
     const key = input.direction(MOVE_DIRECTIONS);
     if (key) this.clearPath();
@@ -594,9 +636,14 @@ export class OverworldScene implements Scene<Container> {
         // The last box closed while `inDialogue` hid it from `onEmpty`: run that now.
         if (this.stack.size === 0) this.stack.onEmpty?.();
         done();
+        this.levelUpChoices();
         return;
       }
       this.showView(view, (choice) => {
+        if (view.battle) {
+          this.dialogueBattle(run, view.battle, step);
+          return;
+        }
         run.next(choice);
         step();
       });
@@ -702,6 +749,33 @@ export class OverworldScene implements Scene<Container> {
     return menu ? this.heldBox : undefined;
   }
 
+  /** Runs a dialogue node's battle; the dialogue goes on in `resume` once it is over. */
+  private dialogueBattle(run: DialogueRun, battle: DialogueBattle, step: () => void): void {
+    const plan = storyBattle(this.options.content, this.party, battle, this.sim.battleSeed());
+    if (!plan) {
+      run.battleOver(this.party, false);
+      step();
+      return;
+    }
+    this.battleRun = { run, step, won: false };
+    this.launch(plan.setup, plan.trainer, (result) => this.finishStoryBattle(plan, result));
+  }
+
+  private finishStoryBattle(plan: StoryBattle, result: BattleResult): void {
+    const { content } = this.options;
+    const applied = applyBattleResult(this.party, result, plan.apply);
+    this.party = applied.party;
+    this.offers = offersFrom(result.team, result.progress);
+    const won = result.outcome === 'win' || result.outcome === 'caught';
+    if (this.battleRun) this.battleRun.won = won;
+    if (result.caught && applied.caughtTo === 'storage') {
+      this.afterBattle.push(
+        `${displayName(content, result.caught)} was sent to storage. Your team is full.`,
+      );
+    }
+    if (result.outcome === 'lose') this.wakeAtCenter();
+  }
+
   /** A wild Zorling was touched: "!" over it for a beat, then the battle. */
   private touch(roamer: Roamer): void {
     this.clearPath();
@@ -715,7 +789,7 @@ export class OverworldScene implements Scene<Container> {
   }
 
   private startBattle(roamer: Roamer): void {
-    const { engine, content, input, ui, theme } = this.options;
+    const { content } = this.options;
     this.encounter = undefined;
     if (teamDown(this.party)) this.party = healTeam(content, this.party);
     const wild = createZorling(content, {
@@ -723,25 +797,41 @@ export class OverworldScene implements Scene<Container> {
       species: roamer.species,
       level: roamer.level,
     });
+    const setup: BattleSetup = {
+      kind: 'wild',
+      seed: this.sim.battleSeed(),
+      player: this.party.team,
+      opponent: [wild],
+      bag: this.party.bag,
+    };
+    this.launch(setup, undefined, (result) => this.finishBattle(roamer, result));
+  }
+
+  /** Plays the battle transition into a battle; `end` writes the result back. */
+  private launch(
+    setup: BattleSetup,
+    trainer: string | undefined,
+    end: (result: BattleResult) => void,
+  ): void {
+    const { engine, content, input, ui, theme } = this.options;
+    this.clearPath();
+    // A team that is down (only possible right after waking) is healed first.
+    if (teamDown(this.party)) this.party = healTeam(content, this.party);
     this.inBattle = true;
     const scene = new BattleScene({
       content,
       input,
       ui,
       theme,
-      setup: {
-        kind: 'wild',
-        seed: this.sim.battleSeed(),
-        player: this.party.team,
-        opponent: [wild],
-        bag: this.party.bag,
-      },
+      setup: { ...setup, player: this.party.team, bag: this.party.bag },
+      ...(trainer ? { trainer } : {}),
+      badges: this.party.badges.length,
       speed: this.options.battleSpeed ?? 1,
       money: this.party.money,
       confirmHotbarSwitch: this.options.confirmHotbarSwitch ?? false,
       biome: this.map.biome,
       onEnd: (result) => {
-        this.finishBattle(roamer, result);
+        end(result);
         void engine.scenes.pop({ transition: engine.fade({ duration: 0.3 }) });
       },
     });
@@ -775,21 +865,24 @@ export class OverworldScene implements Scene<Container> {
       case 'ran':
         roamer.spook(RAN_COOLDOWN);
         break;
-      case 'lose': {
-        // Wake up at the last Zorling center used, team healed.
-        this.party = healTeam(content, this.party);
-        this.sim.clearWild();
-        const spot = this.respawn;
-        this.player.place({ x: spot.x, y: spot.y }, spot.facing);
-        this.clearPath();
-        const [cx, cy] = this.focus();
-        this.camera.snap(cx, cy, this.width, this.height, this.bounds);
-        this.afterBattle.push(
-          'Your team fainted… You hurried back to the Zorling center, and they rested up.',
-        );
+      case 'lose':
+        this.wakeAtCenter();
         break;
-      }
     }
+  }
+
+  /** After losing: back at the last Zorling center used, team healed. */
+  private wakeAtCenter(): void {
+    this.party = healTeam(this.options.content, this.party);
+    this.sim.clearWild();
+    const spot = this.respawn;
+    this.player.place({ x: spot.x, y: spot.y }, spot.facing);
+    this.clearPath();
+    const [cx, cy] = this.focus();
+    this.camera.snap(cx, cy, this.width, this.height, this.bounds);
+    this.afterBattle.push(
+      'Your team fainted… You hurried back to the Zorling center, and they rested up.',
+    );
   }
 
   // ------------------------------------------------------------ click-to-move
@@ -854,8 +947,16 @@ export class OverworldScene implements Scene<Container> {
     for (const npc of this.sim.npcs) {
       const sheet = this.npcSheets.get(npc);
       if (sheet) list.push(this.characterDrawable(npc.mover, sheet));
+      else if (npc.npc.zorling) {
+        const f = npc.mover.facing;
+        if (f === 'left' || f === 'right') this.npcSides.set(npc, f);
+        const side = this.npcSides.get(npc) ?? 'left';
+        list.push(this.zorlingDrawable(npc.mover, npc.npc.zorling, side, 0));
+      }
     }
-    for (const r of this.sim.roamers) list.push(this.wildDrawable(r));
+    for (const r of this.sim.roamers) {
+      list.push(this.zorlingDrawable(r.mover, r.species, r.side, r.alert));
+    }
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.draw(v.x, v.y);
     this.ctx.putImageData(this.image, 0, 0);
@@ -879,12 +980,16 @@ export class OverworldScene implements Scene<Container> {
     };
   }
 
-  private wildDrawable(r: Roamer): Drawable {
-    const m = r.mover;
+  private zorlingDrawable(
+    m: GridMover,
+    species: string,
+    side: 'left' | 'right',
+    alert: number,
+  ): Drawable {
     return {
       y: m.y,
       draw: (camX, camY) => {
-        const sprite = this.wildSprite(r.species)[r.side];
+        const sprite = this.wildSprite(species)[side];
         const wx = Math.round(m.x * TILE);
         const wy = Math.round(m.y * TILE);
         // A little hop on every half tile walked.
@@ -896,7 +1001,7 @@ export class OverworldScene implements Scene<Container> {
         this.drawShadow(wx + TILE / 2, wy + TILE - 1, rx, baseY, camX, camY);
         this.blit(sprite, left, top, baseY, camX, camY);
         this.grassOver(m, left, top, sprite.width, sprite.height, baseY, camX, camY);
-        if (r.alert > 0) this.drawAlert(wx + TILE / 2, top + sprite.top - 2, camX, camY);
+        if (alert > 0) this.drawAlert(wx + TILE / 2, top + sprite.top - 2, camX, camY);
       },
     };
   }
@@ -1089,8 +1194,9 @@ function inFront(at: Tile, facing: Dir): { x: number; y: number; facing: Dir } {
 
 /** A chime for quest notes: a fanfare when one completed. */
 function questSound(notes: readonly string[]): void {
-  if (notes.some((n) => n.startsWith(QUEST_NOTE.done))) playSfx('world.questDone');
-  else if (
+  if (notes.some((n) => n.startsWith(QUEST_NOTE.done) || n.startsWith(BADGE_NOTE))) {
+    playSfx('world.questDone');
+  } else if (
     notes.some((n) => n.startsWith(QUEST_NOTE.started) || n.startsWith(QUEST_NOTE.updated))
   ) {
     playSfx('world.quest');

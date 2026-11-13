@@ -3,7 +3,7 @@
  * `readSave` migrates any older version, checks the shape, then checks the save against the
  * loaded content.
  *
- * Content check: a save that names species, moves, items, bosses or maps the loaded packs
+ * Content check: a save that names species, moves, items, bosses, badges, trainers or maps the loaded packs
  * don't have is refused with a list of what is missing (a pack was removed). Values that only
  * drifted because a pack changed its numbers are repaired instead: HP above the new max HP and
  * bag counts above a new bag cap are lowered, and a quest at a step its pack no longer has
@@ -84,6 +84,8 @@ export function fromSave(content: GameContent, data: SaveData): GameState {
     bosses: p.bosses,
     flags: p.flags,
     quests: fitQuests(content, p.quests),
+    badges: [...new Set(p.badges)],
+    trainers: p.trainers,
   };
   return {
     party,
@@ -108,6 +110,8 @@ function missingContent(content: GameContent, data: SaveData): string[] {
   for (const id of [...p.dex.seen, ...p.dex.caught]) need((i) => content.species.has(i), id);
   for (const id of Object.keys(p.bosses)) need((i) => content.bosses.has(i), id);
   for (const id of Object.keys(p.quests)) need((i) => content.quests.has(i), id);
+  for (const id of p.badges) need((i) => content.badges.has(i), id);
+  for (const id of Object.keys(p.trainers)) need((i) => content.trainers.has(i), id);
   for (const place of [data.place, data.respawn]) {
     if (place) need((i) => content.maps.has(i), place.map);
   }

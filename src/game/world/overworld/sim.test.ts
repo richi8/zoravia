@@ -126,6 +126,33 @@ describe('NPCs in the overworld', () => {
     expect(tiles.size).toBeGreaterThan(3);
   });
 
+  it('come and go with their condition, waiting for a free tile to appear (C27)', () => {
+    const sim = new OverworldSim({ content, mapId: MAP, map, seed: 2 });
+    const ids = () => sim.npcs.map((n) => n.npc.id);
+    // Every NPC is there until told otherwise; NPCs placed on every walkable spot.
+    for (const n of sim.allNpcs) expect(map.blocked(n.mover.tx, n.mover.ty)).toBe(false);
+    expect(ids()).toContain('core:rival-mira');
+    let mira = true;
+    sim.present((n) => n.id !== 'core:rival-mira' || mira);
+    expect(ids()).toContain('core:rival-mira');
+    mira = false;
+    sim.present((n) => n.id !== 'core:rival-mira' || mira);
+    expect(ids()).not.toContain('core:rival-mira');
+    expect(sim.blocked(56, 49)).toBe(false);
+    // She comes back, but the player stands on her spot: she waits until it is free.
+    sim.player.place({ x: 56, y: 49 }, 'left');
+    mira = true;
+    sim.present((n) => n.id !== 'core:rival-mira' || mira);
+    expect(ids()).not.toContain('core:rival-mira');
+    run(sim, 0.1);
+    expect(ids()).not.toContain('core:rival-mira');
+    run(sim, 1, hold('left'));
+    expect(ids()).toContain('core:rival-mira');
+    // Pack order is kept.
+    const order = sim.allNpcs.map((n) => n.npc.id).filter((id) => ids().includes(id));
+    expect(ids()).toEqual(order);
+  });
+
   it('do not move while talking', () => {
     const sim = new OverworldSim({ content, mapId: MAP, map, seed: 3 });
     const kid = sim.npcs.find((n) => n.npc.id === 'core:test-kid') as NpcActor;

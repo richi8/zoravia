@@ -8,6 +8,8 @@
  *   the area is filled. Far ones despawn. They stay in their zone.
  * - Walking into a roaming Zorling (or one chasing the player catching it) is an encounter.
  * - `facing()` is what the player would talk to or touch with `E`.
+ * - NPCs with a `when` condition come and go (C27): `present` says which NPCs are there. One
+ *   that should appear waits until its tile is free.
  *
  * Deterministic for a seed: every random choice comes from split `Rng` streams.
  */
@@ -70,7 +72,11 @@ export function pickTemperament(rng: Rng): Temperament {
 export class OverworldSim {
   readonly map: WorldMap;
   readonly player: GridMover;
-  readonly npcs: NpcActor[];
+  /** NPCs on the map now. */
+  readonly npcs: NpcActor[] = [];
+  /** Every NPC of the map, there or not, in pack order. */
+  readonly allNpcs: readonly NpcActor[];
+  private isPresent: (npc: Npc) => boolean = () => true;
   readonly roamers: Roamer[] = [];
   private readonly spawnRng: Rng;
   private readonly battleRng: Rng;
@@ -92,13 +98,43 @@ export class OverworldSim {
       options.facing ?? (map.anchors['spawn']?.facing as Dir | undefined) ?? 'down',
     );
     const npcRng = this.seed.split('npcs');
-    this.npcs = content.npcs
+    this.allNpcs = content.npcs
       .values()
       .filter((n: Npc) => n.map === options.mapId)
       .map((n) => {
         const p = npcPlace(n, map);
         return new NpcActor(n, { x: p.x, y: p.y }, p.facing, npcRng.split(n.id));
       });
+    this.npcs.push(...this.allNpcs);
+  }
+
+  /**
+   * Which NPCs are there (C27, NPC `when`). Ones that leave vanish at once; ones that come
+   * appear on their spot once nobody stands there. Call again whenever the answer may change.
+   */
+  present(isPresent: (npc: Npc) => boolean): void {
+    this.isPresent = isPresent;
+    this.syncNpcs();
+  }
+
+  private syncNpcs(): void {
+    const next: NpcActor[] = [];
+    for (const a of this.allNpcs) {
+      const here = this.npcs.includes(a);
+      if (!this.isPresent(a.npc)) continue;
+      if (here || this.free(a)) next.push(a);
+    }
+    if (next.length === this.npcs.length && next.every((a, i) => a === this.npcs[i])) return;
+    this.npcs.length = 0;
+    this.npcs.push(...next);
+  }
+
+  /** Whether an NPC that is not there can appear on its tile now. */
+  private free(a: NpcActor): boolean {
+    const { tx, ty } = a.mover;
+    const at = this.player.destination;
+    if (covers(this.player, tx, ty) || (at.x === tx && at.y === ty)) return false;
+    return this.occupant(tx, ty) === undefined;
   }
 
   /** Who stands on (or walks onto) a tile, besides the player. */
@@ -143,6 +179,7 @@ export class OverworldSim {
   update(dt: number, intent: IntentFn, view: TileRect): SimEvent[] {
     const events: SimEvent[] = [];
     let encounter: Roamer | undefined;
+    if (this.npcs.length < this.allNpcs.length) this.syncNpcs();
     for (const e of this.player.update(dt, intent, this.blocked)) {
       events.push({ kind: 'player', event: e });
       if (e.kind === 'bump') {

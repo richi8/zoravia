@@ -6,9 +6,13 @@
  * Reaching a node runs its actions first (and moves quests on), so the notes they make
  * ("You received …", "Quest updated: …") show right after the node's pages. Nodes with no
  * pages and no notes are passed through at once (routing nodes).
+ *
+ * A node with a `battle` (C27) gives a view with `battle` set: the scene shows its pages,
+ * runs the battle, then calls `battleOver` with the party after it. A win goes on at the
+ * node's `win`; anything else ends the dialogue.
  */
 
-import type { DialogueChoice, DialogueNode, GameContent } from '@game/data';
+import type { DialogueBattle, DialogueChoice, DialogueNode, GameContent } from '@game/data';
 import type { Party } from '@game/player';
 import { act } from './actions';
 import { holds } from './conditions';
@@ -21,6 +25,8 @@ export interface DialogueView {
   readonly notes: readonly string[];
   /** Choice labels, offered with the last page or note. Empty: no choice. */
   readonly choices: readonly string[];
+  /** A battle to run once the pages and notes are read (then call `battleOver`). */
+  readonly battle?: DialogueBattle;
 }
 
 /** Most nodes passed through without showing anything (guards against loops). */
@@ -69,6 +75,11 @@ export class DialogueRun {
   next(choice?: number): void {
     const view = this.current;
     if (!view) return;
+    if (view.battle) {
+      // Moving on without the battle: as if it was not won.
+      this.battleOver(this.state, false);
+      return;
+    }
     if (view.choices.length) {
       const c = this.choiceList[choice ?? -1] ?? this.choiceList[this.choiceList.length - 1];
       const r = act(this.content, this.state, c?.do ?? []);
@@ -86,6 +97,19 @@ export class DialogueRun {
     this.enter(this.pending, []);
   }
 
+  /**
+   * The battle of the current view is over. `party` is the party after it (result applied);
+   * `won` is true for a win or a catch.
+   */
+  battleOver(party: Party, won: boolean): void {
+    if (!this.current?.battle) return;
+    this.state = party;
+    const next = this.pending;
+    this.pending = undefined;
+    if (won) this.enter(next, []);
+    else this.current = undefined;
+  }
+
   private enter(start: string | undefined, carried: string[]): void {
     const nodes = this.nodes;
     let id = start;
@@ -101,6 +125,12 @@ export class DialogueRun {
       const offered = (node.choices ?? []).filter(
         (c) => !c.if || holds(this.content, this.state, c.if),
       );
+      if (node.battle) {
+        this.choiceList = [];
+        this.pending = node.win;
+        this.current = { pages, speaker, notes, choices: [], battle: node.battle };
+        return;
+      }
       if (offered.length) {
         this.choiceList = offered;
         this.pending = undefined;

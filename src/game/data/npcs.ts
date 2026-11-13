@@ -11,6 +11,10 @@
  *   `dialogues` registry, with branches, choices and quest actions. Give one of the two.
  * - `role` (C22): after talking, a `center` NPC opens the Zorling center (heal, storage,
  *   move relearner) and a `shop` NPC opens its shop with `stock` (items with a price).
+ * - `when` (C27): the NPC is there only while this story condition holds (a rival who shows
+ *   up after a badge and leaves once beaten; a legendary gone once caught).
+ * - `zorling` (C27): drawn as this species' overworld sprite instead of a person (a Titan in
+ *   its lair, a legendary at its shrine). It never walks; `look` is ignored.
  */
 
 import { defineRegistry, type CheckContext, type EntryOf, type EntryProblem } from '@engine/packs';
@@ -18,6 +22,7 @@ import { z } from 'zod';
 import { HAIR_IDS, OUTFIT_IDS, SKIN_IDS } from '@game/world/overworld/outfits';
 import { name, ref, refTo } from './common';
 import { FACINGS, type AnchorData, type Facing, type RegionMapData } from './maps';
+import { conditionRefs, storyConditionSchema } from './story';
 
 const seconds = z.number().positive().max(60);
 
@@ -67,8 +72,17 @@ export const npcSchema = z
     lines: z.array(z.string().min(1).max(240)).min(1).optional(),
     dialogue: ref.optional(),
     role: npcRoleSchema.optional(),
+    when: storyConditionSchema.optional(),
+    zorling: ref.optional(),
   })
   .superRefine((n, ctx) => {
+    if (n.zorling && n.behavior.kind === 'wander') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['behavior'],
+        message: 'A Zorling NPC does not wander',
+      });
+    }
     if ((n.lines === undefined) === (n.dialogue === undefined)) {
       ctx.addIssue({ code: 'custom', path: ['lines'], message: 'Give either lines or dialogue' });
     }
@@ -84,6 +98,8 @@ export const npcs = defineRegistry('npcs', npcSchema, {
   refs: (n) => [
     refTo('maps', n.map, 'map'),
     ...(n.dialogue ? [refTo('dialogues', n.dialogue, 'dialogue')] : []),
+    ...(n.zorling ? [refTo('species', n.zorling, 'zorling')] : []),
+    ...(n.when ? conditionRefs(n.when, 'when') : []),
     ...(n.role?.kind === 'shop'
       ? n.role.stock.map((id, i) => refTo('items', id, 'role', 'stock', i))
       : []),

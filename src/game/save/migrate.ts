@@ -49,6 +49,11 @@ const STEPS: Readonly<Record<number, Step>> = {
     const party = isObject(v2['party']) ? v2['party'] : {};
     return { ...v2, version: 3, party: { ...party, flags: {}, quests: {} } };
   },
+  // C27: no badges, no trainers beaten yet.
+  3: (v3) => {
+    const party = isObject(v3['party']) ? v3['party'] : {};
+    return { ...v3, version: 4, party: { ...party, badges: [], trainers: {} } };
+  },
 };
 
 /** The version a raw save says it has. */

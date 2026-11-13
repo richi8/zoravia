@@ -5,7 +5,7 @@
 
 import type { GameContent, Quest, StoryActionInput } from '@game/data';
 import { addToBag, bagCount, takeFromBag } from '@game/inventory';
-import type { Party } from '@game/player';
+import { addBadge, type Party } from '@game/player';
 import { holds } from './conditions';
 
 /** How quest notes start (the scene picks a chime by them). */
@@ -14,6 +14,9 @@ export const QUEST_NOTE = {
   updated: 'Quest updated: ',
   done: 'Quest complete: ',
 } as const;
+
+/** How a badge note starts (the scene plays a fanfare for it). */
+export const BADGE_NOTE = 'You received the ';
 
 export interface Acted {
   readonly party: Party;
@@ -69,6 +72,11 @@ function runAction(content: GameContent, p: Party, a: StoryActionInput, notes: s
     if (diff > 0) notes.push(`You received ${coins(diff)} coins.`);
     if (diff < 0) notes.push(`You paid ${coins(-diff)} coins.`);
     return { ...p, money };
+  }
+  if ('badge' in a) {
+    if (p.badges.includes(a.badge)) return p;
+    notes.push(`${BADGE_NOTE}${content.badges.require(a.badge).name}!`);
+    return { ...p, badges: addBadge(p.badges, a.badge) };
   }
   // start
   if (p.quests[a.start]) return p;
