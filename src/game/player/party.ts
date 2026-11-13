@@ -1,12 +1,13 @@
 /**
- * The player's Zorlings, bag, money and Dex between battles (C21, C22). Saves come with C23.
- * Pure.
+ * The player's Zorlings, bag, money, Dex and boss log between battles (C21–C23). Saved by
+ * `@game/save`. Pure.
  */
 
 import type { BattleResult } from '@game/battle/logic';
 import type { GameContent } from '@game/data';
 import type { Bag } from '@game/inventory';
 import { statsOf, type Zorling } from '@game/progression';
+import { EMPTY_BOSS_LOG, recordBoss, type BossLog } from './bosses';
 import { EMPTY_DEX, markCaught, markSeen, type Dex } from './dex';
 
 /** Hotbar size (DESIGN.md → Team). */
@@ -20,6 +21,8 @@ export interface Party {
   readonly bag: Bag;
   readonly money: number;
   readonly dex: Dex;
+  /** Bosses beaten or caught (one per save). */
+  readonly bosses: BossLog;
 }
 
 export interface NewParty {
@@ -39,6 +42,7 @@ export function newParty(p: NewParty): Party {
     bag: p.bag ?? {},
     money: p.money ?? 0,
     dex: markCaught(EMPTY_DEX, owned),
+    bosses: EMPTY_BOSS_LOG,
   };
 }
 
@@ -53,11 +57,13 @@ export interface ApplyOptions {
   readonly opponents?: readonly string[];
   /** Money won (only paid on a win). */
   readonly prize?: number;
+  /** The boss fought, if any (logged on a win or a catch). */
+  readonly boss?: string;
 }
 
 /**
- * Writes a battle result back: team HP and XP, used items, the prize on a win, the Dex, and
- * the caught Zorling (to the team while it has fewer than 3, else to storage; it gets a new
+ * Writes a battle result back: team HP and XP, used items, the prize on a win, the Dex, the
+ * boss log, and the caught Zorling (to the team while it has fewer than 3, else to storage; it gets a new
  * uid if its own is already taken).
  */
 export function applyBattleResult(
@@ -77,7 +83,9 @@ export function applyBattleResult(
     dex = markCaught(dex, [caught.species]);
   }
   const prize = result.outcome === 'win' ? Math.max(0, Math.floor(opts.prize ?? 0)) : 0;
-  const next: Party = { ...party, team, storage, bag: result.bag, money: party.money + prize, dex };
+  const bosses = opts.boss ? recordBoss(party.bosses, opts.boss, result.outcome) : party.bosses;
+  const money = party.money + prize;
+  const next: Party = { ...party, team, storage, bag: result.bag, money, dex, bosses };
   return caughtTo ? { party: next, caughtTo } : { party: next };
 }
 

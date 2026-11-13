@@ -8,6 +8,9 @@
  * - NPCs with a role open the Zorling center or their shop after talking (C22). Losing a
  *   battle wakes the player up at the last center used (the map's first one until then).
  * - Wild Zorlings in view are logged in the Dex as seen; a win pays a little money.
+ * - Saves (C23): starts at a saved place, keeps play time, and autosaves through `save` after
+ *   battles, when menus and dialogs close with something changed, every `AUTOSAVE_EVERY`
+ *   seconds of walking, and on quitting. The pause menu has a manual "Save".
  * - Mouse (optional): click a tile to walk there along an A* path. Clicking an NPC or a wild
  *   Zorling walks next to it, faces it and talks / battles. Any direction key cancels the path.
  * - Walking into a roaming Zorling (or one catching the player) starts a wild battle with the
@@ -39,6 +42,7 @@ import {
   type Party,
 } from '@game/player';
 import { createZorling, displayName } from '@game/progression';
+import type { GameState, Place } from '@game/save';
 import { paper, surface } from '@game/style/tokens';
 import { MoneyLabel } from '@game/ui/panels';
 import { drawPaper } from '@game/ui/skin';
@@ -87,6 +91,14 @@ export interface OverworldOptions {
   readonly confirmHotbarSwitch?: boolean;
   /** Seed of the wild spawns and NPC behavior. Default: the map seed. */
   readonly seed?: number;
+  /** Saved place to start at (used when it is on this map and walkable). */
+  readonly start?: Place;
+  /** Saved center to wake up at after losing (used when it is on this map). */
+  readonly respawn?: Place;
+  /** Seconds played before this visit. */
+  readonly playtime?: number;
+  /** Writes the game state (autosave and the pause menu's "Save"). No saving when unset. */
+  save?(state: GameState): Promise<void>;
   onExit(): void;
 }
 
@@ -98,6 +110,11 @@ const ENCOUNTER_BEAT = 0.4;
 /** Seconds a wild Zorling the player ran from leaves the player alone. */
 const RAN_COOLDOWN = 4;
 const SHADOW = 0x1e3a14;
+/** Seconds of play between autosaves while something changed. */
+const AUTOSAVE_EVERY = 30;
+/** Seconds the HUD shows "Saved". */
+const SAVED_NOTE = 1.5;
+const HELP = 'WASD move · E talk · click to walk · Esc menu';
 
 /** A packed sprite plus where its figure starts (for the "!" bubble). */
 interface Packed extends CharacterFrame {
@@ -159,15 +176,24 @@ export class OverworldScene implements Scene<Container> {
   private width = 480;
   private height = 270;
   private lastZone: string | undefined = '-';
+  private playtime: number;
+  /** What the last save wrote (party object and place), to skip saves that change nothing. */
+  private saved: { party: Party; key: string } | undefined;
+  private autosaveTimer = AUTOSAVE_EVERY;
+  private savedNote = 0;
+  private saveFailed = false;
 
   constructor(private readonly options: OverworldOptions) {
     this.map = loadRegion(options.content, options.mapId);
     this.current = options.party;
+    this.playtime = options.playtime ?? 0;
+    const start = this.onMap(options.start, true);
     this.sim = new OverworldSim({
       content: options.content,
       mapId: options.mapId,
       map: this.map,
       seed: options.seed ?? this.map.seed,
+      ...(start ? { start, facing: start.facing } : {}),
     });
     this.stream = new TerrainStream(this.map, BIOMES[this.map.biome]);
     this.sheet = buildCharacterSheet(PLAYER_OUTFIT);
@@ -190,10 +216,73 @@ export class OverworldScene implements Scene<Container> {
       if (this.talkingTo) this.talkingTo.talking = false;
       this.talkingTo = undefined;
       this.setContext();
+      this.autosave();
     };
-    this.help.text = 'WASD move · E talk · click to walk · Esc menu';
-    this.respawn = this.firstRespawn();
+    this.help.text = HELP;
+    this.respawn = this.onMap(options.respawn, false) ?? this.firstRespawn();
     this.menus = new OverworldMenus(this.menuHost());
+    this.saved = { party: this.current, key: this.placeKey() };
+  }
+
+  /** A saved place if it is on this map (and, for `walkable`, inside and not blocked). */
+  private onMap(p: Place | undefined, walkable: boolean): Place | undefined {
+    if (!p || p.map !== this.options.mapId) return undefined;
+    if (walkable && (!this.map.inside(p.x, p.y) || this.map.blocked(p.x, p.y))) return undefined;
+    return p;
+  }
+
+  /** Everything a save keeps, as of now. */
+  snapshot(): GameState {
+    const at = this.player.destination;
+    const map = this.options.mapId;
+    return {
+      party: this.party,
+      place: { map, x: at.x, y: at.y, facing: this.player.facing },
+      respawn: { map, ...this.respawn },
+      playtime: this.playtime,
+    };
+  }
+
+  private placeKey(): string {
+    const at = this.player.destination;
+    const r = this.respawn;
+    return `${at.x},${at.y},${this.player.facing}|${r.x},${r.y},${r.facing}`;
+  }
+
+  /** Whether the party or the place changed since the last save. */
+  private get dirty(): boolean {
+    return this.saved?.party !== this.party || this.saved.key !== this.placeKey();
+  }
+
+  /**
+   * Saves now (`manual`) or only when something changed (`auto`). Resolves to an error
+   * message when the write failed.
+   */
+  async saveNow(mode: 'auto' | 'manual' = 'auto'): Promise<string | undefined> {
+    const { save } = this.options;
+    if (!save || (mode === 'auto' && !this.dirty)) return undefined;
+    const state = this.snapshot();
+    const key = this.placeKey();
+    this.autosaveTimer = AUTOSAVE_EVERY;
+    try {
+      await save(state);
+      this.saved = { party: state.party, key };
+      this.savedNote = SAVED_NOTE;
+      this.lastZone = '-';
+      return undefined;
+    } catch (e) {
+      console.warn('Save failed', e);
+      return e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  /** Autosave; a failure is told once per visit, not on every try. */
+  private autosave(): void {
+    void this.saveNow('auto').then((error) => {
+      if (!error || this.saveFailed) return;
+      this.saveFailed = true;
+      this.say([`Autosave failed: ${error}`, 'Try "Save" in the menu (Esc).']);
+    });
   }
 
   /** The current party. Setting it reports the change (`onParty`). */
@@ -233,11 +322,19 @@ export class OverworldScene implements Scene<Container> {
           n.npc.role ? [{ x: n.mover.tx, y: n.mover.ty, role: n.npc.role.kind }] : [],
         ),
       say: (pages, speaker, done) => this.say(pages, speaker, done),
+      ...(this.options.save
+        ? {
+            save: (done: (error?: string) => void) =>
+              void this.saveNow('manual').then((error) => done(error)),
+          }
+        : {}),
       centerUsed: () => {
         const npc = this.talkingTo;
         if (npc) this.respawn = inFront(npc.mover.destination, npc.mover.facing);
       },
-      quit: () => this.options.onExit(),
+      quit: () => {
+        void this.saveNow('auto').finally(() => this.options.onExit());
+      },
     };
   }
 
@@ -279,6 +376,7 @@ export class OverworldScene implements Scene<Container> {
     };
     if (pages.length) this.say(pages, undefined, choices);
     else choices();
+    this.autosave();
   }
 
   exit(): void {
@@ -331,6 +429,8 @@ export class OverworldScene implements Scene<Container> {
   update(dt: number): void {
     const { input } = this.options;
     this.time += dt;
+    this.playtime += dt;
+    if (this.savedNote > 0 && (this.savedNote -= dt) <= 0) this.lastZone = '-';
     if (this.inBattle) return;
     if (this.stack.size) {
       this.stack.update(dt);
@@ -357,6 +457,7 @@ export class OverworldScene implements Scene<Container> {
       if (e.kind === 'encounter') this.touch(e.roamer);
     }
     this.logSeen();
+    if ((this.autosaveTimer -= dt) <= 0) this.autosave();
 
     const [cx, cy] = this.focus();
     this.camera.follow(cx, cy, this.width, this.height, this.bounds, dt);
@@ -803,6 +904,7 @@ export class OverworldScene implements Scene<Container> {
     if (key === this.lastZone) return;
     this.lastZone = key;
     this.place.text = this.placeLabel();
+    this.help.text = this.savedNote > 0 ? 'Game saved' : HELP;
     this.money.set(this.party.money);
     const w = Math.max(this.place.width + this.money.width + 16, this.help.width) + 16;
     const x = 6;

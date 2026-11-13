@@ -29,7 +29,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C21 | NPCs & encounters | ✅ | [log](logs/C21-npcs-encounters.md) |
 | C22 | Centers, shops, storage, menus | ✅ | [log](logs/C22-centers-shops-storage-menus.md) |
 | C22b | Level-up choices | ✅ | [log](logs/C22b-level-up-choices.md) |
-| C23 | Save system | ⬜ | |
+| C23 | Save system | ✅ | [log](logs/C23-save-system.md) |
 | C24 | SFX & cries | ⬜ | |
 | C25 | Music & ambience | ⬜ | |
 | C26 | Dialogue & quest engine | ⬜ | |

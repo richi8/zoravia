@@ -19,7 +19,11 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 - Engine contains no content; everything loads from **packs** (`core` is itself a pack).
 - Namespaced registries (`core:emberfox`), schema-validated (Zod), event hooks.
 - Pure, deterministic battle engine: `(state, action) → state + events` (server-ready later).
-- Saves in IndexedDB.
+- Saves in IndexedDB. Rules settled in C23 (2026-11-13):
+  - **3 save slots**, each one playthrough. Writing a slot keeps the previous write as a backup, used if the main copy can't be read.
+  - **Autosave** after every battle, when a menu, dialog or service closes with something changed, every 30 s of play while something changed, on quitting, and when the tab is hidden. The pause menu also has **Save**.
+  - A save keeps the party (team, storage, bag, money, Dex, boss log), the player's map, tile and facing, the last center used, and play time. Wild Zorlings and NPC positions are not kept; they respawn.
+  - Saves are **versioned** and old versions are upgraded on load. A save that needs content from a pack that isn't loaded is refused with the missing ids. Numbers a pack update moved (HP above the new max, bag counts above a new cap) are lowered instead.
 
 ## World
 - **Static map**: generated once offline from a fixed seed by a world tool, then hand-edited (towns, routes, landmarks, secrets). Shipped as data; identical for all players.
@@ -132,7 +136,7 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 - **Regional legendary**: campaign finale, T3 level, one clear weakness, never evolves, bound by level cap.
 - **Capture**: defeat the boss → it becomes **Subdued** → standard capture item, guaranteed.
 - **Boss form ≠ captured form**: aura is gone after capture. Titans keep a Titan mark (+5% stats, bigger glowing sprite, signature move).
-- **One per save**, with **rematches** available later (higher level, rewards).
+- **One per save**, with **rematches** available later (higher level, rewards). A boss counts as done once it is beaten or caught; losing or running leaves it waiting (C23).
 - Rules settled in C17 (2026-11-12; starting values, tuned in C31):
   - The extra move is the boss's **signature move**. A boss can know 4 moves in boss form; caught, it keeps the signature move in place of its oldest move.
   - Each boss lists the reactions that break its Armor (usually one). The breaking hit already counts ×1.5; Armor stays broken for the 2 turns after, then re-arms at the end of the second. Other reactions still hit ×0.4.

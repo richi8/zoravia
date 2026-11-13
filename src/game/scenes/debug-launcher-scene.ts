@@ -1,8 +1,9 @@
 /**
  * Debug launcher (C18): starts sample battles with the core pack's test Zorlings until the
- * world (C19+) and the start flow (C33) exist, and opens the overworld (C20–C21, with a party
- * kept between visits) and the region map viewer (C19). Keyboard: W/S choose, E start, A/D or E change
- * a setting. Every battle starts from fresh teams; the last result shows at the bottom.
+ * world (C19+) and the start flow (C33) exist, opens the overworld from a save slot (C23:
+ * continue, new game, delete) and the region map viewer (C19). Keyboard: W/S choose, E start,
+ * Q back, E change a setting. Every battle starts from fresh teams; the last result shows at
+ * the bottom. While the overworld is open, hiding the tab autosaves.
  */
 
 import { Container, Graphics } from 'pixi.js';
@@ -17,6 +18,14 @@ import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
 import { newParty, type Party } from '@game/player';
 import { createZorling, displayName, statsOf, type Zorling } from '@game/progression';
+import {
+  formatPlaytime,
+  SaveQueue,
+  SLOT_COUNT,
+  type GameState,
+  type SaveSlots,
+  type SlotInfo,
+} from '@game/save';
 import { paper, surface } from '@game/style/tokens';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
@@ -36,6 +45,9 @@ export interface LauncherOptions {
   readonly input: InputManager<Action>;
   readonly ui: UiInput;
   readonly theme: UiTheme;
+  readonly saves: SaveSlots;
+  /** False when saves only live in memory (IndexedDB not available). */
+  readonly savesPersist: boolean;
 }
 
 const BAG = { 'core:potion': 3, 'core:super-potion': 2, 'core:zorb': 5 };
@@ -47,7 +59,7 @@ export class DebugLauncherScene implements Scene<Container> {
   private readonly bg = new Graphics();
   private readonly panel = new Graphics();
   private readonly title = uiText('name', 'Zoravia · battle test launcher (C18)', paper.title);
-  private readonly note = uiText('body', '');
+  private readonly note = uiText('body', '', paper.ink, { wordWrap: true, wordWrapWidth: 220 });
   private readonly status = uiText(
     'body',
     'Pick a battle. W/S choose · E start · Q back',
@@ -59,8 +71,10 @@ export class DebugLauncherScene implements Scene<Container> {
   private speed = 0;
   private confirmSwitch = false;
   private seed = 1;
-  /** The overworld's party: kept between visits until saves exist (C23). */
-  private party: Party | undefined;
+  /** The open overworld, saved when the tab is hidden. */
+  private world: OverworldScene | undefined;
+  /** Slot menus on top of the main menu. */
+  private readonly overlays: Menu[] = [];
   private width = 480;
   private height = 270;
 
@@ -72,6 +86,11 @@ export class DebugLauncherScene implements Scene<Container> {
       options.ui,
     );
     this.buildMenu(0);
+    const hide = (): void => {
+      if (document.visibilityState === 'hidden') void this.world?.saveNow('auto');
+    };
+    document.addEventListener('visibilitychange', hide);
+    window.addEventListener('pagehide', () => void this.world?.saveNow('auto'));
   }
 
   enter(): void {
@@ -177,7 +196,7 @@ export class DebugLauncherScene implements Scene<Container> {
     const battles = this.battles;
     const items: MenuItem[] = [
       ...battles.map((b) => ({ label: b.label, hint: b.hint })),
-      { label: 'Overworld: test region', hint: 'C22' },
+      { label: 'Play: test region', hint: 'Saves' },
       { label: 'Map viewer: test region', hint: 'C19' },
       { label: 'Battle speed', hint: `${BATTLE_SPEEDS[this.speed] ?? 1}×` },
       { label: 'Confirm 1 2 3 switch', hint: this.confirmSwitch ? 'On' : 'Off' },
@@ -192,7 +211,7 @@ export class DebugLauncherScene implements Scene<Container> {
       onSelect: (i) => {
         const b = battles[i];
         if (b) void this.start(b);
-        else if (i === battles.length) void this.openWorld('core:test-region');
+        else if (i === battles.length) void this.openSlots();
         else if (i === battles.length + 1) void this.openMap('core:test-region');
         else if (i === battles.length + 2) {
           this.speed = (this.speed + 1) % BATTLE_SPEEDS.length;
@@ -244,26 +263,148 @@ export class DebugLauncherScene implements Scene<Container> {
     });
   }
 
-  private async openWorld(mapId: string): Promise<void> {
-    const { engine, content, input, ui, theme } = this.options;
+  // ------------------------------------------------------------ save slots
+
+  private async openSlots(index = 0): Promise<void> {
+    const { saves, savesPersist } = this.options;
+    const infos = await saves.list();
+    this.closeOverlays();
+    const detail = (i: number): void => {
+      const info = infos[i];
+      const off = savesPersist ? '' : ' (saves are kept in memory only this time)';
+      this.note.text = info ? slotDetail(info) + off : '';
+      this.layout();
+    };
+    const menu = new Menu({
+      theme: this.options.theme,
+      title: 'Save slots',
+      width: 210,
+      items: infos.map((info) => slotItem(info)),
+      onSelect: (i) => {
+        const info = infos[i];
+        if (!info) return;
+        if (info.state === 'empty') void this.newGame(info.slot);
+        else this.slotOptions(info);
+      },
+      onHighlight: (i) => detail(i),
+      onBack: () => this.closeOverlays(),
+    });
+    menu.cursor.set(Math.min(index, SLOT_COUNT - 1));
+    detail(menu.cursor.index);
+    this.pushOverlay(menu);
+  }
+
+  private slotOptions(info: SlotInfo): void {
+    const entries: [string, () => void][] = [];
+    if (info.state === 'ok') entries.push(['Continue', () => void this.continueGame(info.slot)]);
+    entries.push(
+      ['Delete', () => this.confirmDelete(info.slot)],
+      ['Back', () => this.popOverlay()],
+    );
+    this.pushOverlay(
+      new Menu({
+        theme: this.options.theme,
+        title: `Slot ${info.slot}`,
+        width: 120,
+        items: entries.map(([label]) => ({ label })),
+        onSelect: (i) => entries[i]?.[1](),
+        onBack: () => this.popOverlay(),
+      }),
+    );
+  }
+
+  private confirmDelete(slot: number): void {
+    const menu = new Menu({
+      theme: this.options.theme,
+      title: `Delete slot ${slot}?`,
+      width: 120,
+      items: [{ label: 'No, keep it' }, { label: 'Yes, delete' }],
+      onSelect: (i) => {
+        if (i === 0) return this.popOverlay();
+        void this.options.saves.remove(slot).then(() => this.openSlots(slot - 1));
+      },
+      onBack: () => this.popOverlay(),
+    });
+    this.pushOverlay(menu);
+  }
+
+  private async newGame(slot: number): Promise<void> {
+    const { saves, content } = this.options;
+    const map = content.maps.require('core:test-region');
+    const spawn = map.anchors['spawn'];
+    const state: GameState = {
+      party: this.startParty(),
+      place: {
+        map: map.id,
+        x: spawn?.x ?? 0,
+        y: spawn?.y ?? 0,
+        facing: spawn?.facing ?? 'down',
+      },
+      playtime: 0,
+    };
+    await saves.write(slot, state);
+    await this.play(slot, state);
+  }
+
+  private async continueGame(slot: number): Promise<void> {
+    try {
+      const loaded = await this.options.saves.load(slot);
+      if (!loaded) return void this.newGame(slot);
+      await this.play(slot, loaded.state);
+    } catch (e) {
+      this.note.text = `Slot ${slot} cannot be loaded: ${e instanceof Error ? e.message : e}`;
+      this.layout();
+    }
+  }
+
+  private async play(slot: number, state: GameState): Promise<void> {
+    const { engine, content, input, ui, theme, saves } = this.options;
+    this.closeOverlays();
+    const queue = new SaveQueue((s) => saves.write(slot, s));
     const scene = new OverworldScene({
       engine,
       content,
       input,
       ui,
       theme,
-      mapId,
-      party: (this.party ??= this.startParty()),
-      onParty: (p) => {
-        this.party = p;
-        this.reportParty();
-      },
+      mapId: state.place.map,
+      party: state.party,
+      start: state.place,
+      ...(state.respawn ? { respawn: state.respawn } : {}),
+      playtime: state.playtime,
+      save: (s) => queue.save(s),
+      onParty: (p) => this.reportParty(p),
       battleSpeed: BATTLE_SPEEDS[this.speed] ?? 1,
       confirmHotbarSwitch: this.confirmSwitch,
       seed: this.seed++,
-      onExit: () => void engine.scenes.pop({ transition: engine.fade({ duration: 0.25 }) }),
+      onExit: () => {
+        this.world = undefined;
+        void queue
+          .idle()
+          .catch(() => undefined)
+          .then(() => this.openSlots(slot - 1));
+        void engine.scenes.pop({ transition: engine.fade({ duration: 0.25 }) });
+      },
     });
+    this.world = scene;
+    this.reportParty(state.party);
     await engine.scenes.push(scene, { transition: engine.fade({ duration: 0.25 }) });
+  }
+
+  private pushOverlay(menu: Menu): void {
+    this.overlays.push(menu);
+    this.stack.push(menu);
+    this.layout();
+  }
+
+  private popOverlay(): void {
+    const menu = this.overlays.pop();
+    if (menu) this.stack.remove(menu);
+    this.layout();
+  }
+
+  private closeOverlays(): void {
+    while (this.overlays.length) this.popOverlay();
   }
 
   private async openMap(mapId: string): Promise<void> {
@@ -277,10 +418,8 @@ export class DebugLauncherScene implements Scene<Container> {
     await engine.scenes.push(scene, { transition: engine.fade({ duration: 0.25 }) });
   }
 
-  private reportParty(): void {
+  private reportParty(p: Party): void {
     const { content } = this.options;
-    const p = this.party;
-    if (!p) return;
     const team = p.team
       .map((z) => `${displayName(content, z)} Lv ${z.level} ${z.hp}/${statsOf(content, z).hp}`)
       .join(' · ');
@@ -305,12 +444,51 @@ export class DebugLauncherScene implements Scene<Container> {
     const w = 240;
     const x = Math.round((this.width - w) / 2);
     const menuH = this.menu.height;
-    const h = 40 + menuH + 26;
+    const h = 40 + menuH + 12 + Math.max(14, Math.ceil(this.note.height));
     const y = Math.round((this.height - h) / 2);
     drawPaper(this.panel.clear(), x, y, w, h);
     this.title.position.set(x + 10, y + 6);
     this.status.position.set(x + 10, y + 20);
     this.menu.view.position.set(x + 10, y + 36);
     this.note.position.set(x + 10, y + 40 + menuH + 6);
+    this.overlays.forEach((m, i) => m.view.position.set(x + 20 + i * 10, y + 44 + i * 10));
   }
+}
+
+function slotItem(info: SlotInfo): MenuItem {
+  const n = `Slot ${info.slot}`;
+  switch (info.state) {
+    case 'empty':
+      return { label: `${n} · empty`, hint: 'New' };
+    case 'broken':
+      return { label: `${n} · can't read`, hint: '!' };
+    case 'ok':
+      return {
+        label: `${n} · ${info.summary.lead} Lv ${info.summary.level}`,
+        hint: formatPlaytime(info.summary.playtime),
+      };
+  }
+}
+
+function slotDetail(info: SlotInfo): string {
+  switch (info.state) {
+    case 'empty':
+      return `Slot ${info.slot}: empty. E starts a new game here.`;
+    case 'broken':
+      return `Slot ${info.slot}: ${info.problems.join('; ')}`;
+    case 'ok': {
+      const s = info.summary;
+      const backup = info.fromBackup ? ' · from backup' : '';
+      return `${s.place} · ${s.caught} caught · ${shortDate(s.savedAt)}${backup}`;
+    }
+  }
+}
+
+/** "13 Nov, 08:49" in local time. */
+function shortDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '?';
+  const month = d.toLocaleString('en', { month: 'short' });
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${d.getDate()} ${month}, ${time}`;
 }

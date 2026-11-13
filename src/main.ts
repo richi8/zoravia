@@ -5,6 +5,7 @@ import { installFavicon } from '@game/brand/logo';
 import { GAME_TITLE } from '@game/index';
 import { createInput } from '@game/input/actions';
 import { loadGameContent } from '@game/data';
+import { IndexedDbStore, MemoryStore, SaveSlots, type KeyValueStore } from '@game/save';
 import { DebugLauncherScene } from '@game/scenes/debug-launcher-scene';
 import { UiDemoScene } from '@game/scenes/ui-demo-scene';
 import { corePack } from '@packs/core';
@@ -54,14 +55,38 @@ async function main(): Promise<void> {
   // Until the real start flow exists (C33), the app opens the battle test launcher (C18);
   // `?demo` opens the UI framework demo (C06).
   const content = loadGameContent([corePack]);
+  let store: KeyValueStore;
+  let savesPersist = true;
+  try {
+    store = await IndexedDbStore.open();
+  } catch (err) {
+    console.warn('Saves will only last this session:', err);
+    store = new MemoryStore();
+    savesPersist = false;
+  }
+  const saves = new SaveSlots(store, content);
   const first = params.has('demo')
     ? new UiDemoScene(engine, ui, ZORAVIA_SCREEN_THEME)
-    : new DebugLauncherScene({ engine, content, input, ui, theme: ZORAVIA_SCREEN_THEME });
+    : new DebugLauncherScene({
+        engine,
+        content,
+        input,
+        ui,
+        theme: ZORAVIA_SCREEN_THEME,
+        saves,
+        savesPersist,
+      });
   await engine.scenes.replace(first);
   engine.start();
 
   if (import.meta.env.DEV) {
-    (window as unknown as { __zoravia?: unknown }).__zoravia = { engine, input, content, first };
+    (window as unknown as { __zoravia?: unknown }).__zoravia = {
+      engine,
+      input,
+      content,
+      first,
+      saves,
+    };
   }
 }
 

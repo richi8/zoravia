@@ -67,6 +67,8 @@ export interface MenuHost {
   say(pages: readonly string[], speaker?: string, done?: () => void): void;
   /** The player used this center (they wake up here after losing). */
   centerUsed(): void;
+  /** Saves the game (pause menu → Save); `done` gets an error message if it failed. */
+  save?(done: (error?: string) => void): void;
   /** Leave the overworld (pause menu → quit). */
   quit(): void;
 }
@@ -146,6 +148,9 @@ export class OverworldMenus {
       ['Dex', 'B', () => this.openDex()],
       ['Map', 'M', () => this.openMap()],
       ['Quests', 'J', () => this.openQuests()],
+      ...(this.host.save
+        ? [['Save', '', () => this.saveGame()] as [string, string, () => void]]
+        : []),
       ['Quit to launcher', '', () => this.host.quit()],
     ];
     this.menu(
@@ -153,6 +158,12 @@ export class OverworldMenus {
       entries.map(([label, hint]) => ({ label, ...(hint ? { hint } : {}) })),
       (i) => entries[i]?.[2](),
       140,
+    );
+  }
+
+  private saveGame(): void {
+    this.host.save?.((error) =>
+      this.host.say([error ? `Could not save: ${error}` : 'Game saved.']),
     );
   }
 
