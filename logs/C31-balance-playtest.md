@@ -194,3 +194,16 @@ The full tables are in `npm run balance`. Their main points:
 - `npm run balance` takes about 3 s at 10 seeds and 8 s at 20. Run it after any change to species, moves, trainers, bosses, zones or prices.
 - A new story fight goes into `VERDALE_ROUTE` (`tools/balance/verdale.ts`) where a player meets it. Use `badge` on a goal that awards one.
 - Watch the "Won 1st try" and "Wild before" columns. A trainer sweep row at 0% / 0% / 100% means the team has final forms below their evolution level.
+
+## Addendum: debug checkpoints for G2 (same day, user request)
+- The debug launcher has **Checkpoint: Verdale**: pick a fight (Grove Trial Lv ~12, Bogmaw Titan ~19, Mossback Titan ~25, Mira in Galecrest ~30, Vex ~40, Verdion ~40), then a starter, then a save slot (it asks before overwriting one).
+- The save holds the playthrough simulator's party just before that fight (`snapshots` option in `playthrough.ts`, `tools/balance/checkpoints.ts`). The player starts in front of the nearest Zorling center.
+- `tools/balance/checkpoints.test.ts` (7 tests) checks the following for every checkpoint and starter:
+  - The state survives the save format.
+  - The player starts on a walkable tile.
+  - The team is healthy.
+  - The fight is not yet done and its NPC is present.
+  - The main quest is at the matching step.
+- Checked in the browser: Checkpoint → Vex on Crown Rock → Emberkit → slot 1 (overwrite asked). The player stands at Galecrest's center with Infernyx, Thornwing and Bogmaw at Lv 39, 4 Super Potions, 1 Max Potion, the Grove Badge and the quest at "crown-rock". No console errors.
+- The simulator code is a separate 10 kB chunk in the build, loaded only from this menu.
+

@@ -132,4 +132,10 @@ npm run balance -- --seeds 20 --out report.md
 - `playthrough.test.ts` runs the campaign for each team plan in CI and checks the pacing.
 
 A new region adds its own route file and team plans next to `verdale.ts`.
+- `checkpoints.ts` (G2 prep): the debug launcher's **Checkpoint: Verdale** entry. It starts a
+  save just before a story fight (Grove Trial, Bogmaw, Mossback, Mira in Galecrest, Vex,
+  Verdion) with the party the simulator had there for the chosen starter: team, levels, moves,
+  bag, money, badge, beaten trainers and bosses, and the main quest moved on to match. Side
+  quests and hidden items start fresh. The launcher loads it on demand, so the game's main
+  bundle doesn't include the simulator.
 

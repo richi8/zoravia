@@ -75,6 +75,8 @@ export interface PlaythroughSetup {
   readonly money: number;
   readonly seed: number;
   readonly policy?: Partial<PlayerPolicy>;
+  /** Story fights (ids) to keep a party snapshot for, taken just before the first try. */
+  readonly snapshots?: readonly string[];
 }
 
 /** How the simulated player plays (defaults in `DEFAULT_POLICY`). */
@@ -151,6 +153,11 @@ export interface PlaythroughResult {
   readonly party: Party;
   /** Species on the final team. */
   readonly team: readonly string[];
+  /**
+   * The party just before the first try at each fight listed in `snapshots`: ready for it,
+   * potions bought, team healed (debug checkpoints).
+   */
+  readonly snapshots: Readonly<Record<string, Party>>;
 }
 
 /** A Zorling caught for one boss fight, and the team member it stood in for. */
@@ -181,6 +188,7 @@ class Run {
   private sinceGoal = { battles: 0, turns: 0, losses: 0 };
   private prizeMoney = 0;
   private readonly goals: GoalLog[] = [];
+  private readonly snapshots: Record<string, Party> = {};
 
   constructor(
     private readonly content: GameContent,
@@ -225,6 +233,7 @@ class Run {
       minutes: this.goals.reduce((s, g) => s + g.minutes, 0),
       party: this.party,
       team: this.party.team.map((z) => z.species),
+      snapshots: this.snapshots,
     };
   }
 
@@ -554,6 +563,7 @@ class Run {
       bought += this.buyPotions();
       this.restock(ZORB, 2);
       spent += moneyBefore - this.party.money;
+      if (attempts === 1 && this.setup.snapshots?.includes(id)) this.snapshots[id] = this.party;
       const potionsBefore = this.potionCount();
       const plan = this.plan(goal);
       const { state, turns } = this.fight({ ...plan.setup, player: this.party.team });

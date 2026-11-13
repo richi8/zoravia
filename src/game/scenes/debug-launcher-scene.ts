@@ -1,7 +1,8 @@
 /**
  * Debug launcher (C18): starts sample battles with the core pack's test Zorlings until the
  * world (C19+) and the start flow (C33) exist, opens the overworld from a save slot (C23:
- * continue, new game, delete) and the region map viewer (C19). Keyboard: W/S choose, E start,
+ * continue, new game, delete) and the region map viewer (C19). Checkpoints (G2 prep) start
+ * Verdale later in the campaign with the party the C31 playthrough simulator had there. Keyboard: W/S choose, E start,
  * Q back, E change a setting. Every battle starts from fresh teams; the last result shows at
  * the bottom. While the overworld is open, hiding the tab autosaves.
  */
@@ -74,6 +75,8 @@ export class DebugLauncherScene implements Scene<Container> {
   private speed = 0;
   /** Map a new game starts on (C28: Verdale, or the C19 test region with the C21–C27 content). */
   private newGameMap = 'core:verdale';
+  /** A checkpoint's state waiting for a save slot to be picked. */
+  private pending: GameState | undefined;
   private confirmSwitch = false;
   private biome: BiomeId = 'forest';
   private seed = 1;
@@ -205,6 +208,7 @@ export class DebugLauncherScene implements Scene<Container> {
     const items: MenuItem[] = [
       ...battles.map((b) => ({ label: b.label, hint: b.hint })),
       { label: 'Play: Verdale', hint: 'Saves' },
+      { label: 'Checkpoint: Verdale', hint: 'Later' },
       { label: 'Play: test region', hint: 'Saves' },
       { label: 'Map viewer: Verdale', hint: 'C28' },
       { label: 'Map viewer: test region', hint: 'C19' },
@@ -223,18 +227,20 @@ export class DebugLauncherScene implements Scene<Container> {
       onSelect: (i) => {
         const b = battles[i];
         if (b) void this.start(b);
-        else if (i === battles.length || i === battles.length + 1) {
+        else if (i === battles.length || i === battles.length + 2) {
           this.newGameMap = i === battles.length ? 'core:verdale' : 'core:test-region';
+          this.pending = undefined;
           void this.openSlots();
-        } else if (i === battles.length + 2) void this.openMap('core:verdale');
-        else if (i === battles.length + 3) void this.openMap('core:test-region');
-        else if (i === battles.length + 4) {
+        } else if (i === battles.length + 1) void this.openCheckpoints();
+        else if (i === battles.length + 3) void this.openMap('core:verdale');
+        else if (i === battles.length + 4) void this.openMap('core:test-region');
+        else if (i === battles.length + 5) {
           this.speed = (this.speed + 1) % BATTLE_SPEEDS.length;
           this.buildMenu(i);
-        } else if (i === battles.length + 5) {
+        } else if (i === battles.length + 6) {
           this.confirmSwitch = !this.confirmSwitch;
           this.buildMenu(i);
-        } else if (i === battles.length + 6) {
+        } else if (i === battles.length + 7) {
           this.openSound(i);
         } else {
           // Battle music and ambience of another biome (C25).
@@ -322,15 +328,88 @@ export class DebugLauncherScene implements Scene<Container> {
       onSelect: (i) => {
         const info = infos[i];
         if (!info) return;
-        if (info.state === 'empty') void this.newGame(info.slot);
+        if (this.pending) this.placeCheckpoint(info, this.pending);
+        else if (info.state === 'empty') void this.newGame(info.slot);
         else this.slotOptions(info);
       },
       onHighlight: (i) => detail(i),
-      onBack: () => this.closeOverlays(),
+      onBack: () => {
+        this.pending = undefined;
+        this.closeOverlays();
+      },
     });
     menu.cursor.set(Math.min(index, SLOT_COUNT - 1));
     detail(menu.cursor.index);
     this.pushOverlay(menu);
+  }
+
+  // ------------------------------------------------------------ checkpoints
+
+  /** Checkpoint → starter → save slot. The simulator code is loaded only when used. */
+  private async openCheckpoints(): Promise<void> {
+    const { content, theme } = this.options;
+    const mod = await import('../../../tools/balance/checkpoints');
+    this.closeOverlays();
+    const points = mod.VERDALE_CHECKPOINTS;
+    this.note.text =
+      'Starts Verdale just before this fight, with the party the balance simulator had there.';
+    this.layout();
+    this.pushOverlay(
+      new Menu({
+        theme,
+        title: 'Checkpoint',
+        width: 200,
+        items: points.map((p) => ({ label: p.label, hint: p.hint })),
+        onSelect: (ci) => {
+          const point = points[ci];
+          if (!point) return;
+          const starters = mod.CHECKPOINT_STARTERS;
+          this.pushOverlay(
+            new Menu({
+              theme,
+              title: 'Starter',
+              width: 140,
+              items: starters.map((s) => ({ label: content.species.require(s).name })),
+              onSelect: (si) => {
+                const starter = starters[si];
+                if (!starter) return;
+                try {
+                  this.pending = mod.checkpointState(content, point, starter);
+                } catch (e) {
+                  this.note.text = `Checkpoint failed: ${e instanceof Error ? e.message : e}`;
+                  this.layout();
+                  return;
+                }
+                this.newGameMap = 'core:verdale';
+                void this.openSlots();
+              },
+              onBack: () => this.popOverlay(),
+            }),
+          );
+        },
+        onBack: () => this.closeOverlays(),
+      }),
+    );
+  }
+
+  /** Writes a checkpoint into a slot (asking first if it holds a save) and plays it. */
+  private placeCheckpoint(info: SlotInfo, state: GameState): void {
+    const go = async (): Promise<void> => {
+      this.pending = undefined;
+      await this.options.saves.write(info.slot, state);
+      await this.play(info.slot, state);
+    };
+    if (info.state === 'empty') return void go();
+    this.pushOverlay(
+      new Menu({
+        theme: this.options.theme,
+        title: `Overwrite slot ${info.slot}?`,
+        width: 140,
+        items: [{ label: 'No, keep it' }, { label: 'Yes, overwrite' }],
+        onSelect: (i) => (i === 0 ? this.popOverlay() : void go()),
+        onBack: () => this.popOverlay(),
+      }),
+    );
   }
 
   private slotOptions(info: SlotInfo): void {
