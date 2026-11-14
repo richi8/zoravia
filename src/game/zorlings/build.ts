@@ -28,6 +28,9 @@ import {
   type EyeSpec,
   type ZorlingModel,
 } from './parts';
+import { DESERT_PLANS } from './plans-desert';
+import { FROZEN_PLANS } from './plans-frozen';
+import { LEGENDARY_PLANS } from './plans-legendary';
 import { WILD_PLANS } from './plans-wild';
 
 export { R, type EyeSpec, type MouthSpec, type ZorlingModel } from './parts';
@@ -373,7 +376,17 @@ function biped(b: Builder): void {
   addWings(b, parts.wings, -rx * 0.4, cy - ry * 0.5, 13 + 6 * body.limbs, 5);
 }
 
-const PLANS = { quadruped, serpent, avian, blob, biped, ...WILD_PLANS } as const;
+const PLANS = {
+  quadruped,
+  serpent,
+  avian,
+  blob,
+  biped,
+  ...WILD_PLANS,
+  ...DESERT_PLANS,
+  ...FROZEN_PLANS,
+  ...LEGENDARY_PLANS,
+} as const;
 
 /** Builds the sprite model for a genome (pure, deterministic). */
 export function buildZorling(genome: ZorlingGenome): ZorlingModel {

@@ -7,6 +7,7 @@ import { definePack } from '@engine/packs';
 import { bosses } from './bosses';
 import { conditions } from './conditions';
 import { items } from './items';
+import { modelKits } from './kits';
 import { maps } from './maps';
 import { moves } from './moves';
 import { music } from './music';
@@ -39,6 +40,7 @@ export const corePack = definePack({
     reactions,
     moves,
     traits,
+    modelKits,
     species,
     items,
     music,

@@ -78,10 +78,15 @@ export function stageGenome(
   const parts: ZorlingParts = baby
     ? {
         ...p,
-        horns: p.horns === 'none' ? 'none' : 'nubs',
-        back: p.back === 'leaves' ? 'leaves' : 'none',
+        horns: p.horns === 'none' || p.horns === 'tusks' || p.horns === 'lure' ? 'none' : 'nubs',
+        back: p.back === 'leaves' || p.back === 'ruff' ? p.back : 'none',
         wings: flyer ? (p.wings === 'none' ? 'feather' : p.wings) : 'none',
-        markings: p.markings === 'none' || p.markings === 'stripes' ? 'spots' : 'none',
+        markings:
+          p.markings === 'frost'
+            ? 'frost'
+            : p.markings === 'none' || p.markings === 'stripes'
+              ? 'spots'
+              : 'none',
         tail:
           p.tail === 'club' || p.tail === 'bolt' ? 'thin' : p.tail === 'flame' ? 'fluffy' : p.tail,
         ears: p.ears === 'tuft' ? 'round' : p.ears,
@@ -93,7 +98,7 @@ export function stageGenome(
         ...p,
         horns: p.horns === 'antlers' ? 'single' : p.horns === 'curved' ? 'pair' : p.horns,
         back:
-          p.back === 'plates' || p.back === 'sail' || p.back === 'crystals'
+          p.back === 'plates' || p.back === 'sail' || p.back === 'crystals' || p.back === 'carapace'
             ? 'spikes'
             : p.back === 'mane'
               ? 'none'

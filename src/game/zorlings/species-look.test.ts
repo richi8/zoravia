@@ -45,4 +45,12 @@ describe('species looks', () => {
     };
     expect(() => loadGameContent([corePack, bad])).toThrow(/Only the final form/);
   });
+
+  it('legendaries shine in battle and use their region kit (C35a)', () => {
+    const v = battleLook(content, 'core:verdion');
+    expect(v.legendary).toBe(true);
+    expect(v.genome.plan).toBe('leafwyrm');
+    expect(battleLook(content, 'core:voltbat').legendary).toBe(false);
+    expect(content.species.require('core:verdion').look?.kit).toBe('core:verdale');
+  });
 });

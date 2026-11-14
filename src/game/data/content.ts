@@ -13,6 +13,7 @@ import {
 import { bosses, type Boss } from './bosses';
 import { conditions, type Condition } from './conditions';
 import { items, type Item } from './items';
+import { modelKits, type ModelKit } from './kits';
 import { maps, type RegionMap } from './maps';
 import { moves, type Move } from './moves';
 import { music, type Music } from './music';
@@ -31,6 +32,7 @@ export const GAME_REGISTRIES = [
   reactions,
   moves,
   traits,
+  modelKits,
   species,
   items,
   music,
@@ -57,6 +59,8 @@ export class GameContent<H extends HookMap = HookMap> {
   readonly reactions: Registry<Reaction>;
   readonly moves: Registry<Move>;
   readonly traits: Registry<Trait>;
+  /** Which body plans and parts each region's Zorlings use (C35a). */
+  readonly modelKits: Registry<ModelKit>;
   readonly species: Registry<Species>;
   readonly items: Registry<Item>;
   readonly bosses: Registry<Boss>;
@@ -77,6 +81,7 @@ export class GameContent<H extends HookMap = HookMap> {
     this.reactions = loaded.registry(reactions);
     this.moves = loaded.registry(moves);
     this.traits = loaded.registry(traits);
+    this.modelKits = loaded.registry(modelKits);
     this.species = loaded.registry(species);
     this.items = loaded.registry(items);
     this.bosses = loaded.registry(bosses);

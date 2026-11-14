@@ -6,6 +6,7 @@
 
 import { definePack } from '@engine/packs';
 import { bosses } from './bosses';
+import { modelKits } from './kits';
 import { maps } from './maps';
 import { moves } from './moves';
 import { serviceNpcs } from './npcs';
@@ -24,6 +25,7 @@ export const emberwastePack = definePack({
     dependsOn: ['core@^0.1.0'],
   },
   content: {
+    modelKits,
     species,
     moves,
     traits,

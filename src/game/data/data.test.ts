@@ -85,6 +85,28 @@ describe('game data validation', () => {
     ]);
   });
 
+  it('checks looks against their model kit', () => {
+    const issues = (look: Record<string, unknown>): string[] =>
+      modIssues({
+        content: {
+          modelKits: { k: { name: 'Kit', plans: ['crab', 'jelly'] } },
+          species: {
+            a: mon({ evolution: { into: 'mod:b', level: 10 } }),
+            b: mon({ look: { seed: 1, ...look } }),
+          },
+        },
+      });
+    expect(issues({ plan: 'crab', young: ['jelly'], kit: 'mod:k' })).toEqual([]);
+    expect(issues({ plan: 'dragon', young: ['blob'], kit: 'mod:k' })).toEqual([
+      'content.species.b.look.plan: Plan "dragon" is not in kit "mod:k"',
+      'content.species.b.look.young[0]: Plan "blob" is not in kit "mod:k"',
+    ]);
+    expect(issues({ kit: 'mod:k' })).toEqual([
+      'content.species.b.look.plan: A look with a kit needs a plan',
+    ]);
+    expect(issues({ plan: 'crab', kit: 'mod:nope' }).join()).toContain('mod:nope');
+  });
+
   it('rejects two species evolving into one, and evolving legendaries', () => {
     const issues = modIssues({
       content: {

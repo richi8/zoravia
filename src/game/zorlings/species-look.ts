@@ -1,12 +1,12 @@
 /**
  * What a species looks like: its line's final-form genome (from the species `look`), the
- * stage variant for earlier forms, and the battle sprite options for boss form and the
- * Titan mark. Pure and cached per content.
+ * stage variant for earlier forms, and the battle sprite options for boss form, the Titan
+ * mark and the legendary shine. Pure and cached per content.
  */
 
 import type { GameContent } from '@game/data';
 import { styleTypes } from '@game/style/ids';
-import { generateGenome, type ZorlingGenome } from './genome';
+import { generateGenome, type KitParts, type ZorlingGenome } from './genome';
 import { SPRITE_SIZE } from './render';
 import { stageFill, stageGenome, stageGrowth, TITAN_SIZE, titanGenome } from './variants';
 
@@ -22,6 +22,8 @@ export interface BattleLook extends SpeciesLook {
   readonly size: number;
   /** Draw the Titan glow/aura. */
   readonly titan: boolean;
+  /** Draw the legendary shine (glow edge and sparkles). */
+  readonly legendary: boolean;
 }
 
 const cache = new WeakMap<GameContent, Map<string, SpeciesLook>>();
@@ -38,7 +40,9 @@ export function speciesLook(content: GameContent, speciesId: string): SpeciesLoo
   if (!final) throw new Error(`Species "${speciesId}" has no line`);
   const types = styleTypes(final.types);
   const look = final.look;
+  const kit = look?.kit ? content.modelKits.require(look.kit) : undefined;
   const genome = generateGenome(look?.seed ?? final.id, {
+    ...(kit ? { plans: kit.plans, parts: kit.parts as KitParts } : {}),
     ...(look?.plan ? { plan: look.plan } : {}),
     ...(look?.mood ? { mood: look.mood } : {}),
     ...(types[0] ? { types: types[1] ? [types[0], types[1]] : [types[0]] } : {}),
@@ -63,11 +67,11 @@ export function battleLook(
   opts: { readonly boss?: 'titan' | 'legendary'; readonly titanMark?: boolean } = {},
 ): BattleLook {
   const base = speciesLook(content, speciesId);
+  const legendary = opts.boss === 'legendary' || content.species.require(speciesId).legendary;
   if (opts.boss === 'titan' || opts.titanMark) {
-    return { genome: titanGenome(base.genome), fill: base.fill, size: TITAN_SIZE, titan: true };
+    const genome = titanGenome(base.genome);
+    return { genome, fill: base.fill, size: TITAN_SIZE, titan: true, legendary };
   }
-  if (opts.boss === 'legendary' || content.species.require(speciesId).legendary) {
-    return { ...base, size: TITAN_SIZE, titan: false };
-  }
-  return { ...base, size: SPRITE_SIZE.battle, titan: false };
+  if (legendary) return { ...base, size: TITAN_SIZE, titan: false, legendary: true };
+  return { ...base, size: SPRITE_SIZE.battle, titan: false, legendary: false };
 }

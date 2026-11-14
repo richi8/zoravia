@@ -254,8 +254,26 @@ User plays Region 1. Decide what to change before building more.
 ### C34 · Region 2: Volcanic desert (as a pack)
 - **Done when:** added with zero engine changes (or each engine change logged and justified).
 
+### C35a · Regional body models
+- **Goal:** each region's Zorlings look like they come from that region, not like recolors of one shared model set (user feedback during C35, 2026-11-14).
+- **Deliverables:**
+  - New body plans and part kinds in the Zorling generator (`src/game/zorlings/`):
+    - Frozen: seal / pinniped, walrus / mammoth (tusks, heavy shoulders), jellyfish (bell, tendrils), crab (carapace, claws), anglerfish lure. Parts: tusks, fur ruff, frost tips, icicle spines.
+    - Desert: salamander / lizard, scorpion, beetle carapace, cactus body. Parts: stinger tail, carapace, sail.
+  - A per-pack **model kit** in pack data: which plans and parts the region's species draw from. The engine keeps only the drawing code.
+  - Verdale keeps today's set as its kit.
+  - Emberwaste retrofitted to desert models: new seeds and plans for its 24 species.
+  - Rimeholm's looks set from the frozen kit, in C35's species file.
+  - Stage rules (C29) still hold for new plans (babies rounder, no horns or plates).
+- **Done when:**
+  - The user has approved a preview round (all variants shown as images before any code goes into the repo).
+  - Emberwaste and Rimeholm rosters render with their own kits.
+  - Existing generator tests pass, and new plans pass the same render and animation checks.
+- **Depends:** C34
+
 ### C35 · Region 3: Frozen coast islands (as a pack)
 - Same rule as C34.
+- **Depends:** C35a (looks use the frozen model kit)
 
 ### C36 · Cross-region endgame
 - **Deliverables:** danger zones (Lv 45–60), rival finale, meta-quest after X badges, Titan rematches.

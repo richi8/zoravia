@@ -46,6 +46,8 @@ export interface AnimateOptions {
   readonly pad?: number;
   /** Boss aura: a pulsing glow in the type color. */
   readonly titan?: boolean;
+  /** Legendary shine: a soft glow edge and sparkles twinkling around the figure. */
+  readonly legendary?: boolean;
   /** Which clips to render. Default all. */
   readonly clips?: readonly ClipName[];
 }
@@ -91,9 +93,16 @@ function motionOf(plan: BodyPlan, hasWings: boolean): Motion {
     case 'insect':
       return { hover: hasWings, flap: deg(10), mirror: false, beats: 3 };
     case 'fish':
+    case 'jelly':
+    case 'angler':
+    case 'leafwyrm':
       return { hover: true, flap: 0, mirror: false, beats: 1 };
     case 'avian':
     case 'raptor':
+    case 'vulture':
+    case 'owl':
+    case 'magmadrake':
+    case 'frostwyrm':
     case 'dragon':
       return { hover: false, flap: deg(6), mirror: false, beats: 1 };
     default:
@@ -246,6 +255,7 @@ export function animateZorling(
     const frames = specs.map((f, i): ZorlingFrame => {
       let sprite = renderer.frame({ pose: f.pose, eyes: f.eyes });
       if (f.flash) sprite = silhouette(sprite, 0xffffff);
+      if (options.legendary && !f.flash) sprite = shine(sprite, glow, i, genome.seed);
       if (titan) {
         // Pulse: the dithered outer ring breathes in and out with the idle loop.
         const wide = name !== 'idle' || i % 6 < 3;
@@ -267,4 +277,63 @@ export function animateZorling(
     clips[name] = { name, loop: name === 'idle', frames };
   }
   return { width: renderer.width, size, anchor: renderer.anchor, clips };
+}
+
+/** Sparkle spots per legendary sprite. */
+const SPARKLES = 7;
+
+/**
+ * Legendary shine: a dithered glow edge, then four-point sparkles near the silhouette that
+ * twinkle in turn over the idle loop (each lit for a few frames). Deterministic per seed.
+ */
+export function shine(
+  sprite: PixelSprite,
+  color: number,
+  frame: number,
+  seed: number,
+): PixelSprite {
+  const out = aura(sprite, [{ color, dither: true }], frame % 2);
+  const { width: W, height: H, data } = out;
+  // Candidate spots: empty pixels 2–4 px from the figure, spread around it.
+  const solid = (x: number, y: number): boolean =>
+    x >= 0 && y >= 0 && x < W && y < H && (sprite.data[(y * W + x) * 4 + 3] ?? 0) > 0;
+  const spots: [number, number][] = [];
+  let h = (seed ^ 0x9e3779b9) >>> 0;
+  const rand = (): number => {
+    h = (Math.imul(h ^ (h >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) >>> 0;
+    return h / 2 ** 32;
+  };
+  for (let tries = 0; tries < 400 && spots.length < SPARKLES; tries++) {
+    const x = Math.floor(rand() * W);
+    const y = Math.floor(rand() * H * 0.85);
+    if (solid(x, y)) continue;
+    let near = false;
+    for (let d = 2; d <= 4 && !near; d++) {
+      near = solid(x + d, y) || solid(x - d, y) || solid(x, y + d) || solid(x, y - d);
+    }
+    if (near && spots.every(([sx, sy]) => Math.abs(sx - x) + Math.abs(sy - y) > W / 6))
+      spots.push([x, y]);
+  }
+  const put = (x: number, y: number, c: number): void => {
+    if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return;
+    const i = (y * W + x) * 4;
+    data[i] = (c >> 16) & 255;
+    data[i + 1] = (c >> 8) & 255;
+    data[i + 2] = c & 255;
+    data[i + 3] = 255;
+  };
+  spots.forEach(([x, y], k) => {
+    const phase = (frame + k * 5) % 12;
+    if (phase > 3) return;
+    const arm = phase === 1 || phase === 2 ? 2 : 1;
+    put(x, y, 0xffffff);
+    for (let a = 1; a <= arm; a++) {
+      const c = a === arm ? color : 0xffffff;
+      put(x + a, y, c);
+      put(x - a, y, c);
+      put(x, y + a, c);
+      put(x, y - a, c);
+    }
+  });
+  return out;
 }

@@ -9,6 +9,9 @@
 
 import type { SpeciesInput } from '@game/data';
 
+/** Verdale's model kit (`kits.ts`). */
+const VERDALE = 'core:verdale';
+
 const learn = (...pairs: [number, string][]): { level: number; move: string }[] =>
   pairs.map(([level, move]) => ({ level, move: `core:${move}` }));
 
@@ -38,7 +41,13 @@ export const species = {
     baseStats: { hp: 130, attack: 135, defense: 140, speed: 115 },
     trait: 'core:overgrowth',
     learnset: learn([1, 'thorn-volley'], [1, 'rock-slam'], [32, 'timber-crush'], [40, 'quake']),
-    look: { seed: 2903, plan: 'dragon', mood: 'fierce', young: ['quadruped', 'feline'] },
+    look: {
+      seed: 2903,
+      plan: 'dragon',
+      mood: 'fierce',
+      young: ['quadruped', 'feline'],
+      kit: VERDALE,
+    },
   },
   drizzlet: {
     name: 'Drizzlet',
@@ -65,7 +74,7 @@ export const species = {
     baseStats: { hp: 130, attack: 135, defense: 120, speed: 135 },
     trait: 'core:torrent',
     learnset: learn([1, 'tide-crash'], [1, 'hail-dash'], [32, 'riptide'], [40, 'blizzard']),
-    look: { seed: 2913, plan: 'fish', mood: 'fierce', young: ['blob', 'fish'] },
+    look: { seed: 2913, plan: 'fish', mood: 'fierce', young: ['blob', 'fish'], kit: VERDALE },
   },
   emberkit: {
     name: 'Emberkit',
@@ -92,7 +101,7 @@ export const species = {
     baseStats: { hp: 115, attack: 145, defense: 105, speed: 155 },
     trait: 'core:kindling',
     learnset: learn([1, 'flame-pounce'], [1, 'wing-cut'], [38, 'gale-dash']),
-    look: { seed: 7, plan: 'feline', mood: 'fierce', young: ['blob', 'feline'] },
+    look: { seed: 7, plan: 'feline', mood: 'fierce', young: ['blob', 'feline'], kit: VERDALE },
   },
   pipwing: {
     name: 'Pipwing',
@@ -116,7 +125,7 @@ export const species = {
       [28, 'steel-claw'],
       [36, 'cyclone'],
     ),
-    look: { seed: 2923, plan: 'avian', mood: 'fierce', young: ['blob'] },
+    look: { seed: 2923, plan: 'avian', mood: 'fierce', young: ['blob'], kit: VERDALE },
   },
   sproutle: {
     name: 'Sproutle',
@@ -134,7 +143,7 @@ export const species = {
     baseStats: { hp: 110, attack: 125, defense: 110, speed: 145 },
     trait: 'core:lingering',
     learnset: learn([1, 'vine-snap'], [1, 'gust'], [20, 'thorn-volley'], [26, 'gale-dash']),
-    look: { seed: 12, plan: 'dragon', mood: 'cute' },
+    look: { seed: 12, plan: 'dragon', mood: 'cute', kit: VERDALE },
   },
   puddlit: {
     name: 'Puddlit',
@@ -152,7 +161,7 @@ export const species = {
     baseStats: { hp: 140, attack: 110, defense: 135, speed: 105 },
     trait: 'core:waterproof',
     learnset: learn([1, 'splash-shot'], [1, 'drench'], [22, 'tide-crash'], [28, 'rock-slam']),
-    look: { seed: 31, plan: 'quadruped', mood: 'cute', young: ['fish'] },
+    look: { seed: 31, plan: 'quadruped', mood: 'cute', young: ['fish'], kit: VERDALE },
   },
   mudpaddle: {
     name: 'Mudpaddle',
@@ -176,7 +185,7 @@ export const species = {
       [26, 'tide-crash'],
       [34, 'quake'],
     ),
-    look: { seed: 2933, plan: 'serpent', mood: 'fierce', young: ['fish'] },
+    look: { seed: 2933, plan: 'serpent', mood: 'fierce', young: ['fish'], kit: VERDALE },
   },
   voltbat: {
     name: 'Voltbat',
@@ -184,7 +193,7 @@ export const species = {
     types: ['core:electric', 'core:wind'],
     baseStats: { hp: 90, attack: 120, defense: 85, speed: 185 },
     learnset: learn([1, 'static-bite'], [1, 'wing-cut'], [18, 'volt-lash'], [24, 'frost-fang']),
-    look: { seed: 5, plan: 'bat', mood: 'cute' },
+    look: { seed: 5, plan: 'bat', mood: 'cute', kit: VERDALE },
   },
   hearthog: {
     name: 'Hearthog',
@@ -200,7 +209,7 @@ export const species = {
       [22, 'rock-slam'],
       [30, 'blaze-rush'],
     ),
-    look: { seed: 2943, plan: 'blob', mood: 'cute' },
+    look: { seed: 2943, plan: 'blob', mood: 'cute', kit: VERDALE },
   },
   ironshell: {
     name: 'Ironshell',
@@ -208,7 +217,7 @@ export const species = {
     types: ['core:metal'],
     baseStats: { hp: 150, attack: 105, defense: 170, speed: 55 },
     learnset: learn([1, 'iron-bash'], [10, 'mud-toss'], [20, 'steel-claw']),
-    look: { seed: 44, plan: 'golem', mood: 'fierce' },
+    look: { seed: 44, plan: 'golem', mood: 'fierce', kit: VERDALE },
   },
   mossback: {
     name: 'Mossback',
@@ -225,7 +234,7 @@ export const species = {
       [34, 'timber-crush'],
     ),
     catchRate: 0.7,
-    look: { seed: 2963, plan: 'golem', mood: 'fierce' },
+    look: { seed: 2963, plan: 'golem', mood: 'fierce', kit: VERDALE },
   },
   rimewisp: {
     name: 'Rimewisp',
@@ -241,7 +250,7 @@ export const species = {
       [34, 'cyclone'],
       [40, 'blizzard'],
     ),
-    look: { seed: 2953, plan: 'avian', mood: 'cute' },
+    look: { seed: 2953, plan: 'avian', mood: 'cute', kit: VERDALE },
   },
   verdion: {
     name: 'Verdion',
@@ -251,7 +260,7 @@ export const species = {
     trait: 'core:tailwind',
     learnset: learn([1, 'thorn-volley'], [1, 'gale-dash'], [1, 'timber-crush'], [1, 'cyclone']),
     legendary: true,
-    look: { seed: 2973, plan: 'feline', mood: 'dark' },
+    look: { seed: 5002, plan: 'leafwyrm', mood: 'fierce', kit: VERDALE },
   },
   glacivar: {
     name: 'Glacivar',

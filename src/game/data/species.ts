@@ -46,6 +46,8 @@ export const speciesSchema = z.strictObject({
   look: z
     .strictObject({
       seed: z.number().int().min(0).max(0xffffffff),
+      /** The region's model kit (C35a): the plans may only come from it, and its parts apply. */
+      kit: ref.optional(),
       plan: z.enum(BODY_PLANS).optional(),
       mood: z.enum(MOODS).optional(),
       /**
@@ -71,6 +73,7 @@ export const species = defineRegistry('species', speciesSchema, {
     ...(s.trait ? [refTo('traits', s.trait, 'trait')] : []),
     ...s.learnset.map((l, i) => refTo('moves', l.move, 'learnset', i, 'move')),
     ...(s.evolution ? [refTo('species', s.evolution.into, 'evolution', 'into')] : []),
+    ...(s.look?.kit ? [refTo('modelKits', s.look.kit, 'look', 'kit')] : []),
   ],
   check: (s, ctx) => checkSpecies(s, ctx),
 });
@@ -103,6 +106,26 @@ function checkSpecies(s: SpeciesLike, ctx: CheckContext): EntryProblem[] {
 
   if (s.look && s.evolution) {
     out.push({ path: ['look'], message: 'Only the final form of a line has a look' });
+  }
+  const kit = s.look?.kit
+    ? (ctx.get('modelKits', s.look.kit) as { plans: readonly string[] } | undefined)
+    : undefined;
+  if (kit && s.look) {
+    const used: [string, (string | number)[]][] = [
+      ...(s.look.plan ? [[s.look.plan, ['look', 'plan']] as [string, (string | number)[]]] : []),
+      ...(s.look.young ?? []).map((p, i): [string, (string | number)[]] => [
+        p,
+        ['look', 'young', i],
+      ]),
+    ];
+    for (const [plan, path] of used) {
+      if (!kit.plans.includes(plan)) {
+        out.push({ path, message: `Plan "${plan}" is not in kit "${s.look.kit}"` });
+      }
+    }
+    if (!s.look.plan) {
+      out.push({ path: ['look', 'plan'], message: 'A look with a kit needs a plan' });
+    }
   }
   if (s.look?.young?.length) {
     let earlier = 0;

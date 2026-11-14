@@ -197,6 +197,12 @@ Rules settled in C26 (2026-11-13):
   - Overworld (roaming) Zorlings fit 32×32.
   - Battle sprites **96×96** (Titans 128×128; legendaries up to 128×128).
 - Procedural creatures, genome-based (body plan, parts, palette, seed), drawn as pixel-art sprites at those sizes.
+- **Regional model kits** (C35a, user review): each region's Zorlings come from its own body plans, so regions don't look like recolors of each other. A kit is pack data (`modelKits`): the plans a region's species may use, and part weights added to each plan's own (0 removes a kind). A species names its kit in `look.kit`, and its plans must come from it.
+  - **Verdale:** the 13 classic plans.
+  - **Emberwaste (desert):** lizard, scorpion, beetle, cactus, tortoise, sandworm, vulture, fennec. Sails, carapaces, long ears and stripes are common. No leaves, icicles, ruffs or manes.
+  - **Rimeholm (frozen):** seal/walrus, mammoth, jellyfish, crab, anglerfish, stoat/otter, owl, caribou, urchin. Fur ruffs, icicles and frost are common. No leaves, sails, flame tails or socks.
+  - The regions share no plans. New parts: tusks, angler lure, fur ruff, icicles, carapace, stinger and frost markings. Stage rules hold: babies have no tusks, lures, icicles or shells.
+- **Legendaries** (C35a): each region's legendary is a one-of-a-kind dragon of its element, used by nothing else. Verdion is a leafwyrm (a floating eastern dragon), Calderon a magmadrake (lava-cracked and rock-plated), Glacivar a frostwyrm (a wyvern with crystal wings). Their glowing details use the type's glow color. In battle they **shine**: a soft glow edge plus sparkles that twinkle in turn.
 - Rigged parts animated via transforms (tail wag, wing flap, breathing).
 - Battle animations: idle breathing, attack lunge, type VFX, hit flash/knockback/hit-stop/shake, damage numbers, reaction callouts, condition overlays, switch dissolve, capture arc + wobble, faint fade. Actions ≤ ~1.5s; battle speed setting.
 - Overworld: 4-dir walk cycles, grass rustle, water ripple, roaming creatures/NPCs, battle transition.

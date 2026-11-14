@@ -778,7 +778,7 @@ function fish(b: Builder): void {
   if (parts.ears === 'fin') {
     b.add(lens(rx * 0.1, cy - ry * 0.1, -rx * 0.25, cy - ry * 0.4, ry * 0.3), R.secondary, 11.5);
   }
-  if (parts.horns === 'single') {
+  if (parts.horns === 'single' || parts.horns === 'lure') {
     // Angler lure.
     const c = curve(rx * 0.55, cy - ry * 0.9, deg(-80), deg(110), ry * 1.6, 0.9, 0.7, 4);
     b.add(c.prim, R.primary, 9, { thin: true });

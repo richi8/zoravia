@@ -2,7 +2,14 @@ import { spriteHash, type PixelSprite } from '@engine/render/sdf-sprite';
 import { describe, expect, it } from 'vitest';
 import { TYPE_IDS } from '../style/tokens';
 import { toHsl } from '@engine/core/color';
-import { BODY_PLANS, generateGenome, MOODS, PART_KINDS, zorlingGenomeSchema } from './genome';
+import {
+  BODY_PLANS,
+  CLASSIC_PLANS,
+  generateGenome,
+  MOODS,
+  PART_KINDS,
+  zorlingGenomeSchema,
+} from './genome';
 import { renderZorling } from './render';
 
 const opaque = (s: PixelSprite): number => {
@@ -74,8 +81,9 @@ describe('genome', () => {
 
   it('uses every part kind across many seeds (the library is reachable)', () => {
     const seen = new Map<string, Set<string>>();
-    for (let i = 0; i < 600; i++) {
-      const g = generateGenome(i);
+    for (let i = 0; i < 2000; i++) {
+      const plan = BODY_PLANS[i % BODY_PLANS.length];
+      const g = generateGenome(i, plan ? { plan } : {});
       for (const [slot, kind] of Object.entries(g.parts)) {
         if (!seen.has(slot)) seen.set(slot, new Set());
         seen.get(slot)?.add(kind);
@@ -133,6 +141,45 @@ describe('renderZorling', () => {
         colors.add(((s.data[p] ?? 0) << 16) | ((s.data[p + 1] ?? 0) << 8) | (s.data[p + 2] ?? 0));
       }
       expect(colors.size).toBeLessThanOrEqual(40);
+    }
+  });
+});
+
+describe('model kits (C35a)', () => {
+  it('without a kit, plans roll from the classic set and parts are unchanged', () => {
+    for (let i = 0; i < 60; i++) {
+      const g = generateGenome(i);
+      expect(CLASSIC_PLANS).toContain(g.plan);
+      expect(generateGenome(i, { parts: {} })).toEqual(g);
+    }
+  });
+
+  it('rolls the plan from the kit, and adds or removes part kinds', () => {
+    const plans = ['crab', 'jelly'] as const;
+    for (let i = 0; i < 40; i++) {
+      expect(plans).toContain(generateGenome(i, { plans }).plan);
+      const g = generateGenome(i, { plan: 'feline', parts: { back: { icicles: 50, none: 0 } } });
+      expect(g.parts.back).not.toBe('none');
+    }
+    const icy = Array.from({ length: 40 }, (_, i) =>
+      generateGenome(i, { plan: 'feline', parts: { back: { icicles: 50 } } }),
+    );
+    expect(icy.filter((g) => g.parts.back === 'icicles').length).toBeGreaterThan(25);
+  });
+
+  it('leaves slots the plan fixes alone, and falls back when a kit removes everything', () => {
+    for (let i = 0; i < 20; i++) {
+      // A scorpion always has its stinger; an avian always its beak.
+      expect(
+        generateGenome(i, { plan: 'scorpion', parts: { tail: { stinger: 0 } } }).parts.tail,
+      ).toBe('stinger');
+      expect(generateGenome(i, { plan: 'avian', parts: { snout: { short: 9 } } }).parts.snout).toBe(
+        'beak',
+      );
+      const allGone = { pointy: 0, tuft: 0, round: 0 } as const;
+      expect(['pointy', 'tuft', 'round']).toContain(
+        generateGenome(i, { plan: 'feline', parts: { ears: allGone } }).parts.ears,
+      );
     }
   });
 });

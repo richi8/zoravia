@@ -161,4 +161,8 @@ export const FIXED = {
   /** Flame tails: always bright, whatever the body colors. */
   flame: makeRamp(0xff7a2a),
   flameCore: { tones: [0xfff6c2, 0xffe27a, 0xffc94a, 0xffa53d], outline: 0x5a1f0a } satisfies Ramp,
+  /** Frost tips, rime and icicles. */
+  frost: { tones: [0xffffff, 0xe6f6ff, 0xb8dcf2, 0x86b4d8], outline: 0x1d3a5c } satisfies Ramp,
+  /** Tusks. */
+  ivory: { tones: [0xfffbea, 0xf2e6c4, 0xd6c49a, 0xb09a70], outline: 0x3a2a1a } satisfies Ramp,
 } as const;

@@ -24,7 +24,7 @@ import {
   type SurfacePoint,
 } from '@engine/render/sdf-sprite';
 import type { PartKind, ZorlingGenome } from './genome';
-import { FIXED, makeRamp } from './palette';
+import { FIXED, glowColor, makeRamp } from './palette';
 
 /** Ramp indices in every Zorling model. */
 export const R = {
@@ -36,6 +36,14 @@ export const R = {
   dark: 5,
   flame: 6,
   flameCore: 7,
+  /** Frost tips and icicles: a fixed icy white. */
+  frost: 8,
+  /** Tusks and ivory. */
+  ivory: 9,
+  /** Glowing details (legendary veins, pearls): the primary type's glow color. */
+  glow: 10,
+  /** The second type's glow (the first type's for single-type Zorlings). */
+  glow2: 11,
 } as const;
 
 export interface EyeSpec {
@@ -86,6 +94,8 @@ export class Builder {
   readonly shapes: Shape[] = [];
   readonly eyes: EyeSpec[] = [];
   mouth: MouthSpec | null = null;
+  /** Where tusks grow from (under the snout); plans with a snout set it. */
+  tuskRoot: Pt | null = null;
   /** Bone that `add` tags new shapes with. */
   bone: BoneId = 'body';
   readonly bones: Partial<Record<BoneId, Bone>> = { body: { pivot: [0, 0] } };
@@ -127,10 +137,14 @@ export class Builder {
     const stripes = opts.stripes !== false && m === 'stripes';
     const socks = m === 'socks' ? opts.socksBelow : undefined;
     const mask = m === 'mask' ? opts.mask : undefined;
+    const frost = m === 'frost';
+    const frostFeet = frost ? opts.socksBelow : undefined;
     const seed = g.seed;
-    if (!belly && !spots && !stripes && socks === undefined && !mask) return R.primary;
+    if (!belly && !spots && !stripes && socks === undefined && !mask && !frost) return R.primary;
     return (p) => {
       if (socks !== undefined && p.y > socks) return R.secondary;
+      if (frostFeet !== undefined && p.y > frostFeet) return R.frost;
+      if (frost && p.ny < -0.62 && frostSpeck(p.x, p.y)) return R.frost;
       if (mask && Math.hypot((p.x - mask.x + mask.r * 0.7) / 2.3, p.y - mask.y) < mask.r * 1.25)
         return R.secondary;
       if (belly && p.ny > 0.42) return R.belly;
@@ -151,6 +165,10 @@ export class Builder {
     ramps[R.dark] = FIXED.dark;
     ramps[R.flame] = FIXED.flame;
     ramps[R.flameCore] = FIXED.flameCore;
+    ramps[R.frost] = FIXED.frost;
+    ramps[R.ivory] = FIXED.ivory;
+    ramps[R.glow] = makeRamp(glowColor(this.g.types[0]));
+    ramps[R.glow2] = makeRamp(glowColor(this.g.types[1] ?? this.g.types[0]));
     // Eyes and mouth live on the head when the plan has a separate head.
     const face: BoneId = this.bones.head ? 'head' : 'body';
     return {
@@ -173,6 +191,12 @@ export function onSpot(x: number, y: number, seed: number): boolean {
   const oy = (cy + 0.3 + ((h >>> 10) % 40) / 100) * cell;
   const r = 1.5 + ((h >>> 16) % 10) / 10;
   return Math.hypot(x - ox, y - oy) < r;
+}
+
+/** Frost: a rime crust on top surfaces, broken into flecks at its lower edge. */
+export function frostSpeck(x: number, y: number): boolean {
+  const h = hashString(`${Math.floor(x / 2.5)}:${Math.floor(y / 2.5)}`);
+  return h % 5 !== 0;
 }
 
 export function stripe(x: number, y: number): boolean {
@@ -287,8 +311,8 @@ export function addEars(
   r: number,
 ): void {
   if (kind === 'none') return;
-  const tip = b.g.parts.markings === 'tip';
-  const outer = tip ? R.secondary : R.primary;
+  const m = b.g.parts.markings;
+  const outer = m === 'tip' ? R.secondary : m === 'frost' ? R.frost : R.primary;
   const place: readonly [number, number, boolean][] = [
     [hx - r * 0.55, hy - r * 0.62, true],
     [hx - r * 0.05, hy - r * 0.8, false],
@@ -421,6 +445,39 @@ export function addHorns(
       b.add(circle(hx - r * 0.35, hy - r * 0.85, r * 0.16), A, 11, { depth: 1 });
       b.add(circle(hx + r * 0.2, hy - r * 0.9, r * 0.18), A, 13.5);
       break;
+    case 'tusks': {
+      // From under the snout: down, then forward and up. Plans with a snout anchor pass it.
+      const [mx, my] = b.tuskRoot ?? [hx + r * 0.7, hy + r * 0.45];
+      for (const far of [true, false]) {
+        const c = curve(
+          mx - (far ? r * 0.25 : 0),
+          my,
+          deg(95),
+          deg(-150),
+          r * 1.35,
+          r * 0.2,
+          r * 0.05,
+          4,
+        );
+        b.add(c.prim, R.ivory, far ? 11.8 : 13.6, far ? { depth: 1 } : {});
+      }
+      break;
+    }
+    case 'lure': {
+      const c = curve(
+        hx + r * 0.1,
+        hy - r * 0.85,
+        deg(-85),
+        deg(120),
+        r * 1.6,
+        r * 0.1,
+        r * 0.07,
+        4,
+      );
+      b.add(c.prim, R.primary, 11.5, { thin: true });
+      b.add(circle(c.end[0], c.end[1] + r * 0.1, r * 0.28), R.accent, 11.6, { flatTone: 0 });
+      break;
+    }
   }
 }
 
@@ -449,7 +506,8 @@ function addTailShapes(
   len: number,
   r: number,
 ): void {
-  const tip = b.g.parts.markings === 'tip' ? R.secondary : R.primary;
+  const mk = b.g.parts.markings;
+  const tip = mk === 'tip' ? R.secondary : mk === 'frost' ? R.frost : R.primary;
   const z = 6;
   const stripes = b.skin({ belly: false, spots: false });
   switch (kind) {
@@ -463,7 +521,7 @@ function addTailShapes(
       const c = curve(x, y, angle, deg(-30), len * 0.35, r * 0.6, r * 0.7, 1);
       const [ex, ey] = dirPt(c.end[0], c.end[1], c.endAngle, len * 0.4);
       b.add(union([c.prim, ellipse(ex, ey, len * 0.5, r * 1.2, c.endAngle)], 3), stripes, z);
-      if (tip === R.secondary) {
+      if (tip !== R.primary) {
         const [fx, fy] = dirPt(ex, ey, c.endAngle, len * 0.38);
         b.add(ellipse(fx, fy, len * 0.18, r * 0.8, c.endAngle), tip, z + 0.1, { lines: false });
       }
@@ -512,6 +570,39 @@ function addTailShapes(
       const c = curve(x, y, angle, deg(-20), len * 0.75, r * 0.6, r * 0.45, 2);
       b.add(c.prim, stripes, z);
       b.add(circle(c.end[0], c.end[1], r * 1.05), R.accent, z + 0.1);
+      break;
+    }
+    case 'stinger': {
+      // Segments arching up and forward over the back, a hooked barb at the end.
+      const segs: Primitive[] = [];
+      let [px, py] = [x, y];
+      let a = angle;
+      const n = 5;
+      const step = len / n;
+      for (let i = 0; i < n; i++) {
+        const rad = r * (0.8 - i * 0.08);
+        segs.push(circle(px, py, rad));
+        const [nx, ny] = dirPt(px, py, a, step);
+        segs.push(capsule(px, py, nx, ny, rad * 0.7, rad * 0.62));
+        px = nx;
+        py = ny;
+        a += deg(42);
+      }
+      b.add(union(segs, 0.8), stripes, z);
+      const barb = r * 0.95;
+      b.add(
+        polygon(
+          [
+            dirPt(px, py, a + deg(90), barb * 0.5),
+            dirPt(px, py, a + deg(15), barb * 1.7),
+            dirPt(px, py, a - deg(90), barb * 0.45),
+          ],
+          0.4,
+        ),
+        R.accent,
+        z + 0.1,
+      );
+      b.add(circle(px, py, r * 0.5), R.secondary, z + 0.05);
       break;
     }
     case 'bolt': {
@@ -591,10 +682,29 @@ export function addBack(
         b.add(lens(x, y, tx, ty, s * 0.5), R.secondary, z + 3.5, { group: 3 });
         break;
       }
+      case 'icicles': {
+        // Long, thin shards of ice, alternating tall and short.
+        const base = a + Math.PI / 2;
+        const w = s * 0.2;
+        const h = s * (1.25 + (i % 2) * 0.55);
+        b.add(
+          polygon(
+            [dirPt(x, y, base, w), dirPt(x, y, a + deg(i % 2 ? 6 : -6), h), dirPt(x, y, base, -w)],
+            0.2,
+          ),
+          R.frost,
+          z,
+        );
+        break;
+      }
       case 'sail':
+      case 'ruff':
+      case 'carapace':
         break;
     }
   });
+  if (kind === 'ruff') addRuff(b, ridge, size);
+  if (kind === 'carapace') addCarapace(b, ridge, size);
   if (kind === 'sail') {
     const pts: Pt[] = ridge.map(([x, y]) => [x, y + size * 0.2]);
     const top: Pt[] = [...ridge]
@@ -604,6 +714,90 @@ export function addBack(
       );
     b.add(polygon([...pts, ...top], 1), R.secondary, z);
   }
+}
+
+/**
+ * Fur ruff: a shaggy collar of tufts where the neck meets the body (the head bone's pivot,
+ * or the front of the ridge), drawn over the body and under the head.
+ */
+function addRuff(
+  b: Builder,
+  ridge: readonly (readonly [number, number, number])[],
+  size: number,
+): void {
+  // A ruff needs a neck: plans whose head is part of the body blob have none.
+  const neck = b.bones.head?.pivot;
+  if (!neck || ridge.length === 0) return;
+  const [cx, cy] = neck;
+  const s = size * 1.1;
+  const fur = b.g.parts.markings === 'frost' ? R.frost : R.belly;
+  const tufts: Primitive[] = [];
+  for (let i = 0; i < 6; i++) {
+    const a = deg(-150 + i * 42);
+    const [bx, by] = dirPt(cx, cy, a, s * 0.35);
+    const [tx, ty] = dirPt(bx, by, a + deg(55), s * (0.95 - (i % 2) * 0.25));
+    tufts.push(lens(bx, by, tx, ty, s * 0.55));
+  }
+  tufts.push(circle(cx, cy, s * 0.55));
+  b.add(union(tufts, 1.2), fur, 11.5, { group: 4 });
+}
+
+/**
+ * Carapace: a hard shell over the back, following the ridge, split by a seam down the
+ * middle (beetle elytra, crab shells, armored lizards).
+ */
+function addCarapace(
+  b: Builder,
+  ridge: readonly (readonly [number, number, number])[],
+  size: number,
+): void {
+  if (ridge.length < 2) return;
+  const lift = size * 0.55;
+  const outer: Pt[] = ridge.map(([x, y, a]) => dirPt(x, y, a, lift));
+  const inner: Pt[] = [...ridge].reverse().map(([x, y, a]) => dirPt(x, y, a, -size * 0.45));
+  b.add(polygon([...outer, ...inner], size * 0.35), R.secondary, 10.8);
+  // Plate seams across the shell.
+  for (let i = 1; i < ridge.length - 1; i++) {
+    const [x, y, a] = ridge[i] ?? [0, 0, 0];
+    const p0 = dirPt(x, y, a, lift * 0.95);
+    const p1 = dirPt(x, y, a, -size * 0.3);
+    b.add(capsule(p0[0], p0[1], p1[0], p1[1], 0.5, 0.5), R.secondary, 10.85, {
+      lines: false,
+      flatTone: 3,
+      thin: true,
+    });
+  }
+}
+
+/** A jointed leg: hip → knee → foot, as one thin dark-tipped limb. */
+export function jointed(hip: Pt, knee: Pt, foot: Pt, r0: number, r1: number): Primitive {
+  return union([
+    capsule(hip[0], hip[1], knee[0], knee[1], r0, r0 * 0.85),
+    capsule(knee[0], knee[1], foot[0], foot[1], r0 * 0.85, r1),
+  ]);
+}
+
+/**
+ * A pincer (chela): a palm with a fixed lower finger and a hooked upper one, opening along
+ * `angle`. Drawn as one volume.
+ */
+export function pincer(
+  b: Builder,
+  x: number,
+  y: number,
+  size: number,
+  angle: number,
+  z: number,
+  o: { depth?: number },
+): void {
+  const palm = ellipse(x, y, size * 1.05, size * 0.78, angle);
+  const [ux, uy] = dirPt(x, y, angle - deg(35), size * 0.55);
+  const upper = curve(ux, uy, angle - deg(20), deg(55), size * 1.7, size * 0.5, size * 0.12, 4);
+  const [lx, ly] = dirPt(x, y, angle + deg(40), size * 0.5);
+  const lower = curve(lx, ly, angle + deg(18), deg(-35), size * 1.35, size * 0.42, size * 0.12, 3);
+  b.add(union([palm, upper.prim, lower.prim], 1), R.primary, z, o);
+  b.add(circle(upper.end[0], upper.end[1], size * 0.2), R.accent, z + 0.05, { ...o, lines: false });
+  b.add(circle(lower.end[0], lower.end[1], size * 0.2), R.accent, z + 0.05, { ...o, lines: false });
 }
 
 /** A pair of wings at the shoulder; `size` ≈ wing length. Near wing in front. */

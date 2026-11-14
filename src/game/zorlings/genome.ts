@@ -28,8 +28,34 @@ export const BODY_PLANS = [
   'blob',
   'biped',
   'golem',
+  // Regional plans (C35a): desert…
+  'lizard',
+  'scorpion',
+  'beetle',
+  'cactus',
+  'tortoise',
+  'sandworm',
+  'vulture',
+  'fennec',
+  // …and frozen coast.
+  'pinniped',
+  'tusker',
+  'jelly',
+  'crab',
+  'angler',
+  'mustelid',
+  'owl',
+  'caribou',
+  'urchin',
+  // Legendary dragons, one per region.
+  'leafwyrm',
+  'magmadrake',
+  'frostwyrm',
 ] as const;
 export type BodyPlan = (typeof BODY_PLANS)[number];
+
+/** The original plans (C08): what a genome without a kit rolls its plan from. */
+export const CLASSIC_PLANS = BODY_PLANS.slice(0, 13) as readonly BodyPlan[];
 
 /** Overall attitude: drives eyes, mouths, palette darkness and proportions. */
 export const MOODS = ['cute', 'fierce', 'dark'] as const;
@@ -37,11 +63,22 @@ export type Mood = (typeof MOODS)[number];
 /** Part slots and the kinds each slot can hold (the part library). */
 export const PART_KINDS = {
   ears: ['none', 'pointy', 'round', 'long', 'fin', 'tuft'],
-  horns: ['none', 'single', 'pair', 'curved', 'antlers', 'nubs'],
-  tail: ['none', 'thin', 'fluffy', 'flame', 'fin', 'leaf', 'club', 'bolt'],
-  back: ['none', 'spikes', 'plates', 'sail', 'leaves', 'crystals', 'mane'],
+  horns: ['none', 'single', 'pair', 'curved', 'antlers', 'nubs', 'tusks', 'lure'],
+  tail: ['none', 'thin', 'fluffy', 'flame', 'fin', 'leaf', 'club', 'bolt', 'stinger'],
+  back: [
+    'none',
+    'spikes',
+    'plates',
+    'sail',
+    'leaves',
+    'crystals',
+    'mane',
+    'ruff',
+    'icicles',
+    'carapace',
+  ],
   wings: ['none', 'feather', 'membrane'],
-  markings: ['none', 'spots', 'stripes', 'mask', 'socks', 'tip'],
+  markings: ['none', 'spots', 'stripes', 'mask', 'socks', 'tip', 'frost'],
   eyes: ['round', 'big', 'fierce', 'sleepy', 'slit', 'glow'],
   mouth: ['none', 'smile', 'fang', 'fangs', 'open'],
   snout: ['short', 'long', 'beak'],
@@ -112,9 +149,32 @@ export interface GenerateOptions {
   readonly dualChance?: number;
   /** Force both types (overrides `type` and `dualChance`), e.g. from species data. */
   readonly types?: ZorlingGenome['types'];
+  /** Plans to roll from when `plan` is not forced (a model kit's plans). Default: classic. */
+  readonly plans?: readonly BodyPlan[];
+  /**
+   * Part weights added to the plan's own (a model kit's parts); 0 removes a kind. Slots where
+   * the plan allows only one kind (beaks, stingers) ignore it. Type and mood biases apply on top.
+   */
+  readonly parts?: KitParts;
 }
 
+/** Part weights per slot, as a model kit gives them. */
+export type KitParts = { readonly [S in PartSlot]?: Weights<S> };
+
 type Weights<S extends PartSlot> = Partial<Record<PartKind<S>, number>>;
+
+/** Legendary dragons draw their own horns, wings and tails; only the face varies. */
+const LEGEND: { readonly [S in PartSlot]: Weights<S> } = {
+  ears: { none: 1 },
+  horns: { none: 1 },
+  tail: { none: 1 },
+  back: { none: 1 },
+  wings: { none: 1 },
+  markings: { none: 3, stripes: 1 },
+  eyes: { slit: 3, fierce: 2, glow: 2 },
+  mouth: { fangs: 3, fang: 1 },
+  snout: { long: 1 },
+};
 
 /** Base part weights per body plan (a missing kind has weight 0 for that plan). */
 const PLAN_WEIGHTS: { readonly [P in BodyPlan]: { readonly [S in PartSlot]: Weights<S> } } = {
@@ -261,6 +321,196 @@ const PLAN_WEIGHTS: { readonly [P in BodyPlan]: { readonly [S in PartSlot]: Weig
     mouth: { none: 3, fangs: 1 },
     snout: { short: 1 },
   },
+  lizard: {
+    ears: { none: 4, fin: 1.5 },
+    horns: { none: 4, nubs: 1, single: 0.5, pair: 1, curved: 0.5 },
+    tail: { thin: 4, flame: 1, club: 1, leaf: 0.5, bolt: 0.5 },
+    back: { none: 2, spikes: 3, sail: 2, plates: 1, crystals: 0.5, carapace: 0.5 },
+    wings: { none: 1 },
+    markings: { none: 2, spots: 2, stripes: 2, tip: 0.5 },
+    eyes: { round: 2, big: 1, fierce: 2, slit: 2, glow: 0.5 },
+    mouth: { none: 2, smile: 1, fang: 1.5, fangs: 1 },
+    snout: { short: 2, long: 2 },
+  },
+  scorpion: {
+    ears: { none: 1 },
+    horns: { none: 3, nubs: 1, single: 0.5 },
+    tail: { stinger: 1 },
+    back: { none: 3, spikes: 1, crystals: 0.5, plates: 1 },
+    wings: { none: 1 },
+    markings: { none: 3, stripes: 1.5, spots: 0.5 },
+    eyes: { round: 1, glow: 2, fierce: 2, big: 0.5 },
+    mouth: { none: 1 },
+    snout: { short: 1 },
+  },
+  beetle: {
+    ears: { none: 1 },
+    horns: { none: 2, single: 3, pair: 2, curved: 0.5, nubs: 0.5 },
+    tail: { none: 1 },
+    back: { carapace: 1 },
+    wings: { none: 4, membrane: 1, feather: 0.5 },
+    markings: { none: 2, spots: 2, stripes: 1.5 },
+    eyes: { round: 1.5, glow: 1.5, big: 1, fierce: 1 },
+    mouth: { none: 1 },
+    snout: { short: 1 },
+  },
+  cactus: {
+    ears: { none: 2, tuft: 3, round: 1 },
+    horns: { none: 4, nubs: 1 },
+    tail: { none: 1 },
+    back: { none: 2, spikes: 2 },
+    wings: { none: 1 },
+    markings: { none: 2, stripes: 3, spots: 1 },
+    eyes: { round: 2, big: 2, sleepy: 1.5, fierce: 1, glow: 0.3 },
+    mouth: { smile: 3, none: 1, open: 1.5, fang: 0.5 },
+    snout: { short: 1 },
+  },
+  pinniped: {
+    ears: { none: 4, round: 1 },
+    horns: { none: 4, tusks: 1.5, nubs: 0.5 },
+    tail: { fin: 1 },
+    back: { none: 4, ruff: 1, spikes: 0.5, icicles: 0.5 },
+    wings: { none: 1 },
+    markings: { none: 2, spots: 3, mask: 1, frost: 1 },
+    eyes: { round: 2, big: 3, sleepy: 1, fierce: 1, glow: 0.3 },
+    mouth: { none: 1, smile: 2, fang: 1, open: 1, fangs: 0.5 },
+    snout: { short: 2, long: 1 },
+  },
+  tusker: {
+    ears: { round: 3, long: 1, none: 1 },
+    horns: { tusks: 6, nubs: 0.5 },
+    tail: { thin: 2, fluffy: 2, club: 0.5 },
+    back: { ruff: 3, mane: 2, none: 1, icicles: 1, plates: 0.5 },
+    wings: { none: 1 },
+    markings: { none: 3, frost: 1.5, socks: 1, stripes: 0.5 },
+    eyes: { round: 2, sleepy: 1.5, fierce: 2, big: 1, glow: 0.3 },
+    mouth: { none: 3, smile: 1 },
+    snout: { long: 4, short: 1 },
+  },
+  jelly: {
+    ears: { none: 1 },
+    horns: { none: 3, nubs: 0.5, lure: 0.5 },
+    tail: { none: 1 },
+    back: { none: 3, spikes: 0.5, icicles: 0.5 },
+    wings: { none: 1 },
+    markings: { none: 2, spots: 3, stripes: 1 },
+    eyes: { round: 2, big: 2, sleepy: 1.5, glow: 1.5 },
+    mouth: { smile: 2, none: 1, open: 1 },
+    snout: { short: 1 },
+  },
+  crab: {
+    ears: { none: 1 },
+    horns: { none: 4, nubs: 1, single: 0.5 },
+    tail: { none: 1 },
+    back: { none: 3, spikes: 2, icicles: 1, crystals: 0.5, carapace: 0.5 },
+    wings: { none: 1 },
+    markings: { none: 3, spots: 2, frost: 1 },
+    eyes: { round: 2, big: 1, fierce: 2, glow: 1 },
+    mouth: { none: 2, smile: 1 },
+    snout: { short: 1 },
+  },
+  tortoise: {
+    ears: { none: 1 },
+    horns: { none: 4, nubs: 1, pair: 1, curved: 1, single: 0.5 },
+    tail: { none: 2, thin: 1, club: 0.5 },
+    back: { none: 4, spikes: 2, crystals: 1, plates: 1 },
+    wings: { none: 1 },
+    markings: { none: 3, spots: 1, tip: 1 },
+    eyes: { round: 2, sleepy: 2, big: 1, fierce: 1.5, glow: 0.5 },
+    mouth: { none: 2, smile: 2, open: 0.5 },
+    snout: { short: 1 },
+  },
+  sandworm: {
+    ears: { none: 1 },
+    horns: { none: 4, nubs: 1, pair: 0.5 },
+    tail: { none: 3, flame: 1 },
+    back: { none: 2, spikes: 2, plates: 2, crystals: 1, sail: 0.5 },
+    wings: { none: 1 },
+    markings: { none: 3, spots: 1 },
+    eyes: { round: 1, glow: 2, fierce: 1, slit: 1 },
+    mouth: { none: 1 },
+    snout: { short: 1 },
+  },
+  vulture: {
+    ears: { none: 1 },
+    horns: { none: 6, nubs: 0.5 },
+    tail: { fluffy: 1 },
+    back: { none: 4, spikes: 0.5 },
+    wings: { feather: 1 },
+    markings: { none: 3, tip: 1 },
+    eyes: { fierce: 3, round: 1, slit: 1, glow: 0.5 },
+    mouth: { none: 1 },
+    snout: { beak: 1 },
+  },
+  fennec: {
+    ears: { long: 1 },
+    horns: { none: 8, nubs: 0.5 },
+    tail: { fluffy: 1 },
+    back: { none: 4, spikes: 0.5, sail: 0.3 },
+    wings: { none: 1 },
+    markings: { none: 2, tip: 2, socks: 1, mask: 1 },
+    eyes: { big: 3, round: 2, slit: 1, fierce: 1 },
+    mouth: { none: 2, smile: 2, fang: 1 },
+    snout: { short: 1 },
+  },
+  angler: {
+    ears: { none: 1 },
+    horns: { lure: 1 },
+    tail: { fin: 1 },
+    back: { none: 3, spikes: 1, icicles: 1 },
+    wings: { none: 1 },
+    markings: { none: 2, spots: 2, stripes: 1 },
+    eyes: { round: 1, glow: 3, big: 1 },
+    mouth: { none: 1 },
+    snout: { short: 1 },
+  },
+  mustelid: {
+    ears: { round: 4, none: 0.5 },
+    horns: { none: 8, nubs: 0.5 },
+    tail: { thin: 2, fluffy: 3, bolt: 0.5, fin: 0.5 },
+    back: { none: 4, ruff: 1.5, spikes: 0.5, icicles: 0.5 },
+    wings: { none: 1 },
+    markings: { none: 2, mask: 1.5, tip: 2, frost: 1, socks: 1, stripes: 0.5 },
+    eyes: { round: 2, big: 2, fierce: 2, slit: 0.5 },
+    mouth: { none: 2, smile: 1, fang: 1, fangs: 0.5 },
+    snout: { short: 1 },
+  },
+  owl: {
+    ears: { tuft: 3, none: 1 },
+    horns: { none: 6, nubs: 0.5 },
+    tail: { fluffy: 1 },
+    back: { none: 4, ruff: 0.5, icicles: 0.5 },
+    wings: { feather: 1 },
+    markings: { none: 2, stripes: 2, spots: 1, frost: 1 },
+    eyes: { big: 3, round: 2, fierce: 1.5, glow: 0.5 },
+    mouth: { none: 1 },
+    snout: { beak: 1 },
+  },
+  caribou: {
+    ears: { pointy: 3, none: 0.5 },
+    horns: { antlers: 6, pair: 0.5 },
+    tail: { fluffy: 2, none: 1 },
+    back: { none: 3, ruff: 1, mane: 1, icicles: 0.5 },
+    wings: { none: 1 },
+    markings: { none: 2, socks: 1.5, frost: 1.5, spots: 1 },
+    eyes: { round: 2, big: 1.5, fierce: 1.5, glow: 0.5 },
+    mouth: { none: 3, smile: 1 },
+    snout: { long: 1 },
+  },
+  urchin: {
+    ears: { none: 1 },
+    horns: { none: 4, nubs: 1 },
+    tail: { none: 1 },
+    back: { spikes: 2, icicles: 1 },
+    wings: { none: 1 },
+    markings: { none: 2, spots: 2, stripes: 1 },
+    eyes: { round: 2, big: 2, fierce: 1, glow: 1, sleepy: 1 },
+    mouth: { smile: 2, none: 1, open: 1, fang: 0.5 },
+    snout: { short: 1 },
+  },
+  leafwyrm: LEGEND,
+  magmadrake: LEGEND,
+  frostwyrm: LEGEND,
 };
 
 /** How likely each mood is per body plan. */
@@ -278,6 +528,26 @@ const MOOD_WEIGHTS: { readonly [P in BodyPlan]: Readonly<Record<Mood, number>> }
   blob: { cute: 5, fierce: 0.7, dark: 1 },
   biped: { cute: 4, fierce: 1.5, dark: 1 },
   golem: { cute: 0.5, fierce: 2, dark: 3 },
+  lizard: { cute: 1.5, fierce: 3, dark: 1 },
+  scorpion: { cute: 0.5, fierce: 3, dark: 2 },
+  beetle: { cute: 1, fierce: 2.5, dark: 1.5 },
+  cactus: { cute: 4, fierce: 1, dark: 0.5 },
+  pinniped: { cute: 4, fierce: 1.5, dark: 0.7 },
+  tusker: { cute: 1.5, fierce: 3, dark: 1 },
+  jelly: { cute: 3, fierce: 0.7, dark: 2 },
+  crab: { cute: 1.5, fierce: 3, dark: 1 },
+  tortoise: { cute: 3, fierce: 2, dark: 0.7 },
+  sandworm: { cute: 0.5, fierce: 3, dark: 2 },
+  vulture: { cute: 0.5, fierce: 3, dark: 2 },
+  fennec: { cute: 4, fierce: 1, dark: 0.7 },
+  angler: { cute: 0.5, fierce: 1.5, dark: 3 },
+  mustelid: { cute: 3, fierce: 2.5, dark: 1 },
+  owl: { cute: 3, fierce: 2, dark: 1 },
+  caribou: { cute: 2, fierce: 2.5, dark: 0.7 },
+  urchin: { cute: 2.5, fierce: 2, dark: 1 },
+  leafwyrm: { cute: 0.5, fierce: 3, dark: 1 },
+  magmadrake: { cute: 0.3, fierce: 3, dark: 2 },
+  frostwyrm: { cute: 0.3, fierce: 3, dark: 1.5 },
 };
 
 /** Mood multiplies part weights (only kinds the plan allows). */
@@ -305,11 +575,29 @@ const TYPE_BIAS: { readonly [T in TypeId]: { readonly [S in PartSlot]?: Weights<
   fire: { tail: { flame: 6 }, back: { spikes: 2, mane: 2 }, ears: { pointy: 2 } },
   water: { tail: { fin: 5 }, back: { sail: 3 }, ears: { fin: 4 }, markings: { spots: 2 } },
   nature: { tail: { leaf: 6 }, back: { leaves: 6 }, horns: { antlers: 3 } },
-  electric: { tail: { bolt: 6 }, ears: { pointy: 2, long: 2 }, markings: { stripes: 3 } },
-  ice: { back: { crystals: 6, spikes: 2 }, horns: { single: 2 }, tail: { fluffy: 2 } },
-  earth: { back: { plates: 4 }, horns: { pair: 2, curved: 2, nubs: 2 }, tail: { club: 4 } },
+  electric: {
+    tail: { bolt: 6 },
+    horns: { lure: 3 },
+    ears: { pointy: 2, long: 2 },
+    markings: { stripes: 3 },
+  },
+  ice: {
+    back: { crystals: 6, spikes: 2, icicles: 4, ruff: 2 },
+    horns: { single: 2 },
+    tail: { fluffy: 2 },
+    markings: { frost: 3 },
+  },
+  earth: {
+    back: { plates: 4, carapace: 2 },
+    horns: { pair: 2, curved: 2, nubs: 2 },
+    tail: { club: 4 },
+  },
   wind: { wings: { feather: 4 }, ears: { tuft: 3, long: 2 }, tail: { fluffy: 2, thin: 2 } },
-  metal: { back: { plates: 4, spikes: 2 }, horns: { single: 2, pair: 2 }, tail: { club: 3 } },
+  metal: {
+    back: { plates: 4, spikes: 2, carapace: 3 },
+    horns: { single: 2, pair: 2 },
+    tail: { club: 3 },
+  },
 };
 
 function pickPart<S extends PartSlot>(
@@ -318,11 +606,21 @@ function pickPart<S extends PartSlot>(
   plan: BodyPlan,
   types: readonly TypeId[],
   mood: Mood,
+  kit?: KitParts,
 ): PartKind<S> {
   const base = PLAN_WEIGHTS[plan][slot] as Weights<S>;
   const kinds = PART_KINDS[slot] as readonly PartKind<S>[];
+  // Slots where the plan allows a single kind are fixed by its anatomy (beaks, stingers).
+  const fixed = kinds.filter((k) => (base[k] ?? 0) > 0).length < 2;
+  const over = fixed ? undefined : (kit?.[slot] as Weights<S> | undefined);
+  const withKit = (k: PartKind<S>): number => {
+    const add = over?.[k];
+    return add === 0 ? 0 : (base[k] ?? 0) + (add ?? 0);
+  };
+  // A kit that removes every kind the plan allows leaves the plan's own weights.
+  const weightOf = kinds.some((k) => withKit(k) > 0) ? withKit : (k: PartKind<S>) => base[k] ?? 0;
   return rng.weighted(kinds, (k) => {
-    const w = base[k] ?? 0;
+    const w = weightOf(k);
     if (w === 0) return 0;
     let bias = 1;
     for (const [i, t] of types.entries()) {
@@ -345,7 +643,7 @@ export function generateGenome(seed: Seed, options: GenerateOptions = {}): Zorli
   const root = new Rng(s);
   const r = (label: string): Rng => root.split(label);
 
-  const plan = options.plan ?? r('plan').pick(BODY_PLANS);
+  const plan = options.plan ?? r('plan').pick(options.plans ?? CLASSIC_PLANS);
   const typeRng = r('types');
   const primary = options.type ?? typeRng.pick(TYPE_IDS);
   const dual = typeRng.chance(options.dualChance ?? 0.3);
@@ -365,16 +663,17 @@ export function generateGenome(seed: Seed, options: GenerateOptions = {}): Zorli
     bulk: round2(b.next()),
   };
 
+  const kit = options.parts;
   const parts: ZorlingParts = {
-    ears: pickPart(r('ears'), 'ears', plan, types, mood),
-    horns: pickPart(r('horns'), 'horns', plan, types, mood),
-    tail: pickPart(r('tail'), 'tail', plan, types, mood),
-    back: pickPart(r('back'), 'back', plan, types, mood),
-    wings: pickPart(r('wings'), 'wings', plan, types, mood),
-    markings: pickPart(r('markings'), 'markings', plan, types, mood),
-    eyes: pickPart(r('eyes'), 'eyes', plan, types, mood),
-    mouth: pickPart(r('mouth'), 'mouth', plan, types, mood),
-    snout: pickPart(r('snout'), 'snout', plan, types, mood),
+    ears: pickPart(r('ears'), 'ears', plan, types, mood, kit),
+    horns: pickPart(r('horns'), 'horns', plan, types, mood, kit),
+    tail: pickPart(r('tail'), 'tail', plan, types, mood, kit),
+    back: pickPart(r('back'), 'back', plan, types, mood, kit),
+    wings: pickPart(r('wings'), 'wings', plan, types, mood, kit),
+    markings: pickPart(r('markings'), 'markings', plan, types, mood, kit),
+    eyes: pickPart(r('eyes'), 'eyes', plan, types, mood, kit),
+    mouth: pickPart(r('mouth'), 'mouth', plan, types, mood, kit),
+    snout: pickPart(r('snout'), 'snout', plan, types, mood, kit),
   };
 
   return {

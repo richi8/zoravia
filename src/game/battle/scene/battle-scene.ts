@@ -918,6 +918,7 @@ export class BattleScene implements Scene<Container> {
         size: look.size,
         fill: look.fill,
         titan: look.titan,
+        legendary: look.legendary,
       });
       fa = { actor, look };
       this.actors[side].set(slot, fa);

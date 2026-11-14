@@ -62,7 +62,8 @@ describe('animateZorling', () => {
         a.clips.idle?.frames.map((f) => spriteHash(f.sprite)),
       );
     }
-  });
+    // Every plan × every clip: slow when the whole suite runs in parallel.
+  }, 20_000);
 
   it('idle loops and moves; one frame blinks; others play once', () => {
     const a = animateZorling(generateGenome('idle', { plan: 'biped' }));
@@ -174,5 +175,39 @@ describe('evolution stages', () => {
       renderZorling(stageGenome(g, 1, 3), { fill: stageFill(stageGrowth(1, 3)) }).data,
     );
     expect(small).toBeLessThan(big * 0.6);
+  });
+});
+
+describe('regional plans (C35a)', () => {
+  it('babies of new plans follow the stage rules: no tusks, lures, icicles or shells', () => {
+    for (const plan of BODY_PLANS) {
+      for (let i = 0; i < 6; i++) {
+        const g = generateGenome(`stage:${plan}:${i}`, { plan });
+        const baby = stageGenome(g, 1, 3);
+        expect(['none', 'nubs']).toContain(baby.parts.horns);
+        expect(['icicles', 'carapace', 'plates', 'crystals']).not.toContain(baby.parts.back);
+        expect(baby.parts.eyes).toBe('big');
+      }
+    }
+  });
+
+  it('legendary shine adds a glow edge and twinkling sparkles', () => {
+    const g = generateGenome('shine', { plan: 'magmadrake', types: ['fire', 'earth'] });
+    const plain = animateZorling(g, { size: 64, clips: ['idle'] });
+    const shiny = animateZorling(g, { size: 64, clips: ['idle'], legendary: true });
+    const p = plain.clips.idle?.frames ?? [];
+    const s = shiny.clips.idle?.frames ?? [];
+    for (let i = 0; i < p.length; i++) {
+      expect(opaque(s[i]?.sprite.data ?? new Uint8ClampedArray())).toBeGreaterThan(
+        opaque(p[i]?.sprite.data ?? new Uint8ClampedArray()),
+      );
+    }
+    // Sparkles twinkle: the shiny frames differ from each other by more than the body motion.
+    const counts = s.map((f) => opaque(f.sprite.data));
+    expect(new Set(counts).size).toBeGreaterThan(2);
+    const again = animateZorling(g, { size: 64, clips: ['idle'], legendary: true });
+    expect(again.clips.idle?.frames.map((f) => spriteHash(f.sprite))).toEqual(
+      s.map((f) => spriteHash(f.sprite)),
+    );
   });
 });

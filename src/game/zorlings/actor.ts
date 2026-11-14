@@ -17,6 +17,8 @@ export interface ActorOptions {
   readonly size?: number;
   readonly fill?: number;
   readonly titan?: boolean;
+  /** Legendary shine: glow edge and twinkling sparkles (C35a). */
+  readonly legendary?: boolean;
   readonly facing?: 'left' | 'right';
   /** Animation speed multiplier (battle speed setting). Default 1. */
   readonly speed?: number;
@@ -128,6 +130,7 @@ export class ZorlingActor extends Container {
       ...(this.options.size !== undefined ? { size: this.options.size } : {}),
       ...(this.options.fill !== undefined ? { fill: this.options.fill } : {}),
       ...(this.options.titan !== undefined ? { titan: this.options.titan } : {}),
+      ...(this.options.legendary ? { legendary: true } : {}),
       clips: [name],
     });
     this.anim ??= anim;

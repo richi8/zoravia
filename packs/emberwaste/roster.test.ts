@@ -284,3 +284,15 @@ describe('Emberwaste balance', () => {
     },
   );
 });
+
+describe('Emberwaste looks (C35a)', () => {
+  it('every look comes from the desert kit, which shares no plan with Verdale', () => {
+    const desert = content.modelKits.require('emberwaste:desert');
+    const verdale = content.modelKits.require('core:verdale');
+    expect(desert.plans.filter((p) => verdale.plans.includes(p))).toEqual([]);
+    for (const s of roster) {
+      if (s.look) expect(s.look.kit).toBe('emberwaste:desert');
+    }
+    expect(content.species.require(e('calderon')).look?.plan).toBe('magmadrake');
+  });
+});

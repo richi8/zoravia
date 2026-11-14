@@ -45,6 +45,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C32 | Juice & presentation | ✅ | [log](logs/C32-juice-presentation.md) |
 | C33 | Title, settings, start flow | ✅ | [log](logs/C33-title-settings-start.md) |
 | C34 | Region 2: Emberwaste (volcanic desert) | ✅ | [log](logs/C34-emberwaste.md) |
-| C35 | Region 3: Frozen coast islands | ⬜ | |
+| C35a | Regional body models | ✅ | [log](logs/C35a-regional-models.md) |
+| C35 | Region 3: Rimeholm Isles (frozen coast islands) | 🟨 | paused for C35a; work and log (`logs/C35-rimeholm.md`) on branch `c35-wip` |
 | C36 | Cross-region endgame | ⬜ | |
 | C37 | Release prep | ⬜ | |

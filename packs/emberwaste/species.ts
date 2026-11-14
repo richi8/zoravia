@@ -5,6 +5,7 @@
  * Earth and Metal; the rest are rarer. Core's Hearthog, Ironshell and Voltbat live here too.
  *
  * Only a line's final form has a `look`. `look.young` gives earlier stages another body plan.
+ * Every look comes from Emberwaste's desert model kit (`kits.ts`, C35a).
  */
 
 import type { SpeciesInput } from '@game/data';
@@ -12,6 +13,7 @@ import type { SpeciesInput } from '@game/data';
 const learn = (...pairs: [number, string][]): { level: number; move: string }[] =>
   pairs.map(([level, move]) => ({ level, move: move.includes(':') ? move : `core:${move}` }));
 const e = (local: string): string => `emberwaste:${local}`;
+const KIT = 'emberwaste:desert';
 
 export const species = {
   sizzlet: {
@@ -34,16 +36,17 @@ export const species = {
   },
   magmaroth: {
     name: 'Magmaroth',
-    description: 'A dragon of the caldera. Its scales glow like cooling lava.',
+    description: 'A great sail-backed lizard of the caldera. Its scales glow like cooling lava.',
     types: ['core:fire'],
     baseStats: { hp: 125, attack: 145, defense: 115, speed: 135 },
     trait: 'core:kindling',
     learnset: learn([1, 'flame-pounce'], [1, 'steel-claw'], [32, 'blaze-rush'], [40, 'gale-dash']),
-    look: { seed: 3401, plan: 'dragon', mood: 'fierce', young: ['quadruped'] },
+    look: { seed: 3702, plan: 'lizard', mood: 'fierce', kit: KIT },
   },
   pebbit: {
     name: 'Pebbit',
-    description: 'A round pebble with legs. It warms itself in hot sand. An Emberwaste starter.',
+    description:
+      'A tortoise hatchling no bigger than a pebble. It warms itself in hot sand. An Emberwaste starter.',
     types: ['core:earth'],
     baseStats: { hp: 80, attack: 75, defense: 85, speed: 60 },
     trait: e('landslide'),
@@ -66,7 +69,7 @@ export const species = {
     baseStats: { hp: 135, attack: 140, defense: 150, speed: 95 },
     trait: e('landslide'),
     learnset: learn([1, 'rock-slam'], [1, 'flame-pounce'], [32, 'quake'], [40, 'steel-claw']),
-    look: { seed: 3411, plan: 'golem', mood: 'fierce', young: ['quadruped', 'quadruped'] },
+    look: { seed: 4100, plan: 'tortoise', mood: 'fierce', kit: KIT },
   },
   pricklet: {
     name: 'Pricklet',
@@ -93,7 +96,7 @@ export const species = {
     baseStats: { hp: 140, attack: 130, defense: 145, speed: 105 },
     trait: 'core:overgrowth',
     learnset: learn([1, 'thorn-volley'], [1, 'tide-crash'], [32, 'timber-crush'], [40, 'riptide']),
-    look: { seed: 3423, plan: 'biped', mood: 'cute', young: ['blob', 'biped'] },
+    look: { seed: 3724, plan: 'cactus', mood: 'cute', kit: KIT },
   },
   cindermite: {
     name: 'Cindermite',
@@ -111,7 +114,7 @@ export const species = {
     baseStats: { hp: 115, attack: 125, defense: 125, speed: 125 },
     trait: 'core:kindling',
     learnset: learn([1, 'ember'], [1, 'flame-pounce'], [18, 'wing-cut'], [28, 'blaze-rush']),
-    look: { seed: 3435, plan: 'insect', mood: 'fierce' },
+    look: { seed: 3730, plan: 'beetle', mood: 'fierce', kit: KIT },
   },
   sandskink: {
     name: 'Sandskink',
@@ -136,7 +139,7 @@ export const species = {
       [34, 'quake'],
     ),
     catchRate: 0.8,
-    look: { seed: 3441, plan: 'serpent', mood: 'fierce', young: ['quadruped'] },
+    look: { seed: 4111, plan: 'sandworm', mood: 'fierce', young: ['lizard'], kit: KIT },
   },
   rivetling: {
     name: 'Rivetling',
@@ -158,7 +161,7 @@ export const species = {
       [26, 'rock-slam'],
       [34, e('iron-crash')],
     ),
-    look: { seed: 3451, plan: 'canine', mood: 'fierce', young: ['quadruped'] },
+    look: { seed: 3762, plan: 'beetle', mood: 'fierce', kit: KIT },
   },
   oasip: {
     name: 'Oasip',
@@ -182,11 +185,11 @@ export const species = {
       [30, 'volt-lash'],
       [36, 'riptide'],
     ),
-    look: { seed: 3461, plan: 'serpent', mood: 'cute', young: ['fish'] },
+    look: { seed: 4123, plan: 'lizard', mood: 'cute', kit: KIT },
   },
   tumblet: {
     name: 'Tumblet',
-    description: 'A ball of dry twigs that rolls wherever the wind goes.',
+    description: 'A round cactus pup. It lets the wind roll it from dune to dune.',
     types: ['core:nature', 'core:wind'],
     baseStats: { hp: 80, attack: 80, defense: 75, speed: 95 },
     trait: 'core:tailwind',
@@ -206,11 +209,11 @@ export const species = {
       [26, 'gale-dash'],
       [32, 'timber-crush'],
     ),
-    look: { seed: 3473, plan: 'blob', mood: 'cute' },
+    look: { seed: 4134, plan: 'cactus', mood: 'cute', kit: KIT },
   },
   dustwhirl: {
     name: 'Dustwhirl',
-    description: 'A dusk-flying bat. Its wingbeats whip the sand up into little dust devils.',
+    description: 'A dusk-flying vulture. Its wingbeats whip the sand up into little dust devils.',
     types: ['core:wind', 'core:earth'],
     baseStats: { hp: 110, attack: 125, defense: 105, speed: 140 },
     learnset: learn(
@@ -221,7 +224,7 @@ export const species = {
       [26, 'rock-slam'],
       [34, 'cyclone'],
     ),
-    look: { seed: 3481, plan: 'bat', mood: 'dark' },
+    look: { seed: 4141, plan: 'vulture', mood: 'dark', kit: KIT },
   },
   voltsting: {
     name: 'Voltsting',
@@ -236,7 +239,7 @@ export const species = {
       [26, 'steel-claw'],
       [34, e('iron-crash')],
     ),
-    look: { seed: 3493, plan: 'insect', mood: 'fierce' },
+    look: { seed: 3795, plan: 'scorpion', mood: 'fierce', kit: KIT },
   },
   shimmerfox: {
     name: 'Shimmerfox',
@@ -251,7 +254,7 @@ export const species = {
       [30, 'hail-dash'],
       [36, 'blizzard'],
     ),
-    look: { seed: 3501, plan: 'canine', mood: 'cute' },
+    look: { seed: 4150, plan: 'fennec', mood: 'cute', kit: KIT },
   },
   forgeback: {
     name: 'Forgeback',
@@ -268,7 +271,7 @@ export const species = {
       [34, e('iron-crash')],
     ),
     catchRate: 0.7,
-    look: { seed: 3511, plan: 'golem', mood: 'fierce' },
+    look: { seed: 3811, plan: 'lizard', mood: 'fierce', kit: KIT },
   },
   calderon: {
     name: 'Calderon',
@@ -278,6 +281,6 @@ export const species = {
     trait: 'core:heatproof',
     learnset: learn([1, 'blaze-rush'], [1, 'quake'], [1, 'flame-pounce'], [1, 'rock-slam']),
     legendary: true,
-    look: { seed: 3524, plan: 'dragon', mood: 'fierce' },
+    look: { seed: 5010, plan: 'magmadrake', mood: 'fierce', kit: KIT },
   },
 } satisfies Record<string, SpeciesInput>;
