@@ -11,7 +11,7 @@ import { IndexedDbStore, MemoryStore, SaveSlots, type KeyValueStore } from '@gam
 import { TitleScene } from '@game/scenes/title-scene';
 import { UiDemoScene } from '@game/scenes/ui-demo-scene';
 import { gameSettings, installSettings, persistBindings } from '@game/settings';
-import { corePack } from '@packs/core';
+import { SHIPPED_PACKS } from '@packs/index';
 import { installCssVars } from '@game/style/css';
 import { loadFonts } from '@game/style/fonts';
 import { ZORAVIA_SCREEN_THEME } from '@game/style/theme';
@@ -74,7 +74,7 @@ async function main(): Promise<void> {
 
   // The title screen (C33); `?demo` opens the UI framework demo (C06). The battle test
   // launcher (C18) is the title's Debug item in dev builds and with `?debug`.
-  const content = loadGameContent([corePack]);
+  const content = loadGameContent([...SHIPPED_PACKS]);
   let store: KeyValueStore;
   let savesPersist = true;
   try {

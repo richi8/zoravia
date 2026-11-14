@@ -573,7 +573,7 @@ const mainDialogues: Record<string, DialogueInput> = {
       },
       chat: {
         say: [
-          'The road east climbs to Ember Pass. The lands beyond are closed for now.',
+          'The road east climbs to Ember Pass. Past it lies a volcanic desert, hot enough to cook an egg on a rock.',
           'North is Galeback Ridge. Only strong teams should go up to Crown Rock.',
         ],
       },
@@ -824,7 +824,7 @@ const SIGNS: Record<string, Sign> = {
     x: 164,
     y: 103,
     name: 'Sign',
-    text: ['North: Galeback Ridge and Crown Rock. East: Ember Pass (closed).'],
+    text: ['North: Galeback Ridge and Crown Rock. East: Ember Pass.'],
   },
   'sign-lookout': {
     x: 183,

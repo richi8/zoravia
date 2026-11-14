@@ -176,6 +176,8 @@ describe('map validation', () => {
       { species: 'core:sproutl' as NamespacedId, weight: 1 },
       { species: 'core:glacivar' as NamespacedId, weight: 1 },
     ];
+    // C34: battle weather names conditions.
+    need(data.zones['field']).battleWeather = ['core:burnin' as NamespacedId];
     const mod = definePack({
       manifest: { id: 'mod', version: '1.0.0', dependsOn: ['core'] },
       content: { maps: { sample: data } },
@@ -193,6 +195,9 @@ describe('map validation', () => {
     );
     expect(text).toContain(
       '[mod] content.maps.sample.zones.field.spawns[1].species: Legendaries do not spawn in the wild',
+    );
+    expect(text).toContain(
+      '[mod] content.maps.sample.zones.field.battleWeather[0]: Unknown conditions "core:burnin"',
     );
   });
 });

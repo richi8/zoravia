@@ -1,0 +1,1211 @@
+{
+  "zones": {
+    "flats": {
+      "levels": [3, 6],
+      "spawns": [
+        {
+          "species": "emberwaste:cindermite",
+          "weight": 3
+        },
+        {
+          "species": "emberwaste:sandskink",
+          "weight": 3
+        },
+        {
+          "species": "emberwaste:tumblet",
+          "weight": 2
+        }
+      ]
+    },
+    "dustway": {
+      "levels": [5, 9],
+      "spawns": [
+        {
+          "species": "emberwaste:oasip",
+          "weight": 3
+        },
+        {
+          "species": "emberwaste:rivetling",
+          "weight": 3
+        },
+        {
+          "species": "emberwaste:tumblet",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:sandskink",
+          "weight": 1
+        }
+      ]
+    },
+    "redrock": {
+      "levels": [8, 13],
+      "spawns": [
+        {
+          "species": "core:hearthog",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:rivetling",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:cindermite",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:oasip",
+          "weight": 1
+        }
+      ]
+    },
+    "cinder-dunes": {
+      "levels": [15, 20],
+      "weather": "ash",
+      "battleWeather": ["core:burning"],
+      "spawns": [
+        {
+          "species": "emberwaste:sandskink",
+          "weight": 3
+        },
+        {
+          "species": "emberwaste:dustwhirl",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:pyrebeetle",
+          "weight": 2,
+          "levels": [18, 20]
+        },
+        {
+          "species": "emberwaste:cindermite",
+          "weight": 1,
+          "levels": [15, 17]
+        },
+        {
+          "species": "emberwaste:tumblet",
+          "weight": 1,
+          "levels": [15, 19]
+        }
+      ]
+    },
+    "glassflats": {
+      "levels": [16, 22],
+      "spawns": [
+        {
+          "species": "emberwaste:voltsting",
+          "weight": 3
+        },
+        {
+          "species": "emberwaste:rivetling",
+          "weight": 2,
+          "levels": [16, 19]
+        },
+        {
+          "species": "emberwaste:ironjaw",
+          "weight": 1,
+          "levels": [20, 22]
+        },
+        {
+          "species": "emberwaste:oasip",
+          "weight": 2
+        },
+        {
+          "species": "core:ironshell",
+          "weight": 1
+        }
+      ]
+    },
+    "rust-canyon": {
+      "levels": [17, 23],
+      "spawns": [
+        {
+          "species": "emberwaste:rivetling",
+          "weight": 2,
+          "levels": [17, 19]
+        },
+        {
+          "species": "emberwaste:ironjaw",
+          "weight": 2,
+          "levels": [20, 23]
+        },
+        {
+          "species": "core:ironshell",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:forgeback",
+          "weight": 1
+        },
+        {
+          "species": "emberwaste:dustwhirl",
+          "weight": 1
+        }
+      ]
+    },
+    "ashfall": {
+      "levels": [19, 25],
+      "weather": "ash",
+      "battleWeather": ["core:burning"],
+      "spawns": [
+        {
+          "species": "emberwaste:pyrebeetle",
+          "weight": 3
+        },
+        {
+          "species": "emberwaste:dustwhirl",
+          "weight": 2
+        },
+        {
+          "species": "core:hearthog",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:brambleroll",
+          "weight": 1,
+          "levels": [20, 25]
+        },
+        {
+          "species": "emberwaste:voltsting",
+          "weight": 1
+        }
+      ]
+    },
+    "scorch-basin": {
+      "levels": [23, 29],
+      "spawns": [
+        {
+          "species": "emberwaste:dunewyrm",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:mirageel",
+          "weight": 2,
+          "levels": [24, 29]
+        },
+        {
+          "species": "emberwaste:pyrebeetle",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:voltsting",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:brambleroll",
+          "weight": 1
+        }
+      ]
+    },
+    "obsidian": {
+      "levels": [30, 36],
+      "spawns": [
+        {
+          "species": "emberwaste:shimmerfox",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:dunewyrm",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:ironjaw",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:mirageel",
+          "weight": 1
+        },
+        {
+          "species": "core:voltbat",
+          "weight": 1
+        }
+      ]
+    },
+    "ironspire": {
+      "levels": [32, 38],
+      "spawns": [
+        {
+          "species": "emberwaste:ironjaw",
+          "weight": 3
+        },
+        {
+          "species": "emberwaste:forgeback",
+          "weight": 1
+        },
+        {
+          "species": "emberwaste:voltsting",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:shimmerfox",
+          "weight": 1
+        },
+        {
+          "species": "core:ironshell",
+          "weight": 1
+        }
+      ]
+    },
+    "caldera": {
+      "levels": [36, 42],
+      "weather": "ash",
+      "battleWeather": ["core:burning"],
+      "spawns": [
+        {
+          "species": "emberwaste:pyrebeetle",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:dunewyrm",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:shimmerfox",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:dustwhirl",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:forgeback",
+          "weight": 1
+        }
+      ]
+    }
+  },
+  "anchors": {
+    "center": {
+      "x": 98,
+      "y": 118,
+      "kind": "center",
+      "facing": "down"
+    },
+    "shop": {
+      "x": 106,
+      "y": 118,
+      "kind": "shop",
+      "facing": "down"
+    },
+    "spawn": {
+      "x": 104,
+      "y": 121,
+      "kind": "spawn",
+      "facing": "down"
+    },
+    "elder": {
+      "x": 96,
+      "y": 113,
+      "kind": "npc",
+      "facing": "down"
+    },
+    "center-kilnreach": {
+      "x": 94,
+      "y": 62,
+      "kind": "center",
+      "facing": "down"
+    },
+    "shop-kilnreach": {
+      "x": 102,
+      "y": 62,
+      "kind": "shop",
+      "facing": "down"
+    },
+    "trial": {
+      "x": 106,
+      "y": 71,
+      "kind": "npc",
+      "facing": "down"
+    },
+    "center-slagwatch": {
+      "x": 154,
+      "y": 110,
+      "kind": "center",
+      "facing": "down"
+    },
+    "ranger": {
+      "x": 168,
+      "y": 110,
+      "kind": "npc",
+      "facing": "left"
+    },
+    "titan-sunken-sands": {
+      "x": 36,
+      "y": 150,
+      "kind": "titan",
+      "facing": "down"
+    },
+    "titan-old-foundry": {
+      "x": 146,
+      "y": 160,
+      "kind": "titan",
+      "facing": "down"
+    },
+    "legendary": {
+      "x": 100,
+      "y": 12,
+      "kind": "legendary",
+      "facing": "down"
+    },
+    "boss-cap-works": {
+      "x": 150,
+      "y": 28,
+      "kind": "boss",
+      "facing": "down"
+    },
+    "ember-heart": {
+      "x": 100,
+      "y": 12,
+      "kind": "shrine",
+      "mood": "shrine",
+      "radius": 8
+    },
+    "sunstone-circle": {
+      "x": 64,
+      "y": 84,
+      "kind": "landmark",
+      "mood": "shrine",
+      "radius": 6
+    },
+    "sunken-sands": {
+      "x": 36,
+      "y": 150,
+      "kind": "lair",
+      "mood": "mist",
+      "radius": 7
+    }
+  },
+  "connections": {
+    "ember-pass": {
+      "x": 0,
+      "y": 104,
+      "kind": "pass",
+      "to": "core:verdale#ember-pass"
+    }
+  },
+  "edits": [
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 92,
+        "y": 108,
+        "w": 23,
+        "h": 25
+      },
+      "note": "Cinderwell: cleared town ground"
+    },
+    {
+      "op": "zone",
+      "rect": {
+        "x": 92,
+        "y": 108,
+        "w": 23,
+        "h": 25
+      },
+      "zone": null,
+      "note": "No wild Zorlings in town"
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 92,
+        "y": 108,
+        "w": 23,
+        "h": 25
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 92,
+        "y": 119,
+        "w": 23,
+        "h": 2
+      },
+      "note": "Cinderwell main street (east-west)"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 103,
+        "y": 108,
+        "w": 2,
+        "h": 25
+      },
+      "note": "Cinderwell north-south street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 100,
+        "y": 119,
+        "w": 9,
+        "h": 4
+      },
+      "note": "Cinderwell square"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 93,
+        "y": 115,
+        "w": 5,
+        "h": 4
+      },
+      "note": "Cinderwell Zorling center"
+    },
+    {
+      "op": "prop",
+      "kind": "center",
+      "at": [95, 118]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 107,
+        "y": 115,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Cinderwell shop"
+    },
+    {
+      "op": "prop",
+      "kind": "shop",
+      "at": [107, 118]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 94,
+        "y": 109,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Cinderwell north-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [95, 112],
+      "variant": 1
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 95,
+        "y": 113,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the north-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 107,
+        "y": 109,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Cinderwell north-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [109, 112],
+      "variant": 4
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 105,
+        "y": 113,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the north-east house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 94,
+        "y": 123,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Cinderwell south-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [95, 126],
+      "variant": 2
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 95,
+        "y": 127,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the south-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 107,
+        "y": 123,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Cinderwell south-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [109, 126],
+      "variant": 7
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 105,
+        "y": 127,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the south-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "well",
+      "at": [101, 122],
+      "note": "Square well"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [98, 117]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [111, 117]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [107, 122]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [102, 107],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [115, 121],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [91, 119],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [105, 133],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "cactus",
+      "at": [95, 111],
+      "variant": 1,
+      "note": "Cinderwell garden cacti"
+    },
+    {
+      "op": "prop",
+      "kind": "cactus",
+      "at": [112, 111],
+      "variant": 2,
+      "note": "Cinderwell garden cacti"
+    },
+    {
+      "op": "prop",
+      "kind": "cactus",
+      "at": [94, 129],
+      "variant": 3,
+      "note": "Cinderwell garden cacti"
+    },
+    {
+      "op": "prop",
+      "kind": "cactus",
+      "at": [112, 129],
+      "variant": 4,
+      "note": "Cinderwell garden cacti"
+    },
+    {
+      "op": "prop",
+      "kind": "cactus",
+      "at": [110, 124],
+      "variant": 5,
+      "note": "Cinderwell garden cacti"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 89,
+        "y": 54,
+        "w": 23,
+        "h": 21
+      },
+      "note": "Kilnreach: cleared town ground"
+    },
+    {
+      "op": "zone",
+      "rect": {
+        "x": 89,
+        "y": 54,
+        "w": 23,
+        "h": 21
+      },
+      "zone": null,
+      "note": "No wild Zorlings in town"
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 89,
+        "y": 54,
+        "w": 23,
+        "h": 21
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 89,
+        "y": 63,
+        "w": 23,
+        "h": 2
+      },
+      "note": "Kilnreach main street (east-west)"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 99,
+        "y": 54,
+        "w": 2,
+        "h": 21
+      },
+      "note": "Kilnreach north-south street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 96,
+        "y": 63,
+        "w": 9,
+        "h": 4
+      },
+      "note": "Kilnreach square"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 89,
+        "y": 59,
+        "w": 5,
+        "h": 4
+      },
+      "note": "Kilnreach Zorling center"
+    },
+    {
+      "op": "prop",
+      "kind": "center",
+      "at": [91, 62]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 103,
+        "y": 59,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Kilnreach shop"
+    },
+    {
+      "op": "prop",
+      "kind": "shop",
+      "at": [103, 62]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 90,
+        "y": 53,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Kilnreach north-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [91, 56],
+      "variant": 1
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 91,
+        "y": 57,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the north-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 103,
+        "y": 53,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Kilnreach north-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [105, 56],
+      "variant": 4
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 101,
+        "y": 57,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the north-east house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 90,
+        "y": 67,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Kilnreach south-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [91, 70],
+      "variant": 2
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 91,
+        "y": 71,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the south-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 103,
+        "y": 67,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Kilnreach south-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [105, 70],
+      "variant": 7
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 101,
+        "y": 71,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the south-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "well",
+      "at": [97, 66],
+      "note": "Square well"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [94, 61]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [107, 61]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [103, 66]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [102, 53],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [112, 65],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [88, 63],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [101, 75],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [97, 71],
+      "note": "Trial stone"
+    },
+    {
+      "op": "prop",
+      "kind": "vent",
+      "at": [93, 57],
+      "note": "Forge vents"
+    },
+    {
+      "op": "prop",
+      "kind": "vent",
+      "at": [108, 57],
+      "note": "Forge vents"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 151,
+        "y": 104,
+        "w": 18,
+        "h": 17
+      },
+      "note": "Slagwatch: cleared town ground"
+    },
+    {
+      "op": "zone",
+      "rect": {
+        "x": 151,
+        "y": 104,
+        "w": 18,
+        "h": 17
+      },
+      "zone": null,
+      "note": "No wild Zorlings in town"
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 151,
+        "y": 104,
+        "w": 18,
+        "h": 17
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 151,
+        "y": 111,
+        "w": 18,
+        "h": 2
+      },
+      "note": "Slagwatch main street (east-west)"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 159,
+        "y": 104,
+        "w": 2,
+        "h": 17
+      },
+      "note": "Slagwatch north-south street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 156,
+        "y": 111,
+        "w": 9,
+        "h": 4
+      },
+      "note": "Slagwatch square"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 149,
+        "y": 107,
+        "w": 5,
+        "h": 4
+      },
+      "note": "Slagwatch Zorling center"
+    },
+    {
+      "op": "prop",
+      "kind": "center",
+      "at": [151, 110]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 150,
+        "y": 101,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Slagwatch north-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [151, 104],
+      "variant": 1
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 151,
+        "y": 105,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the north-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 163,
+        "y": 101,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Slagwatch north-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [165, 104],
+      "variant": 4
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 161,
+        "y": 105,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the north-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "well",
+      "at": [157, 114],
+      "note": "Square well"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [154, 109]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [163, 109]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [163, 114]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [162, 103],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [169, 113],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [150, 111],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [61, 81],
+      "note": "Sunstone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [67, 81],
+      "note": "Sunstone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [61, 87],
+      "note": "Sunstone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [67, 87],
+      "note": "Sunstone Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [96, 9],
+      "note": "Ember Heart stones"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [104, 9],
+      "note": "Ember Heart stones"
+    },
+    {
+      "op": "prop",
+      "kind": "vent",
+      "at": [146, 25],
+      "note": "Capped vents of the Cap Works"
+    },
+    {
+      "op": "prop",
+      "kind": "vent",
+      "at": [154, 25],
+      "note": "Capped vents of the Cap Works"
+    },
+    {
+      "op": "prop",
+      "kind": "vent",
+      "at": [146, 31],
+      "note": "Capped vents of the Cap Works"
+    },
+    {
+      "op": "prop",
+      "kind": "vent",
+      "at": [154, 31],
+      "note": "Capped vents of the Cap Works"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [142, 157],
+      "note": "Old Foundry ruins"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [150, 157],
+      "note": "Old Foundry ruins"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [142, 163],
+      "note": "Old Foundry ruins"
+    },
+    {
+      "op": "prop",
+      "kind": "rock",
+      "at": [150, 163],
+      "note": "Old Foundry ruins"
+    }
+  ]
+}

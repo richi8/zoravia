@@ -73,7 +73,7 @@ import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
 import { BIOMES, TILE } from '@game/world/biomes';
 import { nextPhaseStart, type DayPhase } from '@game/world/lighting';
-import { loadRegion, type WorldMap } from '@game/world/map';
+import { connectionAt, linkedArrival, loadRegion, type WorldMap } from '@game/world/map';
 import type { NpcActor, Roamer } from '@game/world/overworld/actors';
 import { Atmosphere } from '@game/world/overworld/atmosphere';
 import { Camera } from '@game/world/overworld/camera';
@@ -125,6 +125,11 @@ export interface OverworldOptions {
   readonly playtime?: number;
   /** Writes the game state (autosave and the pause menu's "Save"). No saving when unset. */
   save?(state: GameState): Promise<void>;
+  /**
+   * The player stepped onto a connection linked to another map (C34). `state` is the game
+   * as of now, with the player at the other end; the host opens that map. No travel when unset.
+   */
+  onTravel?(state: GameState): void;
   onExit(): void;
 }
 
@@ -213,6 +218,8 @@ export class OverworldScene implements Scene<Container> {
   private choiceMenu: Menu | undefined;
   private heldBox: DialogBox | undefined;
   private inBattle = false;
+  /** Travelling to another map: the scene stops (C34). */
+  private leaving = false;
   private afterBattle: string[] = [];
   /** The dialogue waiting on a story battle, and whether that battle was won. */
   private battleRun: { run: DialogueRun; step: () => void; won: boolean } | undefined;
@@ -315,7 +322,8 @@ export class OverworldScene implements Scene<Container> {
    */
   async saveNow(mode: 'auto' | 'manual' = 'auto'): Promise<string | undefined> {
     const { save } = this.options;
-    if (!save || (mode === 'auto' && !this.dirty)) return undefined;
+    // After travel the next map's scene saves; this one's place is stale.
+    if (!save || this.leaving || (mode === 'auto' && !this.dirty)) return undefined;
     const state = this.snapshot();
     const key = this.placeKey();
     this.autosaveTimer = AUTOSAVE_EVERY;
@@ -539,7 +547,7 @@ export class OverworldScene implements Scene<Container> {
       if (this.nudge.t > 0) this.nudge.t -= dt;
     }
     if (this.savedNote > 0 && (this.savedNote -= dt) <= 0) this.lastZone = '-';
-    if (this.inBattle) return;
+    if (this.inBattle || this.leaving) return;
     if (this.stack.size) {
       this.stack.update(dt);
       // A dialog over a menu (or a menu after a dialog) changes the input context.
@@ -569,6 +577,7 @@ export class OverworldScene implements Scene<Container> {
         this.bumpNudge(e.event.dir);
       } else if (e.kind === 'player' && e.event.kind === 'step')
         this.stepFx(e.event.from, e.event.to);
+      else if (e.kind === 'player' && e.event.kind === 'arrive' && this.travel(e.event.at)) return;
     }
     this.roamerFx();
     this.logSeen();
@@ -578,6 +587,28 @@ export class OverworldScene implements Scene<Container> {
     this.camera.follow(cx, cy, this.width, this.height, this.bounds, dt);
     this.stream.prefetch(this.viewRect());
     this.layoutHud();
+  }
+
+  /**
+   * Arriving on a connection linked to another map: saves with the player at the other end
+   * and lets the host open that map (C34). True when the player leaves.
+   */
+  private travel(at: Tile): boolean {
+    const { content, mapId, onTravel } = this.options;
+    if (!onTravel) return false;
+    const key = connectionAt(content, mapId, at.x, at.y);
+    const to = key ? linkedArrival(content, mapId, key) : undefined;
+    if (!to) return false;
+    this.leaving = true;
+    this.clearPath();
+    const state: GameState = {
+      ...this.snapshot(),
+      place: { map: to.map, x: to.x, y: to.y, facing: to.facing },
+    };
+    this.saved = undefined;
+    void this.options.save?.(state).catch((e: unknown) => console.warn('Travel save failed:', e));
+    onTravel(state);
+    return true;
   }
 
   /** `Esc` and the menu keys (`P I B M J`). */
@@ -963,12 +994,19 @@ export class OverworldScene implements Scene<Container> {
     // A team that is down (only possible right after waking) is healed first.
     if (teamDown(this.party)) this.party = healTeam(content, this.party);
     this.inBattle = true;
+    // Battle weather of the zone the player stands in (C34: ash storms → Burning).
+    const weather = setup.weather ?? this.map.zoneAt(this.player.tx, this.player.ty)?.battleWeather;
     const scene = new BattleScene({
       content,
       input,
       ui,
       theme,
-      setup: { ...setup, player: this.party.team, bag: this.party.bag },
+      setup: {
+        ...setup,
+        player: this.party.team,
+        bag: this.party.bag,
+        ...(weather?.length ? { weather } : {}),
+      },
       ...(trainer ? { trainer } : {}),
       ...(intro ? { intro } : {}),
       badges: this.party.badges.length,

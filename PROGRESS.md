@@ -44,7 +44,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | G2c | Fewer battle captions (G2 feedback) | ✅ | [log](logs/G2c-fewer-captions.md) |
 | C32 | Juice & presentation | ✅ | [log](logs/C32-juice-presentation.md) |
 | C33 | Title, settings, start flow | ✅ | [log](logs/C33-title-settings-start.md) |
-| C34 | Region 2: Volcanic desert | ⬜ | |
+| C34 | Region 2: Emberwaste (volcanic desert) | ✅ | [log](logs/C34-emberwaste.md) |
 | C35 | Region 3: Frozen coast islands | ⬜ | |
 | C36 | Cross-region endgame | ⬜ | |
 | C37 | Release prep | ⬜ | |

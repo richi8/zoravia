@@ -5,6 +5,7 @@ import { decodeRegion } from './codec';
 import type { WorldMap } from './world-map';
 
 export * from './codec';
+export * from './links';
 export * from './minimap';
 export * from './world-map';
 

@@ -27,7 +27,7 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 
 ## World
 - **Static map**: generated once offline from a fixed seed by a world tool, then hand-edited (towns, routes, landmarks, secrets). Shipped as data; identical for all players.
-- Expansions attach new regions at defined connection points (sea routes, passes, ferries).
+- Expansions attach new regions at defined connection points (sea routes, passes, ferries). Settled in C34: a link is written on **either end** (`to: "pack:region#connection"`), so an expansion attaches itself to a core exit without changing the core map; an exit whose other end isn't loaded leads nowhere. Stepping onto a linked connection saves and opens the other map, with the player on its connection facing inland. The respawn center stays per map (the region's first center until one is used there).
 - Launch: **3 regions**, each ~200×200 tiles.
 - Each region is **tiered concentrically**:
   - T1 (Lv 3–15): hub town, creature center, starters
@@ -49,7 +49,10 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 1. **Verdale** (temperate forest & lakes) — Nature / Water / Wind. Gentlest start. Hub town Willowmere, second town Fernhollow (Grove Trial), outpost Galecrest; exits: Ember Pass (east, to region 2) and a ferry dock (south, to region 3).
    - Zorlings (C29): 23 species. Starters **Sprigling** (Nature), **Drizzlet** (Water) and **Emberkit** (Fire): the Fire > Nature > Water > Fire triangle reads best for a first choice, even though Fire is not one of Verdale's three types. Titans: **Mossback** (Hollow Oak, Deepwood; breaks on Wildfire) and **Bogmaw** (Sunken Hollow, Reed Marsh; breaks on Conducted). Legendary: **Verdion** (Nature/Wind, Heartwood Shrine; breaks on Overload since C31, was Shatter: Nature resists Earth, so that plan lost to plain potions in the simulator).
    - Campaign (C30): every spring the Heartwood breathes out the **Seedwind**, which wakes the forest; this year it has not come. Main quest **The Still Wind** (Elder Rowan): Grove Badge in Fernhollow → face both Titans (each shows a vision of Crown Rock) → beat the region boss **Stormcatcher Vex** on Crown Rock, whose Gale Engine bottles the wind (her Storm Galehawk fights in boss form) → Verdion appears at the Heartwood Shrine → tell Rowan. Rival **Mira** meets the player on Willowmere's north road, at the trial after the badge, and in Galecrest after both Titans. Her starter line is the one that beats the player's (C33): Fire against Sprigling, Nature against Drizzlet, Water against Emberkit. Four side quests, readable signs and lore stones, and hidden items in the secrets and landmarks.
-2. **Volcanic desert** — Fire / Earth / Metal. Ash storms: battles start with Burning.
+2. **Emberwaste** (volcanic desert, pack `emberwaste`, C34) — Fire / Earth / Metal. Hub town Cinderwell, trial town Kilnreach (Forge Trial, Kiln Badge), outpost Slagwatch; Ember Pass (west) leads to Verdale's.
+   - **Ash storms** (C34): a zone can set `battleWeather` (conditions put on both Zorlings sent out first in every battle started there). The Cinder Dunes, Ashfall Slopes and Caldera Rim have ash storms: every battle starts with both Zorlings Burning, so a Water hit sets off Steam Burst. Cosmetic weather stays separate (C32).
+   - Zorlings (C34): 24 species. Starters **Sizzlet** (Fire), **Pebbit** (Earth) and **Pricklet** (Nature): Fire > Nature > Earth > Fire. Core's Hearthog, Ironshell and Voltbat live here too. Titans: **Dunewyrm** (Sunken Sands, Cinder Dunes; breaks on Steam Burst, which its ash storm sets up) and **Forgeback** (Old Foundry, Rust Canyon; breaks on Shred). Legendary: **Calderon** (Fire/Earth, Ember Heart; Heatproof, breaks on Frozen; aura ×1.75 HP).
+   - Campaign (C34): the vents of Mount Caldus have gone quiet, the forges of Kilnreach are cold, and the trapped heat bursts out as ash storms. Main quest **The Cold Forge** (Elder Sabra): Kiln Badge → both Titans (each shows a vision of iron lids on the caldera vents) → region boss **Glassmaker Gorran** at the Cap Works, who capped the vents to heat a glass dome against the storms (his Kiln Ironjaw fights in boss form, breaks on Shatter) → Calderon at the Ember Heart → tell Sabra. Rival Mira travels: she meets the player in Cinderwell, Kilnreach and Slagwatch, with the starter line that beats the player's, from the player's own region. Four side quests, signs, stones and hidden items.
 3. **Frozen coast islands** — Ice / Water / Electric. Storms: battles start with Wet.
 
 Every region has all 8 types, weighted toward its own three.
@@ -58,7 +61,7 @@ Each region has its own lore, a legendary, a trial/badge, and **its own 3 starte
 ## Starting a game
 Settled in C33 (2026-11-14):
 - The game opens on a **title screen**: the dragon crest over the first start region's map, dimmed and drifting, with its own theme. Its menu: Continue (the slot saved last), New game, Load game, Settings.
-- **New game**: pick a save slot (it asks before overwriting one), then a **start region**, then one of that region's **starters**. Start regions are pack data (`starts`): the map and spot, the starters, their level, the bag and the money. Only Verdale exists so far; regions 2 and 3 add their own entries.
+- **New game**: pick a save slot (it asks before overwriting one), then a **start region**, then one of that region's **starters**. Start regions are pack data (`starts`): the map and spot, the starters, their level, the bag and the money. Verdale and Emberwaste (C34) exist so far; region 3 adds its own entry.
 - Choosing a starter sets its story flag (`core:starter-sprigling`, …), so dialogue and trainers can react to it. A trainer's team member can name another species for a story condition (`instead`), which is how the rival counter-picks.
 - **Load game** shows the slot cards (team portraits, lead and level, region, badges, Zorlings caught, play time, when it was saved); a slot can be continued or deleted there. Quitting from the pause menu goes back to the title.
 - **Settings** (title and pause menu) belong to the device, like the volumes: battle speed (1×, 1.5×, 2×), text speed (slow, normal, fast), the `1 2 3` switch prompt, screen shake, full-screen flashes, Sound (volumes), mute while the tab is hidden, and Controls.
@@ -127,7 +130,7 @@ Each type applies one condition; another type exploits it. Conditions last **3 t
 - Side-effect sizes (e.g. Burning = 1/16 max HP per turn, Wet = speed ×0.85) are starting values in `packs/core`, tuned in C31.
 - Switching out clears your creature's conditions (switch costs the turn).
 - Wild creatures apply conditions too; dual-type wilds can self-combo (rare, dangerous).
-- Biome weather can apply conditions at battle start: they go on **both** Zorlings sent out first (traits such as Waterproof still block them).
+- Biome weather can apply conditions at battle start: they go on **both** Zorlings sent out first (traits such as Waterproof still block them). It is set per zone (`battleWeather`, C34), and story battles get the weather of the zone their NPC stands in.
 - Rules settled in C15 (2026-11-12):
   - A Zorling can have several different conditions at once. Applying one it already has restarts its 3 turns (no stacking).
   - "Lasts 3 turns" means 3 of the holder's own turns. A condition put on a Zorling that has already acted this turn starts counting next turn. Side effects (HP loss) happen at the end of each turn it counts, player side first.

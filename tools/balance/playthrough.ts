@@ -50,9 +50,13 @@ import { bossBattle, trainerBattle, type StoryBattle } from '@game/story';
 import type { Zone } from '@game/world/map';
 import { pickSpawn } from '@game/world/overworld/sim';
 
-/** A story fight: a trainer (rival, trial, region boss) or a wild boss (Titan, legendary). */
-export type Goal =
-  { readonly trainer: string; readonly badge?: string } | { readonly boss: string };
+/**
+ * A story fight: a trainer (rival, trial, region boss) or a wild boss (Titan, legendary).
+ * `weather`: the battle weather where it stands (C34: an ash storm).
+ */
+export type Goal = (
+  { readonly trainer: string; readonly badge?: string } | { readonly boss: string }
+) & { readonly weather?: readonly string[] };
 
 /** A part of the campaign: the zones it opens for grinding, then its fights in order. */
 export interface RouteStage {
@@ -258,7 +262,7 @@ class Run {
       for (let tries = 0; tries < 60; tries++) {
         this.restock(ZORB, 5);
         const spawn = this.spawnOf(zone, species);
-        if (this.wildBattle(spawn.species, spawn.level, true)) break;
+        if (this.wildBattle(spawn.species, spawn.level, true, zone.battleWeather)) break;
       }
     }
   }
@@ -375,11 +379,16 @@ class Run {
   private grind(): void {
     const zone = this.grindZone();
     const s = pickSpawn(zone, this.rng);
-    this.wildBattle(s.species, s.level, false);
+    this.wildBattle(s.species, s.level, false, zone.battleWeather);
   }
 
-  /** One wild battle. Returns true when the Zorling was caught. */
-  private wildBattle(species: string, level: number, catching: boolean): boolean {
+  /** One wild battle (in the zone's battle weather). Returns true when it was caught. */
+  private wildBattle(
+    species: string,
+    level: number,
+    catching: boolean,
+    weather?: readonly string[],
+  ): boolean {
     const foe = createZorling(this.content, { uid: 'wild', species, level });
     const setup: BattleSetup = {
       kind: 'wild',
@@ -387,6 +396,7 @@ class Run {
       player: this.party.team,
       opponent: [foe],
       bag: this.party.bag,
+      ...(weather?.length ? { weather } : {}),
     };
     const { state, turns } = this.fight(setup, catching);
     const result = finishBattle(this.content, state, { badges: this.party.badges.length });
@@ -470,10 +480,13 @@ class Run {
 
   private plan(goal: Goal): StoryBattle {
     const seed = this.battleSeed++;
-    if ('trainer' in goal) return trainerBattle(this.content, this.party, goal.trainer, seed);
-    const plan = bossBattle(this.content, this.party, goal.boss, seed);
-    if (!plan) throw new Error(`Boss "${goal.boss}" already done`);
-    return plan;
+    const plan =
+      'trainer' in goal
+        ? trainerBattle(this.content, this.party, goal.trainer, seed)
+        : bossBattle(this.content, this.party, goal.boss, seed);
+    if (!plan) throw new Error(`Boss "${'boss' in goal ? goal.boss : ''}" already done`);
+    const weather = goal.weather;
+    return weather?.length ? { ...plan, setup: { ...plan.setup, weather } } : plan;
   }
 
   /**
@@ -514,7 +527,7 @@ class Run {
     for (let tries = 0; tries < 60 && this.party.storage.length === before; tries++) {
       this.restock(ZORB, 5);
       const spawn = this.spawnOf(best.zone, best.species);
-      this.wildBattle(spawn.species, spawn.level, true);
+      this.wildBattle(spawn.species, spawn.level, true, best.zone.battleWeather);
     }
     const caught = this.party.storage[before];
     if (!caught) return undefined;

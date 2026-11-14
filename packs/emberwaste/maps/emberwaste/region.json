@@ -1,0 +1,402 @@
+{
+  "name": "Emberwaste",
+  "biome": "desert",
+  "seed": 3434,
+  "width": 200,
+  "height": 200,
+  "chunkSize": 32,
+  "zones": {
+    "flats": {
+      "name": "Sunbaked Flats",
+      "tier": "t1"
+    },
+    "dustway": {
+      "name": "Dustway",
+      "tier": "t1"
+    },
+    "redrock": {
+      "name": "Redrock Trail",
+      "tier": "t1"
+    },
+    "cinder-dunes": {
+      "name": "Cinder Dunes",
+      "tier": "t2"
+    },
+    "glassflats": {
+      "name": "Glass Flats",
+      "tier": "t2"
+    },
+    "rust-canyon": {
+      "name": "Rust Canyon",
+      "tier": "t2"
+    },
+    "ashfall": {
+      "name": "Ashfall Slopes",
+      "tier": "t2"
+    },
+    "scorch-basin": {
+      "name": "Scorch Basin",
+      "tier": "t2"
+    },
+    "obsidian": {
+      "name": "Obsidian Wastes",
+      "tier": "t3"
+    },
+    "caldera": {
+      "name": "Caldera Rim",
+      "tier": "t3"
+    },
+    "ironspire": {
+      "name": "Ironspire Ridge",
+      "tier": "t3"
+    }
+  },
+  "layout": {
+    "towns": {
+      "cinderwell": {
+        "name": "Cinderwell",
+        "at": [104, 120],
+        "radius": 9,
+        "plaza": 3.5
+      },
+      "kilnreach": {
+        "name": "Kilnreach",
+        "at": [100, 64],
+        "radius": 8
+      },
+      "slagwatch": {
+        "name": "Slagwatch",
+        "at": [160, 112],
+        "radius": 6,
+        "plaza": 2.5
+      }
+    },
+    "routes": [
+      {
+        "points": [
+          [104, 120],
+          [100, 100],
+          [104, 82],
+          [100, 64]
+        ]
+      },
+      {
+        "points": [
+          [104, 120],
+          [126, 118],
+          [142, 116],
+          [160, 112]
+        ]
+      },
+      {
+        "points": [
+          [104, 120],
+          [80, 116],
+          [60, 110],
+          [36, 106],
+          [14, 104],
+          [0, 104]
+        ]
+      },
+      {
+        "points": [
+          [104, 120],
+          [100, 144],
+          [94, 166],
+          [98, 186]
+        ]
+      },
+      {
+        "points": [
+          [100, 64],
+          [98, 44],
+          [100, 30],
+          [100, 14]
+        ]
+      },
+      {
+        "points": [
+          [100, 64],
+          [78, 58],
+          [58, 50],
+          [44, 40]
+        ]
+      },
+      {
+        "points": [
+          [100, 64],
+          [124, 66],
+          [144, 72],
+          [160, 86],
+          [160, 112]
+        ]
+      },
+      {
+        "points": [
+          [160, 112],
+          [168, 90],
+          [166, 64],
+          [156, 40],
+          [150, 30]
+        ]
+      },
+      {
+        "points": [
+          [104, 120],
+          [126, 140],
+          [146, 156],
+          [170, 170]
+        ]
+      },
+      {
+        "points": [
+          [60, 110],
+          [54, 132],
+          [46, 152],
+          [34, 168]
+        ],
+        "wobble": 2
+      },
+      {
+        "points": [
+          [170, 170],
+          [182, 152],
+          [186, 136]
+        ],
+        "wobble": 2
+      },
+      {
+        "points": [
+          [94, 166],
+          [72, 178],
+          [52, 186]
+        ],
+        "wobble": 2
+      },
+      {
+        "points": [
+          [44, 40],
+          [32, 30],
+          [26, 20]
+        ],
+        "wobble": 2
+      }
+    ],
+    "rivers": [
+      {
+        "points": [
+          [132, 0],
+          [128, 22],
+          [124, 42],
+          [128, 56],
+          [122, 80],
+          [120, 100],
+          [118, 118],
+          [122, 138],
+          [116, 160],
+          [120, 180],
+          [118, 199]
+        ],
+        "width": 3
+      },
+      {
+        "points": [
+          [40, 60],
+          [48, 78],
+          [46, 96],
+          [40, 122],
+          [28, 140],
+          [16, 160]
+        ],
+        "width": 2.5
+      }
+    ],
+    "lakes": [
+      {
+        "at": [100, 26],
+        "radius": [13, 7]
+      },
+      {
+        "at": [70, 138],
+        "radius": [8, 6]
+      },
+      {
+        "at": [178, 40],
+        "radius": [9, 7]
+      }
+    ],
+    "ponds": 0.12,
+    "clearings": [
+      {
+        "id": "sunken-sands",
+        "kind": "lair",
+        "at": [36, 150],
+        "radius": 4
+      },
+      {
+        "id": "old-foundry",
+        "kind": "lair",
+        "at": [146, 160],
+        "radius": 4
+      },
+      {
+        "id": "ember-heart",
+        "kind": "shrine",
+        "at": [100, 12],
+        "radius": 5
+      },
+      {
+        "id": "cap-works",
+        "kind": "arena",
+        "at": [150, 28],
+        "radius": 5
+      },
+      {
+        "id": "sunstone-circle",
+        "kind": "landmark",
+        "at": [64, 84],
+        "radius": 4
+      },
+      {
+        "id": "lookout",
+        "kind": "landmark",
+        "at": [186, 134],
+        "radius": 3
+      },
+      {
+        "id": "glass-garden",
+        "kind": "secret",
+        "at": [24, 22],
+        "radius": 3,
+        "ring": true,
+        "gap": "south"
+      },
+      {
+        "id": "buried-caravan",
+        "kind": "secret",
+        "at": [176, 184],
+        "radius": 4,
+        "ring": true,
+        "gap": "north"
+      },
+      {
+        "id": "old-mine",
+        "kind": "landmark",
+        "at": [52, 186],
+        "radius": 3
+      },
+      {
+        "id": "mirage-spring",
+        "kind": "secret",
+        "at": [140, 94],
+        "radius": 3,
+        "ring": true,
+        "gap": "west"
+      }
+    ],
+    "zones": {
+      "flats": {
+        "seeds": [
+          [104, 142],
+          [118, 150],
+          [90, 150]
+        ],
+        "trees": -0.4,
+        "grass": 0.3
+      },
+      "dustway": {
+        "seeds": [
+          [80, 118],
+          [86, 104],
+          [84, 134]
+        ],
+        "trees": -0.2
+      },
+      "redrock": {
+        "seeds": [
+          [104, 94],
+          [118, 98],
+          [130, 124]
+        ],
+        "trees": -0.1
+      },
+      "cinder-dunes": {
+        "seeds": [
+          [54, 122],
+          [50, 146],
+          [64, 160]
+        ],
+        "trees": -0.3,
+        "grass": 0.2
+      },
+      "glassflats": {
+        "seeds": [
+          [104, 44],
+          [84, 46],
+          [124, 44]
+        ],
+        "trees": 0.1
+      },
+      "rust-canyon": {
+        "seeds": [
+          [128, 166],
+          [150, 172],
+          [100, 186]
+        ],
+        "trees": 0.3
+      },
+      "ashfall": {
+        "seeds": [
+          [66, 60],
+          [52, 48],
+          [78, 76]
+        ],
+        "trees": 0.2
+      },
+      "scorch-basin": {
+        "seeds": [
+          [146, 118],
+          [150, 138],
+          [140, 94],
+          [138, 76]
+        ],
+        "trees": -0.3,
+        "grass": 0.2
+      },
+      "obsidian": {
+        "seeds": [
+          [22, 104],
+          [24, 140],
+          [28, 66],
+          [24, 176],
+          [26, 32]
+        ],
+        "trees": 0.2
+      },
+      "caldera": {
+        "seeds": [
+          [100, 16],
+          [72, 18],
+          [130, 18],
+          [150, 30]
+        ],
+        "trees": 0.1
+      },
+      "ironspire": {
+        "seeds": [
+          [172, 58],
+          [184, 86],
+          [184, 150],
+          [182, 184]
+        ],
+        "trees": 0.1
+      }
+    },
+    "exits": {
+      "ember-pass": {
+        "at": [0, 104],
+        "kind": "pass"
+      }
+    }
+  }
+}

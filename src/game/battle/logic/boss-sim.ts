@@ -41,6 +41,8 @@ export interface BossSimSetup {
   readonly bag: Bag;
   readonly policy: SimPolicy;
   readonly seed: number;
+  /** Battle weather of the lair's zone (C34: an ash storm sets both Zorlings Burning). */
+  readonly weather?: readonly string[];
   /** Safety stop. */
   readonly maxTurns?: number;
 }
@@ -68,6 +70,7 @@ export function simulateBoss(content: GameContent, setup: BossSimSetup): BossSim
     opponent: [boss],
     bag: setup.bag,
     boss: { id: setup.boss },
+    ...(setup.weather ? { weather: setup.weather } : {}),
   });
   let potionsUsed = 0;
   let armorBreaks = 0;

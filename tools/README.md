@@ -100,6 +100,10 @@ All positions are tiles from the map's top-left. Rects are `{ "x", "y", "w", "h"
 - Errors list every problem at once, e.g.
   `edits[0] (tall: too wide): rect (6, 0, 4×1) leaves the 8×6 map`.
 
+A connection's `to` may be written on either end: the other end leads back (C34). Emberwaste's
+`ember-pass` names `core:verdale#ember-pass`, so the core map stays unchanged. A zone's
+`battleWeather` lists conditions every battle there starts with (C34: ash storms → `core:burning`).
+
 Town pieces are props too (C28): `center`, `shop` and `house` cover several tiles (their
 tile is the door, in the bottom row; houses with `variant & 4` have the door on the right,
 `variant & 3` picks the roof color), plus `well`, `sign`, `fence`, `lamp` and `menhir`.
@@ -118,7 +122,11 @@ footprint is blocked, a bridge deck opens water), plus the overlay's forced tile
 ```sh
 npm run balance                      # Markdown report for Verdale (10 seeds per team plan)
 npm run balance -- --seeds 20 --out report.md
+npm run balance -- --region emberwaste   # another region (C34; see tools/balance/regions.ts)
 ```
+
+Each region has a route file (`verdale.ts`, `emberwaste.ts`: stages, zones, shops, story fights,
+team plans, start) and an entry in `regions.ts`. A story fight in an ash storm sets `weather`.
 
 - `playthrough.ts`: an AI player plays a region's story in order from a new game with real
   progression. It catches its team, grinds the zones reached (real spawn tables), evolves and

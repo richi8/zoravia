@@ -47,6 +47,7 @@ export const trainerMemberSchema = z.strictObject({
   /**
    * Another species when a story condition holds; the first match wins (C33: the rival takes
    * the starter that beats the player's). `moves` are then the new species' learnset moves.
+   * Up to 8 (C34: a rival who travels counters every region's starters, two per region).
    */
   instead: z
     .array(
@@ -58,7 +59,7 @@ export const trainerMemberSchema = z.strictObject({
       }),
     )
     .min(1)
-    .max(4)
+    .max(8)
     .optional(),
 });
 export type TrainerMember = z.output<typeof trainerMemberSchema>;

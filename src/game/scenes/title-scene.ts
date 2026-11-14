@@ -413,10 +413,17 @@ export class TitleScene implements Scene<Container> {
   }
 
   private async play(slot: number, state: GameState): Promise<void> {
-    const { engine, content, input, ui, theme, saves } = this.options;
+    const { engine, saves } = this.options;
     this.closeAll();
     const queue = new SaveQueue((s) => saves.write(slot, s));
-    const scene = new OverworldScene({
+    const scene = this.worldScene(state, queue);
+    await engine.scenes.push(scene, { transition: engine.iris(() => scene.playerScreen()) });
+  }
+
+  /** The overworld of `state`'s map; travel to another map replaces it (C34). */
+  private worldScene(state: GameState, queue: SaveQueue): OverworldScene {
+    const { engine, content, input, ui, theme } = this.options;
+    const scene: OverworldScene = new OverworldScene({
       engine,
       content,
       input,
@@ -428,6 +435,10 @@ export class TitleScene implements Scene<Container> {
       ...(state.respawn ? { respawn: state.respawn } : {}),
       playtime: state.playtime,
       save: (s) => queue.save(s),
+      onTravel: (next) => {
+        const to = this.worldScene(next, queue);
+        void engine.scenes.replace(to, { transition: engine.fade({ duration: 0.4 }) });
+      },
       onExit: () => {
         this.world = undefined;
         void queue.idle().catch(() => undefined);
@@ -435,7 +446,7 @@ export class TitleScene implements Scene<Container> {
       },
     });
     this.world = scene;
-    await engine.scenes.push(scene, { transition: engine.iris(() => scene.playerScreen()) });
+    return scene;
   }
 
   private openDebug(): void {

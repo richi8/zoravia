@@ -82,6 +82,11 @@ export const zoneSchema = z.strictObject({
   mood: z.enum(MOOD_IDS).optional(),
   /** Cosmetic weather while the player is in the zone (C32). */
   weather: z.enum(WEATHER_IDS).optional(),
+  /**
+   * Battle weather (C34): conditions put on both Zorlings sent out first in every battle
+   * started in the zone, e.g. Emberwaste's ash storms → `core:burning`.
+   */
+  battleWeather: z.array(ref).max(2).optional(),
 });
 
 export const anchorSchema = z.strictObject({
@@ -256,9 +261,12 @@ function checkLayout(m: RegionMapData): { path: PropertyKey[]; message: string }
 
 export const maps = defineRegistry('maps', regionMapSchema, {
   refs: (m) =>
-    Object.entries(m.zones).flatMap(([k, z]) =>
-      z.spawns.map((s, i) => refTo('species', s.species, 'zones', k, 'spawns', i, 'species')),
-    ),
+    Object.entries(m.zones).flatMap(([k, z]) => [
+      ...z.spawns.map((s, i) => refTo('species', s.species, 'zones', k, 'spawns', i, 'species')),
+      ...(z.battleWeather ?? []).map((c, i) =>
+        refTo('conditions', c, 'zones', k, 'battleWeather', i),
+      ),
+    ]),
   check: (m, ctx) => checkSpawns(m, ctx),
 });
 

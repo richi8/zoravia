@@ -21,11 +21,15 @@ import { createZorling } from '@game/progression';
 import { trainerBattle } from '@game/story';
 import type { Zone } from '@game/world/map';
 import { playthrough, type PlaythroughResult, type PlaythroughSetup } from './playthrough';
-import { VERDALE_ROUTE, VERDALE_START, VERDALE_TEAMS } from './verdale';
+import { REGIONS, type BalanceRegion } from './regions';
 
 export interface ReportOptions {
   readonly seeds: number;
+  /** The region (`REGIONS` key). Default: Verdale. */
+  readonly region?: BalanceRegion;
 }
+
+const VERDALE = REGIONS['verdale'] as BalanceRegion;
 
 const median = (xs: readonly number[]): number => {
   const s = [...xs].sort((a, b) => a - b);
@@ -36,7 +40,7 @@ const mean = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0) / 
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
 const f1 = (x: number): string => x.toFixed(1);
 const f0 = (x: number): string => x.toFixed(0);
-const local = (id: string): string => id.replace(/^core:/, '');
+const local = (id: string): string => id.replace(/^[a-z0-9_-]+:/, '');
 
 function table(head: readonly string[], rows: readonly (readonly string[])[]): string {
   const line = (cells: readonly string[]): string => `| ${cells.join(' | ')} |`;
@@ -44,18 +48,25 @@ function table(head: readonly string[], rows: readonly (readonly string[])[]): s
 }
 
 export interface Runs {
+  readonly region: BalanceRegion;
   readonly byTeam: readonly { readonly starter: string; readonly runs: PlaythroughResult[] }[];
 }
 
-export function runPlaythroughs(content: GameContent, zones: readonly Zone[], seeds: number): Runs {
+export function runPlaythroughs(
+  content: GameContent,
+  zones: readonly Zone[],
+  seeds: number,
+  region: BalanceRegion = VERDALE,
+): Runs {
   return {
-    byTeam: VERDALE_TEAMS.map((team) => ({
+    region,
+    byTeam: region.teams.map((team) => ({
       starter: team.starter,
       runs: Array.from({ length: seeds }, (_, i) =>
         playthrough(content, {
-          route: VERDALE_ROUTE,
+          route: region.route,
           zones,
-          ...VERDALE_START,
+          ...region.start,
           ...team,
           seed: i + 1,
         } satisfies PlaythroughSetup),
@@ -122,7 +133,7 @@ export function goalTable(runs: Runs): string {
 /** Wild battles and minutes per stage. */
 export function stageTable(runs: Runs): string {
   const all = runs.byTeam.flatMap((t) => t.runs);
-  const stages = VERDALE_ROUTE.map((s) => s.name);
+  const stages = runs.region.route.map((s) => s.name);
   return table(
     ['Stage', 'Wild battles', 'Wild losses', 'Minutes', 'Prize money', 'Potions bought'],
     stages.map((name) => {
@@ -157,40 +168,6 @@ export function moneyTable(runs: Runs): string {
 
 // ------------------------------------------------------------------ bosses
 
-interface BossCase {
-  readonly boss: string;
-  /** `[species, moves]`: a team built for the boss's Armor-breaking reaction. */
-  readonly team: readonly (readonly [string, readonly string[]])[];
-}
-
-/** The reaction teams of the C29 roster test (`verdale-roster.test.ts`). */
-const BOSS_CASES: readonly BossCase[] = [
-  {
-    boss: 'bogmaw-titan',
-    team: [
-      ['brooklet', ['splash-shot', 'drench', 'tide-crash']],
-      ['voltbat', ['static-bite', 'volt-lash', 'wing-cut']],
-      ['galehawk', ['gust', 'wing-cut', 'gale-dash']],
-    ],
-  },
-  {
-    boss: 'mossback-titan',
-    team: [
-      ['fernwick', ['spore-cloud', 'thorn-volley', 'rock-slam']],
-      ['blazekit', ['ember', 'flame-pounce', 'kindle']],
-      ['galehawk', ['gust', 'wing-cut', 'gale-dash']],
-    ],
-  },
-  {
-    boss: 'verdion',
-    team: [
-      ['voltbat', ['static-field', 'volt-lash', 'frost-fang']],
-      ['ironshell', ['iron-bash', 'steel-claw', 'mud-toss']],
-      ['rimewisp', ['cold-snap', 'frost-fang', 'hail-dash']],
-    ],
-  },
-];
-
 const POLICIES: readonly { readonly name: string; readonly policy: SimPolicy; bag?: string }[] = [
   { name: 'reactions', policy: { style: 'reactions' } },
   { name: 'brute', policy: { style: 'brute' } },
@@ -202,10 +179,14 @@ const POLICIES: readonly { readonly name: string; readonly policy: SimPolicy; ba
 ];
 
 /** Boss win rates by level gap and play style. */
-export function bossTable(content: GameContent, seeds: number): string {
+export function bossTable(
+  content: GameContent,
+  seeds: number,
+  region: BalanceRegion = VERDALE,
+): string {
   const rows: string[][] = [];
-  for (const { boss: name, team } of BOSS_CASES) {
-    const boss = `core:${name}`;
+  for (const { boss, team, weather } of region.bosses) {
+    const name = local(boss);
     const level = content.bosses.require(boss).level;
     for (const gap of [0, 2, 4]) {
       const cells = POLICIES.map(({ policy, bag }) => {
@@ -216,20 +197,26 @@ export function bossTable(content: GameContent, seeds: number): string {
             team: team.map(([sp, moves], i) => ({
               ...createZorling(content, {
                 uid: `b${i}`,
-                species: `core:${sp}`,
+                species: sp,
                 level: level + gap,
               }),
-              moves: moves.map((m) => `core:${m}`),
+              moves: [...moves],
             })),
             bag: { 'core:zorb': 1, ...(bag ? { [bag]: 5 } : {}) },
             policy,
             seed: s,
+            ...(weather ? { weather } : {}),
           });
           if (r.outcome === 'caught' || r.outcome === 'win') wins++;
         }
         return pct(wins / seeds);
       });
-      rows.push([`${name} Lv ${level}`, team.map(([sp]) => sp).join(', '), `+${gap}`, ...cells]);
+      rows.push([
+        `${name} Lv ${level}`,
+        team.map(([sp]) => local(sp)).join(', '),
+        `+${gap}`,
+        ...cells,
+      ]);
     }
   }
   return table(['Boss', 'Team', 'Gap', ...POLICIES.map((p) => p.name)], rows);
@@ -270,10 +257,16 @@ function aiBattle(content: GameContent, setup: BattleSetup): boolean {
  * Every story trainer against each team plan at a uniform level (its line evolved, default
  * moves, no potions), one level below, at and two above the trainer's top level.
  */
-export function trainerTable(content: GameContent, seeds: number): string {
-  const goals = VERDALE_ROUTE.flatMap((s) => s.goals).filter(
-    (g): g is { trainer: string; badge?: string } => 'trainer' in g,
-  );
+export function trainerTable(
+  content: GameContent,
+  seeds: number,
+  region: BalanceRegion = VERDALE,
+): string {
+  const goals = region.route
+    .flatMap((s) => s.goals)
+    .filter(
+      (g): g is { trainer: string; badge?: string; weather?: readonly string[] } => 'trainer' in g,
+    );
   const gaps = [-1, 0, 2];
   const rows: string[][] = [];
   let badges: string[] = [];
@@ -282,7 +275,7 @@ export function trainerTable(content: GameContent, seeds: number): string {
     const top = Math.max(
       ...trainerBattle(content, probe, goal.trainer, 1).setup.opponent.map((z) => z.level),
     );
-    const cells = VERDALE_TEAMS.map((plan) =>
+    const cells = region.teams.map((plan) =>
       gaps
         .map((gap) => {
           const level = top + gap;
@@ -292,7 +285,9 @@ export function trainerTable(content: GameContent, seeds: number): string {
               createZorling(content, { uid: `t${i}`, species: formAt(content, sp, level), level }),
             );
             const party = { ...newParty({ team }), badges, flags: { ...plan.flags } };
-            if (aiBattle(content, trainerBattle(content, party, goal.trainer, s).setup)) wins++;
+            const setup = trainerBattle(content, party, goal.trainer, s).setup;
+            const weather = goal.weather;
+            if (aiBattle(content, weather ? { ...setup, weather } : setup)) wins++;
           }
           return pct(wins / seeds);
         })
@@ -302,25 +297,30 @@ export function trainerTable(content: GameContent, seeds: number): string {
     if (goal.badge) badges = [...badges, goal.badge];
   }
   return table(
-    ['Trainer', 'Top Lv', ...VERDALE_TEAMS.map((p) => `${local(p.starter)} (−1 / ±0 / +2)`)],
+    ['Trainer', 'Top Lv', ...region.teams.map((p) => `${local(p.starter)} (−1 / ±0 / +2)`)],
     rows,
   );
 }
 
 // ------------------------------------------------------------------ first battles
 
-/** Each starter alone against each meadow Zorling. */
-export function starterTable(content: GameContent, zones: readonly Zone[], seeds: number): string {
-  const meadow = zones.find((z) => z.key === 'meadow');
+/** Each starter alone against each Zorling of the first zone. */
+export function starterTable(
+  content: GameContent,
+  zones: readonly Zone[],
+  seeds: number,
+  region: BalanceRegion = VERDALE,
+): string {
+  const meadow = zones.find((z) => z.key === region.firstZone);
   const foes = [...new Set(meadow?.spawns.map((s) => s.species) ?? [])];
   const rows: string[][] = [];
-  for (const { starter } of VERDALE_TEAMS) {
+  for (const { starter } of region.teams) {
     for (const foe of foes) {
       const [lo, hi] = meadow?.levels ?? [3, 6];
       const cells = [lo, Math.round((lo + hi) / 2), hi].map((foeLevel) => {
         let wins = 0;
         for (let s = 1; s <= seeds; s++) {
-          const level = VERDALE_START.starterLevel;
+          const level = region.start.starterLevel;
           const won = aiBattle(content, {
             kind: 'wild',
             seed: s,
@@ -331,7 +331,7 @@ export function starterTable(content: GameContent, zones: readonly Zone[], seeds
         }
         return pct(wins / seeds);
       });
-      rows.push([`${local(starter)} Lv ${VERDALE_START.starterLevel}`, local(foe), ...cells]);
+      rows.push([`${local(starter)} Lv ${region.start.starterLevel}`, local(foe), ...cells]);
     }
   }
   const [lo, hi] = meadow?.levels ?? [3, 6];
@@ -344,12 +344,13 @@ export function balanceReport(
   zones: readonly Zone[],
   opts: ReportOptions,
 ): string {
-  const runs = runPlaythroughs(content, zones, opts.seeds);
+  const region = opts.region ?? VERDALE;
+  const runs = runPlaythroughs(content, zones, opts.seeds, region);
   return [
-    '# Verdale balance report',
+    `# ${region.name} balance report`,
     '',
-    `Playthrough simulator, ${opts.seeds} seeds per team plan. Start: one starter at Lv ${VERDALE_START.starterLevel}, ` +
-      `${VERDALE_START.money} coins. The player grinds until the team's mean level is at most 1 below the ` +
+    `Playthrough simulator, ${opts.seeds} seeds per team plan. Start: one starter at Lv ${region.start.starterLevel}, ` +
+      `${region.start.money} coins. The player grinds until the team's mean level is at most 1 below the ` +
       `fight's top level, buys the best potions on sale before each story fight, and retries after 3 more ` +
       `wild battles when it loses. After 3 losses to a boss (or a trainer's boss) it follows the hint: it catches a ` +
       `wild Zorling of a type the Armor-breaking reaction needs and puts it on the team ("Hint followed"). ` +
@@ -373,15 +374,15 @@ export function balanceReport(
     '',
     '## Story trainers by team level (no potions)',
     '',
-    trainerTable(content, opts.seeds * 2),
+    trainerTable(content, opts.seeds * 2, region),
     '',
     '## Bosses (wild battle, Zorb ready)',
     '',
-    bossTable(content, opts.seeds * 2),
+    bossTable(content, opts.seeds * 2, region),
     '',
-    '## Starter alone vs meadow Zorlings',
+    `## Starter alone vs ${region.firstZone} Zorlings`,
     '',
-    starterTable(content, zones, opts.seeds * 2),
+    starterTable(content, zones, opts.seeds * 2, region),
     '',
   ].join('\n');
 }

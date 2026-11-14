@@ -452,10 +452,18 @@ export class DebugLauncherScene implements Scene<Container> {
   }
 
   private async play(slot: number, state: GameState): Promise<void> {
-    const { engine, content, input, ui, theme, saves } = this.options;
+    const { engine, saves } = this.options;
     this.closeOverlays();
     const queue = new SaveQueue((s) => saves.write(slot, s));
-    const scene = new OverworldScene({
+    const scene = this.worldScene(slot, state, queue);
+    this.reportParty(state.party);
+    await engine.scenes.push(scene, { transition: engine.iris(() => scene.playerScreen()) });
+  }
+
+  /** The overworld of `state`'s map; travel to another map replaces it (C34). */
+  private worldScene(slot: number, state: GameState, queue: SaveQueue): OverworldScene {
+    const { engine, content, input, ui, theme } = this.options;
+    const scene: OverworldScene = new OverworldScene({
       engine,
       content,
       input,
@@ -469,6 +477,10 @@ export class DebugLauncherScene implements Scene<Container> {
       save: (s) => queue.save(s),
       onParty: (p) => this.reportParty(p),
       seed: this.seed++,
+      onTravel: (next) => {
+        const to = this.worldScene(slot, next, queue);
+        void engine.scenes.replace(to, { transition: engine.fade({ duration: 0.4 }) });
+      },
       onExit: () => {
         this.world = undefined;
         void queue
@@ -479,8 +491,7 @@ export class DebugLauncherScene implements Scene<Container> {
       },
     });
     this.world = scene;
-    this.reportParty(state.party);
-    await engine.scenes.push(scene, { transition: engine.iris(() => scene.playerScreen()) });
+    return scene;
   }
 
   private pushOverlay(menu: Menu): void {
