@@ -15,6 +15,7 @@
  */
 
 import { Container, Graphics } from 'pixi.js';
+import { lighten } from '@engine/core/color';
 import type { InputManager } from '@engine/input';
 import { pixelTexture } from '@engine/render/pixel-texture';
 import type { Scene } from '@engine/scenes/scene-manager';
@@ -23,6 +24,7 @@ import {
   InspectWidget,
   Menu,
   TooltipLayer,
+  UiMotion,
   type UiInput,
   type UiTheme,
   type Widget,
@@ -33,11 +35,12 @@ import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
 import { xpForLevel } from '@game/progression';
 import { conditionIdOf, typeIdOf } from '@game/style/ids';
-import { conditionColors, paper, semantic, typeColors } from '@game/style/tokens';
+import { conditionColors, paper, semantic, typeColors, type TypeId } from '@game/style/tokens';
 import { BagPanel, type BagItem } from '@game/ui/bag';
 import { BattleCaption, BattleLogPanel, BattleResultPanel, MoveBar } from '@game/ui/battle-bar';
 import { CombatantCard, Hotbar, type CombatantView, type HudTips } from '@game/ui/battle-hud';
 import { Callout, EffectsLayer, FloatNumber } from '@game/ui/callout';
+import { IntroSplash, type IntroSpec } from '@game/ui/intro-splash';
 import { drawItem } from '@game/ui/panels';
 import { ZorlingActor } from '@game/zorlings/actor';
 import { renderZorling } from '@game/zorlings/render';
@@ -109,6 +112,8 @@ export interface BattleSceneOptions {
   readonly confirmHotbarSwitch?: boolean;
   /** Where the battle happens: picks the battle music and ambience. Default forest. */
   readonly biome?: BiomeId;
+  /** Trainer and story-boss battles: the intro splash shown before the first events (C32). */
+  readonly intro?: IntroSpec;
   /** Called once after the battle ended and its results were shown. */
   readonly onEnd: (result: BattleResult, state: BattleState) => void;
 }
@@ -205,6 +210,10 @@ export class BattleScene implements Scene<Container> {
   private time = 0;
   private freeze = 0;
   private shake = { t: 0, amp: 0 };
+  private readonly motion: UiMotion;
+  private splash: IntroSplash | undefined;
+  /** Type of the move being shown (tints the hit flash). */
+  private hitType: TypeId | undefined;
   private waiters: { pred: () => boolean; resolve: () => void }[] = [];
   private tweens: Tween[] = [];
   private clickedSlot: number | undefined;
@@ -275,10 +284,8 @@ export class BattleScene implements Scene<Container> {
       this.stackLayer,
       this.tooltips.view,
     );
-    this.stack = new FocusStack<Container>(
-      { attach: (v) => this.stackLayer.addChild(v), detach: (v) => this.stackLayer.removeChild(v) },
-      options.ui,
-    );
+    this.motion = new UiMotion(this.stackLayer);
+    this.stack = new FocusStack<Container>(this.motion, options.ui);
   }
 
   /** Current state for tests and tools. */
@@ -312,19 +319,33 @@ export class BattleScene implements Scene<Container> {
     this.shown = shownFrom(content, state, this.xpOf, true);
     this.refreshHud(false);
     this.refreshMoves();
-    void this.playEvents(events).then(() => this.next());
+    const intro = this.options.intro;
+    if (intro) {
+      // Starts once the battle transition has mostly uncovered the screen.
+      const splash = new IntroSplash(intro, 0.35);
+      this.splash = splash;
+      this.ui.addChild(splash.view);
+      splash.layout(this.width, this.height);
+      void this.delay(0.35).then(() => playSfx('world.intro'));
+    }
+    void this.until(() => !this.splash)
+      .then(() => this.playEvents(events))
+      .then(() => this.next());
   }
 
   exit(): void {
     for (const side of this.actors)
       for (const fa of side.values()) fa.actor.destroy({ children: true });
     for (const t of this.portraits.values()) t.destroy(true);
+    this.splash?.destroy();
+    this.splash = undefined;
   }
 
   resize(width: number, height: number): void {
     this.width = width;
     this.height = height;
     drawBackdrop(this.backdrop, width, height);
+    this.splash?.layout(width, height);
     for (const side of [PLAYER, OPPONENT] as const) this.placeActor(side);
     const y = this.barY;
     this.foeCard.position.set(8, 8);
@@ -349,7 +370,16 @@ export class BattleScene implements Scene<Container> {
     this.time += sdt;
     this.handleKeys();
     this.stack.update(dt);
+    this.motion.update(dt);
     this.tooltips.update(dt);
+    this.caption.update(dt);
+    if (this.splash) {
+      this.splash.update(dt);
+      if (this.splash.done) {
+        this.splash.destroy();
+        this.splash = undefined;
+      }
+    }
     this.foeCard.update(sdt);
     this.allyCard.update(sdt);
     this.effects.update(sdt);
@@ -448,6 +478,10 @@ export class BattleScene implements Scene<Container> {
       result.outcome
     ];
     this.caption.hide();
+    if (result.outcome === 'win' || result.outcome === 'caught') {
+      const levelled = result.progress.some((evs) => evs.some((e) => e.kind === 'levelUp'));
+      await this.victoryPose(levelled);
+    }
     this.closeMenus();
     // The only text in a battle that waits for `E`.
     await new Promise<void>((resolve) => {
@@ -463,6 +497,23 @@ export class BattleScene implements Scene<Container> {
       );
     });
     this.options.onEnd(result, this.state);
+  }
+
+  /**
+   * The player's Zorling cheers (a hop) with gold sparkles before the results panel (C32);
+   * a level-up adds a callout.
+   */
+  private async victoryPose(levelled: boolean): Promise<void> {
+    const fa = this.onField[PLAYER];
+    if (!fa) return;
+    fa.actor.play('attack');
+    const at = this.center(PLAYER);
+    this.vfxLayer.addChild(new SparkleVfx({ x: at.x, y: at.y - 10 }, 0xffd23f, this.vfxSeed++));
+    if (levelled) {
+      this.callout('Level up!', 0xffd23f, 0.6);
+      this.vfxLayer.addChild(new SparkleVfx({ x: at.x, y: at.y - 30 }, 0xfff1a8, this.vfxSeed++));
+    }
+    await this.delay(levelled ? 0.7 : 0.45);
   }
 
   /** The presentation queue: plays the events of one step in order. */
@@ -531,8 +582,13 @@ export class BattleScene implements Scene<Container> {
       }
       case 'damage': {
         const fa = this.onField[e.side];
-        fa?.actor.play('hurt');
-        this.hitStop(e.amount / Math.max(1, shownActive(before, e.side).maxHp));
+        if (fa) {
+          fa.actor.flashTint = this.hitType
+            ? lighten(typeColors[this.hitType].base, 0.45)
+            : 0xffffff;
+          fa.actor.play('hurt');
+        }
+        this.hitStop(e.amount / Math.max(1, shownActive(before, e.side).maxHp), e.effectiveness);
         this.number(e.side, e.amount, false);
         apply();
         this.refreshHud(true);
@@ -662,6 +718,7 @@ export class BattleScene implements Scene<Container> {
     const { content } = this.options;
     const move = content.moves.require(moveId);
     const type = typeIdOf(move.type) ?? 'metal';
+    this.hitType = type;
     const fa = this.onField[side];
     const lunge = fa
       ? new Promise<void>((resolve) => fa.actor.play('attack', resolve))
@@ -704,9 +761,17 @@ export class BattleScene implements Scene<Container> {
     }
   }
 
-  private hitStop(fraction: number): void {
-    this.freeze = 0.06 + Math.min(0.08, fraction * 0.2);
-    this.startShake(1 + Math.round(Math.min(1, fraction * 3) * 3), 0.25);
+  /**
+   * Freeze and shake for a hit taking `fraction` of max HP (C32 tuning): resisted hits barely
+   * stop, super-effective ones and big chunks stop longer and shake harder.
+   */
+  private hitStop(fraction: number, effectiveness = 1): void {
+    const f = Math.min(1, fraction);
+    const strong = effectiveness > 1;
+    const weak = effectiveness < 1;
+    this.freeze = weak ? 0.04 : 0.06 + Math.min(0.1, f * 0.22) + (strong ? 0.03 : 0);
+    const amp = weak ? 1 : 1 + Math.round(Math.min(1, f * 3) * 2) + (strong ? 1 : 0);
+    this.startShake(amp, f >= 0.4 || strong ? 0.35 : 0.22);
   }
 
   private startShake(amp: number, seconds: number): void {

@@ -11,7 +11,7 @@ import { Texture } from 'pixi.js';
 import { pixelTexture } from '@engine/render/pixel-texture';
 import { Menu, type FocusStack, type MenuItem, type UiTheme, type Widget } from '@engine/ui';
 import { bagTabsFor, itemLook } from '@game/battle/scene/view-data';
-import { playSfx } from '@game/audio';
+import { playJingle, playSfx } from '@game/audio';
 import { VolumeMenu } from '@game/ui/volume-menu';
 import type { GameContent, NpcRole } from '@game/data';
 import { bagCount } from '@game/inventory';
@@ -85,8 +85,29 @@ export class OverworldMenus {
   /** Move offers and evolutions after battles and from the party screen (C22b). */
   readonly levelUp: LevelUpFlow;
 
+  /** Quest state when the log was last opened (or the visit began): newer ones show "New". */
+  private readonly questsSeen = new Map<string, string>();
+
   constructor(readonly host: MenuHost) {
     this.levelUp = new LevelUpFlow(this);
+    this.markQuestsSeen();
+  }
+
+  private static questKey(q: { readonly state: string; readonly step?: string }): string {
+    return q.state === 'done' ? 'done' : `active:${q.step ?? ''}`;
+  }
+
+  private markQuestsSeen(): void {
+    for (const [id, q] of Object.entries(this.host.party.quests))
+      this.questsSeen.set(id, OverworldMenus.questKey(q));
+  }
+
+  /** Quests started or moved on since the log was last opened. */
+  get newQuests(): number {
+    let n = 0;
+    for (const [id, q] of Object.entries(this.host.party.quests))
+      if (this.questsSeen.get(id) !== OverworldMenus.questKey(q)) n++;
+    return n;
   }
 
   /** Re-centers every open screen (after a resize). */
@@ -354,7 +375,13 @@ export class OverworldMenus {
       this.open(panel, () => ({ w: panel.width, h: panel.height }));
       return;
     }
-    const panel = new QuestPanel({ rows, onBack: (p) => this.close(p) });
+    const quests = this.host.party.quests;
+    const fresh = rows.map((r) => {
+      const q = quests[r.id];
+      return { ...r, fresh: !!q && this.questsSeen.get(r.id) !== OverworldMenus.questKey(q) };
+    });
+    this.markQuestsSeen();
+    const panel = new QuestPanel({ rows: fresh, onBack: (p) => this.close(p) });
     this.open(panel, () => ({ w: QuestPanel.WIDTH, h: QuestPanel.HEIGHT }));
   }
 
@@ -379,7 +406,7 @@ export class OverworldMenus {
   private heal(speaker: string): void {
     this.host.party = healAll(this.host.content, this.host.party);
     this.host.centerUsed();
-    playSfx('world.heal');
+    playJingle('world.heal');
     this.host.say(['Your Zorlings are fully healed. Come back any time!'], speaker);
   }
 

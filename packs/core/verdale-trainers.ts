@@ -266,7 +266,7 @@ function bossDialogue(
       },
       fight: { battle: { boss: c(boss) }, win: 'after' },
       after: {
-        ...(vision.length ? { say: [...vision], speaker: 'Vision' } : {}),
+        ...(vision.length ? { say: [...vision], narration: true } : {}),
         branch: [{ if: { boss: c(boss), caught: true }, goto: 'caught' }],
         goto: 'beaten',
       },

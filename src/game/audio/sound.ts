@@ -8,6 +8,7 @@ import {
   AmbiencePlayer,
   MusicPlayer,
   scaleSpec,
+  specDuration,
   type Ambience,
   type AudioEngine,
   type MusicPlayOptions,
@@ -119,6 +120,27 @@ export function currentMusic(): string | undefined {
 /** Scales the music, e.g. under a jingle. 1 = normal. */
 export function setMusicLevel(level: number, seconds = 0.5): void {
   music?.setLevel(level, seconds);
+}
+
+let duckUntil = 0;
+let duckTimer: ReturnType<typeof setTimeout> | undefined;
+
+/**
+ * Plays a jingle (center heal, evolution, quest fanfare) with the music ducked under it,
+ * coming back up once it ends (C32). Overlapping jingles keep it ducked until the last ends.
+ */
+export function playJingle(id: SfxId, level = 0.25): void {
+  playSfx(id);
+  if (!music) return;
+  const ms = specDuration(SFX[id]) * 1000 + 150;
+  const now = Date.now();
+  duckUntil = Math.max(duckUntil, now + ms);
+  setMusicLevel(level, 0.15);
+  if (duckTimer !== undefined) clearTimeout(duckTimer);
+  duckTimer = setTimeout(() => {
+    duckTimer = undefined;
+    setMusicLevel(1, 0.8);
+  }, duckUntil - now);
 }
 
 export function playAmbience(a: Ambience, opts: { readonly fade?: number } = {}): void {

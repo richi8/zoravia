@@ -121,7 +121,7 @@ export class DialogueRun {
       this.state = r.party;
       notes = [...notes, ...r.notes];
       const pages = node.say ?? [];
-      const speaker = node.speaker ?? this.speaker;
+      const speaker = node.narration ? undefined : (node.speaker ?? this.speaker);
       const offered = (node.choices ?? []).filter(
         (c) => !c.if || holds(this.content, this.state, c.if),
       );

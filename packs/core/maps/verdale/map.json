@@ -90,7 +90,8 @@
           "species": "core:voltbat",
           "weight": 1
         }
-      ]
+      ],
+      "weather": "rain"
     },
     "fernwood": {
       "name": "Fernwood",
@@ -139,7 +140,8 @@
           "species": "core:mossback",
           "weight": 1
         }
-      ]
+      ],
+      "mood": "canopy"
     },
     "downs": {
       "name": "Breezy Downs",
@@ -200,7 +202,8 @@
           "species": "core:thornwing",
           "weight": 2
         }
-      ]
+      ],
+      "mood": "canopy"
     },
     "mistmere": {
       "name": "Mistmere",
@@ -220,7 +223,9 @@
           "species": "core:torrentoad",
           "weight": 2
         }
-      ]
+      ],
+      "mood": "mist",
+      "weather": "mist"
     },
     "galeback": {
       "name": "Galeback Ridge",
@@ -272,17 +277,23 @@
     "hollow-oak": {
       "x": 48,
       "y": 44,
-      "kind": "lair"
+      "kind": "lair",
+      "mood": "canopy",
+      "radius": 7
     },
     "sunken-hollow": {
       "x": 44,
       "y": 158,
-      "kind": "lair"
+      "kind": "lair",
+      "mood": "mist",
+      "radius": 7
     },
     "heartwood-shrine": {
       "x": 100,
       "y": 13,
-      "kind": "shrine"
+      "kind": "shrine",
+      "mood": "shrine",
+      "radius": 8
     },
     "crown-rock": {
       "x": 168,
@@ -292,7 +303,9 @@
     "stone-circle": {
       "x": 132,
       "y": 28,
-      "kind": "landmark"
+      "kind": "landmark",
+      "mood": "shrine",
+      "radius": 6
     },
     "lookout": {
       "x": 184,

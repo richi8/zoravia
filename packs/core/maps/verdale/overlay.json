@@ -71,7 +71,8 @@
           "species": "core:voltbat",
           "weight": 1
         }
-      ]
+      ],
+      "weather": "rain"
     },
     "fernwood": {
       "levels": [16, 22],
@@ -114,7 +115,8 @@
           "species": "core:mossback",
           "weight": 1
         }
-      ]
+      ],
+      "mood": "canopy"
     },
     "downs": {
       "levels": [23, 29],
@@ -166,7 +168,8 @@
           "species": "core:thornwing",
           "weight": 2
         }
-      ]
+      ],
+      "mood": "canopy"
     },
     "mistmere": {
       "levels": [30, 36],
@@ -183,7 +186,9 @@
           "species": "core:torrentoad",
           "weight": 2
         }
-      ]
+      ],
+      "mood": "mist",
+      "weather": "mist"
     },
     "galeback": {
       "levels": [36, 42],
@@ -296,6 +301,34 @@
       "y": 42,
       "kind": "boss",
       "facing": "down"
+    },
+    "heartwood-shrine": {
+      "x": 100,
+      "y": 13,
+      "kind": "shrine",
+      "mood": "shrine",
+      "radius": 8
+    },
+    "stone-circle": {
+      "x": 132,
+      "y": 28,
+      "kind": "landmark",
+      "mood": "shrine",
+      "radius": 6
+    },
+    "hollow-oak": {
+      "x": 48,
+      "y": 44,
+      "kind": "lair",
+      "mood": "canopy",
+      "radius": 7
+    },
+    "sunken-hollow": {
+      "x": 44,
+      "y": 158,
+      "kind": "lair",
+      "mood": "mist",
+      "radius": 7
     }
   },
   "edits": [

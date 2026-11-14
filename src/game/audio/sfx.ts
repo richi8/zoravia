@@ -595,6 +595,44 @@ const world = {
   'world.bump': {
     tones: [{ wave: 'sine', dur: 0.07, freq: [160, 90], gain: 0.3 }],
   },
+  /** Stepping into tall grass (C32). */
+  'world.rustle': {
+    tones: [
+      {
+        wave: 'noise',
+        dur: 0.14,
+        gain: 0.16,
+        attack: 0.02,
+        filter: { type: 'bandpass', freq: [5200, 2600], q: 1.5 },
+      },
+    ],
+  },
+  /** Picking up an item from the ground (C32). */
+  'world.pickup': {
+    tones: notes(
+      [
+        [84, 1],
+        [88, 1],
+        [91, 1],
+        [96, 3],
+      ],
+      { wave: 'triangle', beat: 0.05, gain: 0.2 },
+    ),
+  },
+  /** A trainer or boss intro splash (C32). */
+  'world.intro': {
+    tones: [
+      { wave: 'noise', dur: 0.3, gain: 0.3, filter: { type: 'highpass', freq: [800, 4000] } },
+      ...notes(
+        [
+          [67, 1],
+          [74, 1],
+          [79, 3],
+        ],
+        { wave: 'square', beat: 0.07, gain: 0.14, at: 0.12 },
+      ),
+    ],
+  },
   'world.heal': {
     tones: [
       ...notes(

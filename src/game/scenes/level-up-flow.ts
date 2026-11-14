@@ -17,7 +17,7 @@ import type { PixelSprite } from '@engine/render/sdf-sprite';
 import type { MenuItem } from '@engine/ui';
 import { progressText } from '@game/battle/present/text';
 import { answerMoveOffer, evolveMember, memberOf, offerValid, type Offer } from '@game/player';
-import { playSfx, playSpec, speciesCry } from '@game/audio';
+import { playJingle, playSpec, speciesCry } from '@game/audio';
 import { displayName, MOVE_SLOTS } from '@game/progression';
 import { typeIdOf } from '@game/style/ids';
 import { TypeBadge } from '@game/ui/badges';
@@ -181,11 +181,12 @@ export class LevelUpFlow {
       return;
     }
     const name = displayName(content, zorling);
-    playSfx('world.evolve');
+    playJingle('world.evolve');
     const panel = new EvolutionPanel({
       title: `What? ${name} is evolving!`,
       from: this.art(zorling.species),
       into: this.art(evo.into),
+      intoName: content.species.require(evo.into).name,
       onDone: (p) => {
         this.menus.close(p);
         playSpec(speciesCry(content, evo.into));
@@ -207,7 +208,12 @@ export class LevelUpFlow {
         this.host.say(pages, undefined, () => next(result.offers));
       },
     });
-    this.menus.open(panel, () => ({ w: panel.width, h: panel.height }));
+    // Full screen: the panel follows the screen size.
+    this.menus.open(panel, () => {
+      const { width, height } = this.host.size();
+      panel.resize(width, height);
+      return { w: width, h: height };
+    });
   }
 
   /** Battle-size sprite and its white silhouette. */

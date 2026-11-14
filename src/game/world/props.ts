@@ -115,6 +115,8 @@ export interface PropSprite {
   readonly width: number;
   readonly height: number;
   readonly data: Uint32Array;
+  /** `PropGlow` code per pixel, when some pixels glow at night. */
+  readonly glow?: Uint8Array;
 }
 
 type Px = readonly [Material, number] | null;

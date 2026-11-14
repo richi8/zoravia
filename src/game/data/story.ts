@@ -131,6 +131,8 @@ export const dialogueNodeSchema = z
     say: z.array(page).max(12).optional(),
     /** Who speaks; default the NPC talked to. */
     speaker: name.optional(),
+    /** Narration (C32): the pages show without a name tag (visions, scene text). */
+    narration: z.boolean().optional(),
     /** Run when the node is reached (before its pages show, so notes can follow them). */
     do: actions.optional(),
     /** Shown with the last page; the player picks one. `Q` picks the last one. */

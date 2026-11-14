@@ -12,6 +12,12 @@ import { TILE_STYLE, type Biome } from './biomes';
 import { Painter } from './props';
 import { LIQUID_STRIDE, type TerrainBake } from './terrain';
 
+/** Receives the glowing prop pixels drawn this frame (C32 lighting). */
+export interface GlowSink {
+  /** Screen pixel `i` was drawn as packed color `px`, with `PropGlow` code `code`. */
+  glow(i: number, px: number, code: number): void;
+}
+
 /** Draws terrain with screen pixel (0, 0) at world pixel (`camX`, `camY`); `t` in seconds. */
 export class TerrainRenderer {
   readonly painter: Painter;
@@ -32,7 +38,7 @@ export class TerrainRenderer {
     this.tall = this.painter.ramp('tall');
   }
 
-  draw(buf: PixelBuffer, camX: number, camY: number, t: number): void {
+  draw(buf: PixelBuffer, camX: number, camY: number, t: number, sink?: GlowSink): void {
     const { bake } = this;
     const out = buf.data;
     const W = buf.width;
@@ -76,7 +82,12 @@ export class TerrainRenderer {
         const row = y * W;
         for (let x = x0; x < x1; x++) {
           const c = bake.overlay[src + x] ?? 0;
-          if (c) out[row + x] = c;
+          if (!c) continue;
+          out[row + x] = c;
+          if (sink) {
+            const g = bake.glow[src + x] ?? 0;
+            if (g) sink.glow(row + x, c, g);
+          }
         }
       }
     }

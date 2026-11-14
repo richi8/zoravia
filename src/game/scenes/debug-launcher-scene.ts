@@ -11,7 +11,7 @@ import { Container, Graphics } from 'pixi.js';
 import type { InputManager } from '@engine/input';
 import type { Engine } from '@engine/render/engine';
 import type { Scene } from '@engine/scenes/scene-manager';
-import { FocusStack, Menu, type MenuItem, type UiInput, type UiTheme } from '@engine/ui';
+import { FocusStack, Menu, UiMotion, type MenuItem, type UiInput, type UiTheme } from '@engine/ui';
 import { bossZorling, type BattleResult, type BattleSetup } from '@game/battle/logic';
 import { BATTLE_SPEEDS, BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
@@ -71,6 +71,7 @@ export class DebugLauncherScene implements Scene<Container> {
   );
   private readonly layer = new Container();
   private readonly stack: FocusStack<Container>;
+  private readonly motion: UiMotion;
   private menu!: Menu;
   private speed = 0;
   /** Map a new game starts on (C28: Verdale, or the C19 test region with the C21–C27 content). */
@@ -90,10 +91,8 @@ export class DebugLauncherScene implements Scene<Container> {
   constructor(private readonly options: LauncherOptions) {
     this.view.addChild(this.bg);
     this.ui.addChild(this.panel, this.title, this.note, this.status, this.layer);
-    this.stack = new FocusStack<Container>(
-      { attach: (v) => this.layer.addChild(v), detach: (v) => this.layer.removeChild(v) },
-      options.ui,
-    );
+    this.motion = new UiMotion(this.layer);
+    this.stack = new FocusStack<Container>(this.motion, options.ui);
     this.buildMenu(0);
     const hide = (): void => {
       if (document.visibilityState === 'hidden') void this.world?.saveNow('auto');
@@ -123,6 +122,7 @@ export class DebugLauncherScene implements Scene<Container> {
 
   update(dt: number): void {
     this.stack.update(dt);
+    this.motion.update(dt);
   }
 
   resize(width: number, height: number): void {
@@ -501,12 +501,12 @@ export class DebugLauncherScene implements Scene<Container> {
           .idle()
           .catch(() => undefined)
           .then(() => this.openSlots(slot - 1));
-        void engine.scenes.pop({ transition: engine.fade({ duration: 0.25 }) });
+        void engine.scenes.pop({ transition: engine.iris(() => scene.playerScreen()) });
       },
     });
     this.world = scene;
     this.reportParty(state.party);
-    await engine.scenes.push(scene, { transition: engine.fade({ duration: 0.25 }) });
+    await engine.scenes.push(scene, { transition: engine.iris(() => scene.playerScreen()) });
   }
 
   private pushOverlay(menu: Menu): void {

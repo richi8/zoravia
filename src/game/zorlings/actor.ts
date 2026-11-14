@@ -30,6 +30,7 @@ interface LoadedClip {
     readonly dy: number;
     readonly alpha: number;
     readonly ms: number;
+    readonly flash: boolean;
   }[];
 }
 
@@ -42,6 +43,8 @@ export class ZorlingActor extends Container {
   private time = 0;
   private onDone: (() => void) | undefined;
   speed: number;
+  /** Tint of hit-flash frames (white by default; the battle uses the move's type, C32). */
+  flashTint = 0xffffff;
 
   constructor(
     readonly genome: ZorlingGenome,
@@ -115,6 +118,7 @@ export class ZorlingActor extends Container {
       Math.round(-anim.anchor.y + f.dy),
     );
     this.sprite.alpha = f.alpha;
+    this.sprite.tint = f.flash ? this.flashTint : 0xffffff;
   }
 
   private load(name: ClipName): LoadedClip {
@@ -137,6 +141,7 @@ export class ZorlingActor extends Container {
         dy: f.dy,
         alpha: f.alpha,
         ms: f.ms,
+        flash: f.flash ?? false,
       })),
     };
     this.clips.set(name, loaded);

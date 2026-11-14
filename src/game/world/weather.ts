@@ -6,14 +6,15 @@
 
 import type { WeatherSpec } from '@engine/render/weather';
 
-export type WeatherId = 'clear' | 'rain' | 'ash' | 'snow';
-export const WEATHER_IDS: readonly WeatherId[] = ['clear', 'rain', 'ash', 'snow'];
+export const WEATHER_IDS = ['clear', 'rain', 'ash', 'snow', 'mist'] as const;
+export type WeatherId = (typeof WEATHER_IDS)[number];
 
 export const WEATHER_LABELS: Readonly<Record<WeatherId, string>> = {
   clear: 'Clear',
   rain: 'Rain',
   ash: 'Ash storm',
   snow: 'Snow',
+  mist: 'Mist',
 };
 
 export const WEATHER: Readonly<Record<WeatherId, WeatherSpec>> = {
@@ -57,6 +58,21 @@ export const WEATHER: Readonly<Record<WeatherId, WeatherSpec>> = {
         color: 0xffd27a,
         alpha: [0.75, 1],
         flicker: { colors: [0xffd27a, 0xff7a36], speed: 9 },
+      },
+    ],
+  },
+  mist: {
+    haze: { color: 0xeef2f8, alpha: 0.14, wave: { amp: 0.08, freq: 0.025, speed: 0.35 } },
+    layers: [
+      {
+        count: 40,
+        shape: 'dot',
+        vx: [6, 12],
+        vy: [-2, 2],
+        sway: { amp: 3, freq: 0.7 },
+        wideFrom: 0.4,
+        color: 0xffffff,
+        alpha: [0.15, 0.3],
       },
     ],
   },

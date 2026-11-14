@@ -21,7 +21,9 @@
 import { defineRegistry, type CheckContext, type EntryOf, type EntryProblem } from '@engine/packs';
 import { z } from 'zod';
 import { BIOME_IDS } from '@game/world/biomes';
+import { MOOD_IDS } from '@game/world/lighting';
 import { PROP_KINDS } from '@game/world/props';
+import { WEATHER_IDS } from '@game/world/weather';
 import { name, ref, refTo } from './common';
 import { MAX_LEVEL } from './species';
 
@@ -76,6 +78,10 @@ export const zoneSchema = z.strictObject({
   /** Fixed wild levels of the zone (inside the tier's range). */
   levels,
   spawns: z.array(spawnSchema).default([]),
+  /** Light mood over the whole zone (C32), e.g. `canopy` under a deep wood. */
+  mood: z.enum(MOOD_IDS).optional(),
+  /** Cosmetic weather while the player is in the zone (C32). */
+  weather: z.enum(WEATHER_IDS).optional(),
 });
 
 export const anchorSchema = z.strictObject({
@@ -84,6 +90,9 @@ export const anchorSchema = z.strictObject({
   /** Free-form role: `spawn`, `center`, `shop`, `npc`, … */
   kind: z.string().min(1).max(24).default('point'),
   facing: z.enum(FACINGS).optional(),
+  /** Light mood around the anchor (C32), full within `radius` tiles and fading after. */
+  mood: z.enum(MOOD_IDS).optional(),
+  radius: z.number().int().min(1).max(32).optional(),
 });
 
 export const connectionSchema = z.strictObject({

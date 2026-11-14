@@ -11,3 +11,4 @@ export * from './tooltip';
 export * from './typewriter';
 export * from './ui-input';
 export * from './ui-sound';
+export * from './motion';

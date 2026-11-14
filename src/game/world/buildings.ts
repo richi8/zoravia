@@ -9,8 +9,8 @@
  */
 
 import { hash2, valueNoise } from '@engine/core/noise';
-import type { PropSprite } from './props';
-import type { Painter, PaintMaterial } from './props';
+import { GLOW, type PropGlow } from './glow';
+import type { Painter, PaintMaterial, PropSprite } from './props';
 
 /** Town materials: ramps dark → light, shared by every biome. */
 export const TOWN_RAMPS = {
@@ -21,6 +21,8 @@ export const TOWN_RAMPS = {
   glass: [0x2f5a86, 0x4f86b6, 0x8cc4e6, 0xd8f0fc],
   white: [0xc8d0dc, 0xeef2f6, 0xffffff],
   gold: [0xa07a22, 0xd8ae40, 0xf6d878],
+  /** Lamp glass: looks like gold by day, glows at night (C32). */
+  flame: [0xa07a22, 0xd8ae40, 0xf6d878],
   heart: [0xa82838, 0xd8405a, 0xf47a8a],
   awning: [0xa8323a, 0xd84a4a, 0xf07070],
   potion: [0x2f6ab0, 0x4a92e0, 0x9ad0ff],
@@ -37,6 +39,13 @@ export const TOWN_RAMPS = {
 } as const satisfies Record<string, readonly number[]>;
 
 export type TownMaterial = keyof typeof TOWN_RAMPS;
+
+/** Materials that glow when lit (C32), by `PropGlow` code. */
+const GLOW_OF: Partial<Record<PaintMaterial, PropGlow>> = {
+  glass: GLOW.window,
+  rune: GLOW.rune,
+  flame: GLOW.flame,
+};
 
 /** House roof colors by `variant & 3`. */
 const HOUSE_ROOFS: readonly TownMaterial[] = ['roofTeal', 'roofMustard', 'roofRed', 'roofPlum'];
@@ -101,6 +110,14 @@ class Canvas {
       data[i] = p.tone(m, this.light[i] ?? 0.5, x * 7 + 3, y * 5 + 1);
     }
     const out = new Uint32Array(data);
+    let glow: Uint8Array | undefined;
+    for (let i = 0; i < w * h; i++) {
+      const m = this.mat[i];
+      const code = m ? GLOW_OF[m] : undefined;
+      if (code === undefined) continue;
+      glow ??= new Uint8Array(w * h);
+      glow[i] = code;
+    }
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         if (this.get(x, y)) continue;
@@ -109,7 +126,7 @@ class Canvas {
         if (m) out[y * w + x] = p.outline(m);
       }
     }
-    return { width: w, height: h, data: out };
+    return glow ? { width: w, height: h, data: out, glow } : { width: w, height: h, data: out };
   }
 }
 
@@ -342,7 +359,7 @@ export function lamp(p: Painter): PropSprite {
   const c = new Canvas(10, 28);
   c.rect(4, 8, 2, 18, 'timber', (x) => (x === 0 ? 0.6 : 0.2));
   c.rect(3, 25, 4, 2, 'stone', 0.5);
-  c.rect(2, 2, 6, 6, 'gold', (x, y) => 0.95 - x * 0.08 - y * 0.03);
+  c.rect(2, 2, 6, 6, 'flame', (x, y) => 0.95 - x * 0.08 - y * 0.03);
   c.rect(1, 1, 8, 1, 'timber', 0.3);
   c.rect(3, 0, 4, 1, 'timber', 0.3);
   return c.finish(p);

@@ -80,6 +80,8 @@ export interface TerrainBake {
    * empty. Entities whose base is above (smaller y) are hidden behind that pixel (C20).
    */
   readonly depth: Int32Array;
+  /** Per overlay pixel: its `PropGlow` code (0 = none), lit at night (C32). */
+  readonly glow: Uint8Array;
   /**
    * Liquid pixels, `LIQUID_STRIDE` ints each: local index, world x, world y, edge coverage
    * ×1000 (with noise; 500 = shoreline) and smooth depth ×1000.
@@ -106,30 +108,47 @@ interface Placed {
   readonly by: number;
 }
 
-function placeProps(map: TerrainMap, painter: Painter): Placed[] {
-  const cache = new Map<string, PropSprite>();
-  const placed = map.props.map((p): Placed => {
+/** Where a prop's sprite goes: sprite top-left and footprint center, world px. */
+export function placeProp(
+  p: PropPlacement,
+  sprite: PropSprite,
+): { x: number; y: number; bx: number; by: number } {
+  const info = PROP_INFO[p.kind];
+  const variant = (p.variant ?? 0) & 7;
+  const dx = p.dx ?? 0;
+  const dy = (p.dy ?? 0) + (info.lift ?? 0);
+  // Buildings center on their footprint, not on their (door) tile.
+  const [fx, , fw] = propFootprint(p.kind, p.tx, p.ty, variant);
+  const bx = fx * TILE + (fw * TILE) / 2 + dx;
+  return {
+    x: bx - (sprite.width >> 1),
+    y: p.ty * TILE + TILE - 1 - sprite.height + dy,
+    bx,
+    by: p.ty * TILE + TILE - 2 + dy,
+  };
+}
+
+/** Prop sprites by kind and variant (they only depend on the painter). */
+export class PropSprites {
+  private readonly cache = new Map<string, PropSprite>();
+  constructor(readonly painter: Painter) {}
+  get(p: PropPlacement): PropSprite {
     const variant = (p.variant ?? 0) & 7;
     const key = `${p.kind}:${variant}`;
-    let sprite = cache.get(key);
+    let sprite = this.cache.get(key);
     if (!sprite) {
-      sprite = buildProp(painter, p.kind, variant);
-      cache.set(key, sprite);
+      sprite = buildProp(this.painter, p.kind, variant);
+      this.cache.set(key, sprite);
     }
-    const info = PROP_INFO[p.kind];
-    const dx = p.dx ?? 0;
-    const dy = (p.dy ?? 0) + (info.lift ?? 0);
-    // Buildings center on their footprint, not on their (door) tile.
-    const [fx, , fw] = propFootprint(p.kind, p.tx, p.ty, variant);
-    const bx = fx * TILE + (fw * TILE) / 2 + dx;
-    return {
-      sprite,
-      info,
-      x: bx - (sprite.width >> 1),
-      y: p.ty * TILE + TILE - 1 - sprite.height + dy,
-      bx,
-      by: p.ty * TILE + TILE - 2 + dy,
-    };
+    return sprite;
+  }
+}
+
+function placeProps(map: TerrainMap, painter: Painter): Placed[] {
+  const sprites = new PropSprites(painter);
+  const placed = map.props.map((p): Placed => {
+    const sprite = sprites.get(p);
+    return { sprite, info: PROP_INFO[p.kind], ...placeProp(p, sprite) };
   });
   return placed.sort((a, b) => a.by - b.by);
 }
@@ -233,9 +252,10 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
   // Props overlay (clipped to the rect; props from neighbouring chunks overlap in too).
   const overlay = new Uint32Array(W * H);
   const depth = new Int32Array(W * H);
+  const glow = new Uint8Array(W * H);
   const vents: { x: number; y: number }[] = [];
   for (const p of props) {
-    const { width: sw, height: sh, data } = p.sprite;
+    const { width: sw, height: sh, data, glow: sg } = p.sprite;
     for (let y = 0; y < sh; y++) {
       for (let x = 0; x < sw; x++) {
         const c = data[y * sw + x] ?? 0;
@@ -244,6 +264,7 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
         if (i >= 0) {
           overlay[i] = c;
           depth[i] = p.info.flat ? 0 : p.by;
+          glow[i] = sg?.[y * sw + x] ?? 0;
         }
       }
     }
@@ -258,6 +279,7 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
     base,
     overlay,
     depth,
+    glow,
     liquid: Int32Array.from(liquid),
     tufts,
     vents,

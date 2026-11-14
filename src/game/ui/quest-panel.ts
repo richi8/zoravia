@@ -21,6 +21,8 @@ export interface QuestRow {
   readonly done: boolean;
   readonly steps: readonly { readonly text: string; readonly done: boolean }[];
   readonly reward: string;
+  /** Started or moved on since the log was last opened (C32): shows a "New" tag. */
+  readonly fresh?: boolean;
 }
 
 export interface QuestPanelOptions {
@@ -128,6 +130,14 @@ export class QuestPanel implements Widget<Container> {
       const name = uiText('body', d.name, d.done ? paper.inkDim : paper.ink);
       name.position.set(18, 1);
       r.addChild(name);
+      if (d.fresh) {
+        const tag = uiText('label', 'New', paper.title);
+        tag.position.set(Math.round(LIST_W - 4 - tag.width), 2);
+        name.style.wordWrap = false;
+        // Keep the name clear of the tag.
+        if (name.x + name.width > tag.x - 3) name.scale.x = (tag.x - 3 - name.x) / name.width;
+        r.addChild(tag);
+      }
       r.hitArea = new Rectangle(0, 0, LIST_W, ROW_H - 1);
       this.pointer.bind(r, 'row', i);
       add(r, 4, TOP + (i - this.scroll) * ROW_H);

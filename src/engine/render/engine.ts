@@ -33,6 +33,7 @@ import { FixedStepLoop } from '../loop/fixed-step';
 import { createRafDriver, type FrameDriver } from '../loop/raf';
 import { SceneManager, type Transition } from '../scenes/scene-manager';
 import { createFade, type FadeOptions } from './fade';
+import { createIris, type IrisOptions } from './iris';
 import { fitVirtual, toVirtual, type VirtualFit, type VirtualSize } from './virtual-screen';
 
 const log = createLogger('engine:render');
@@ -216,6 +217,16 @@ export class Engine {
     return createFade(
       this.layers.transitions,
       () => ({ width: this.width, height: this.height }),
+      options,
+    );
+  }
+
+  /** Iris wipe sized to the screen, closing on and opening around `center` (game px). */
+  iris(center?: () => { x: number; y: number } | undefined, options?: IrisOptions): Transition {
+    return createIris(
+      this.layers.transitions,
+      () => ({ width: this.width, height: this.height }),
+      center ?? (() => undefined),
       options,
     );
   }

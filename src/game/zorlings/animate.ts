@@ -27,6 +27,8 @@ export interface ZorlingFrame {
   readonly alpha: number;
   /** Frame duration in milliseconds (at battle speed 1). */
   readonly ms: number;
+  /** A hit-flash frame (drawn as a white silhouette; the actor may tint it, C32). */
+  readonly flash?: boolean;
 }
 
 export interface ZorlingClip {
@@ -253,7 +255,14 @@ export function animateZorling(
           i % 2,
         );
       }
-      return { sprite, dx: f.dx, dy: f.dy, alpha: f.alpha, ms: f.ms };
+      return {
+        sprite,
+        dx: f.dx,
+        dy: f.dy,
+        alpha: f.alpha,
+        ms: f.ms,
+        ...(f.flash ? { flash: true } : {}),
+      };
     });
     clips[name] = { name, loop: name === 'idle', frames };
   }

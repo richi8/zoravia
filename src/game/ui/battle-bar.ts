@@ -243,27 +243,60 @@ export class MoveBar implements Widget<Container> {
  * scene decides how long each line stays.
  */
 export class BattleCaption extends Container {
+  /** Seconds to fade in or out (C32). */
+  static readonly FADE = 0.12;
+  private readonly box = new Container();
   private readonly bg = new Graphics();
   private readonly text = uiText('body', '', paper.ink, { wordWrap: true, align: 'center' });
   private maxW = 260;
+  private shown = false;
+  private appear = 0;
 
   constructor() {
     super({ label: 'caption' });
-    this.addChild(this.bg, this.text);
+    this.box.addChild(this.bg, this.text);
+    this.addChild(this.box);
     this.visible = false;
   }
 
   get current(): string {
-    return this.visible ? this.text.text : '';
+    return this.shown ? this.text.text : '';
   }
 
   /** Room for the caption: centered in `area`, at most `maxW` wide. */
   setMaxWidth(maxW: number): void {
     this.maxW = Math.round(maxW);
-    if (this.visible) this.show(this.text.text);
+    if (this.shown) this.draw(this.text.text);
   }
 
   show(line: string): void {
+    // A new caption over a shown one swaps in place; from hidden it fades and slides in.
+    if (!this.shown) this.appear = 0;
+    this.shown = true;
+    this.visible = true;
+    this.draw(line);
+    this.pose();
+  }
+
+  hide(): void {
+    this.shown = false;
+  }
+
+  /** Fades toward shown or hidden. */
+  update(dt: number): void {
+    if (!this.visible) return;
+    const step = dt / BattleCaption.FADE;
+    this.appear = this.shown ? Math.min(1, this.appear + step) : Math.max(0, this.appear - step);
+    if (!this.shown && this.appear <= 0) this.visible = false;
+    this.pose();
+  }
+
+  private pose(): void {
+    this.box.alpha = this.appear;
+    this.box.y = Math.round((1 - this.appear) * -3);
+  }
+
+  private draw(line: string): void {
     this.text.style.wordWrapWidth = this.maxW - 16;
     this.text.text = line;
     const w = Math.min(this.maxW, Math.ceil(this.text.width) + 16);
@@ -271,11 +304,6 @@ export class BattleCaption extends Container {
     this.bg.clear();
     drawPaper(this.bg, 0, 0, w, h, { radius: 3 });
     this.text.position.set(Math.round((w - this.text.width) / 2), 4);
-    this.visible = true;
-  }
-
-  hide(): void {
-    this.visible = false;
   }
 }
 

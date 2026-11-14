@@ -189,6 +189,9 @@ Rules settled in C26 (2026-11-13):
 - Battle animations: idle breathing, attack lunge, type VFX, hit flash/knockback/hit-stop/shake, damage numbers, reaction callouts, condition overlays, switch dissolve, capture arc + wobble, faint fade. Actions ≤ ~1.5s; battle speed setting.
 - Overworld: 4-dir walk cycles, grass rustle, water ripple, roaming creatures/NPCs, battle transition.
 - Lighting, weather particles, grass/water shaders, camera easing.
+  - **Day and night** (C32) are cosmetic: a 20-minute day on the play clock (a new game starts in the morning). Lamps and windows light up from dusk. Wild spawns do not change with the time of day (day/night spawns stay a "Later" idea).
+  - **Area moods** (C32) come from map data: a zone or an anchor can set a light mood (`canopy`, `shrine`, `mist`) and a zone can set cosmetic weather. Overworld weather never changes battles.
+- Presentation (C32): iris wipes into the world and out of battles; an intro splash before trainer and story-boss battles; quest and badge news as toasts that do not stop play; a full-screen evolution scene.
 - Audio: synth SFX, genome-derived cries, procedural biome music, hand-authored boss themes, ambience.
   - **Cries** (C24) come from the species' genome, so a species always sounds the same: the body plan picks the voice (a canine barks, a feline meows, an insect buzzes, a golem rumbles), size lowers the pitch (later evolution stages sound deeper), mood shapes it (cute higher with a rising end, fierce harsher, dark lower and detuned) and the first type adds a texture. Titans and legendaries in boss form sound deeper and longer.
   - Every battle action and UI action has a sound; turn markers are silent. A cry plays on send-out, and a low, slow one on faint.

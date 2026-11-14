@@ -534,13 +534,13 @@ export type OverlayId = ConditionId | 'frozen' | 'rooted' | 'overload' | 'steam-
 /** Particles per second for each overlay. */
 const OVERLAY_RATE: Readonly<Record<OverlayId, number>> = {
   burning: 14,
-  wet: 7,
+  wet: 11,
   overgrown: 5,
   charged: 9,
   chilled: 7,
   muddy: 4,
   airborne: 6,
-  exposed: 4,
+  exposed: 6,
   frozen: 10,
   rooted: 6,
   overload: 10,
@@ -560,6 +560,7 @@ export class ConditionOverlay extends Container {
   /** Half width and height of the figure in game pixels. */
   private w = 24;
   private h = 56;
+  private time = 0;
 
   constructor() {
     super({ label: 'condition-overlay' });
@@ -590,7 +591,32 @@ export class ConditionOverlay extends Container {
       this.acc.set(id, a);
     }
     this.ps.update(dt);
+    this.time += dt;
     const g = this.g.clear();
+    if (this.ids.includes('wet')) {
+      // A small puddle at the feet that breathes in and out (C32: easier to read).
+      const pw = this.w + 2 + Math.round(Math.sin(this.time * 3) * 1.5);
+      g.rect(-pw, -1, pw * 2, 2).fill({ color: conditionColors.wet.color, alpha: 0.55 });
+      g.rect(-pw + 4, -2, pw * 2 - 8, 1).fill({ color: 0xdff4ff, alpha: 0.6 });
+    }
+    if (this.ids.includes('exposed') && this.time % 1 < 0.6) {
+      // Target brackets around the figure: its guard is down.
+      const c = conditionColors.exposed.color;
+      const x0 = -this.w - 5;
+      const x1 = this.w + 5;
+      const y0 = -this.h - 6;
+      const y1 = 2;
+      const L = 6;
+      for (const [x, y, sx, sy] of [
+        [x0, y0, 1, 1],
+        [x1, y0, -1, 1],
+        [x0, y1, 1, -1],
+        [x1, y1, -1, -1],
+      ] as const) {
+        g.rect(sx > 0 ? x : x - L + 2, y, L, 2).fill({ color: c });
+        g.rect(x, sy > 0 ? y : y - L + 2, 2, L).fill({ color: c });
+      }
+    }
     if (this.ids.includes('frozen')) {
       // An icy rim at the feet.
       g.rect(-this.w, -2, this.w * 2, 2).fill({ color: 0xd3f6ff });
@@ -622,12 +648,13 @@ export class ConditionOverlay extends Container {
       case 'wet':
         this.ps.spawn({
           x: r.float(-w, w),
-          y: -h * r.float(0.5, 1),
+          y: -h * r.float(0.4, 1),
           vy: 30,
-          ay: 160,
-          life: 0.5,
-          size: 1,
-          color: r.chance(0.5) ? 0xffffff : color('wet'),
+          ay: 170,
+          life: 0.55,
+          size: r.chance(0.4) ? 2 : 1,
+          shape: r.chance(0.5) ? 'streak' : 'square',
+          color: r.chance(0.4) ? 0xffffff : color('wet'),
         });
         break;
       case 'overgrown':
@@ -686,7 +713,13 @@ export class ConditionOverlay extends Container {
         break;
       case 'exposed': {
         const p = body();
-        this.ps.spawn({ ...p, life: 0.35, size: 2, shape: 'glint', color: color('exposed') });
+        this.ps.spawn({
+          ...p,
+          life: 0.4,
+          size: r.int(2, 3),
+          shape: 'glint',
+          color: r.chance(0.3) ? 0xffffff : color('exposed'),
+        });
         break;
       }
       case 'frozen': {

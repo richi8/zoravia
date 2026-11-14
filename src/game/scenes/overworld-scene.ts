@@ -29,15 +29,16 @@
 
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { darken, lighten } from '@engine/core/color';
+import { coverage } from '@engine/world/autotile';
 import type { InputManager } from '@engine/input';
 import type { Engine } from '@engine/render/engine';
 import { blendPacked, packColor, PixelBuffer } from '@engine/render/pixel-buffer';
 import type { Scene } from '@engine/scenes/scene-manager';
-import { DialogBox, FocusStack, Menu, type UiInput, type UiTheme } from '@engine/ui';
+import { DialogBox, FocusStack, Menu, UiMotion, type UiInput, type UiTheme } from '@engine/ui';
 import type { BattleResult, BattleSetup } from '@game/battle/logic';
 import { BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
-import { fieldAudio, playSfx } from '@game/audio';
+import { fieldAudio, playJingle, playSfx } from '@game/audio';
 import type { GameContent } from '@game/data';
 import { MOVE_DIRECTIONS, type Action } from '@game/input/actions';
 import {
@@ -66,12 +67,16 @@ import type { DialogueBattle } from '@game/data';
 import { paper, surface } from '@game/style/tokens';
 import { ITEM_SPRITES } from '@game/ui/icons';
 import { MoneyLabel } from '@game/ui/panels';
+import { splitNotes, ToastQueue } from '@game/ui/toast';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
 import { BIOMES, TILE } from '@game/world/biomes';
+import { nextPhaseStart, type DayPhase } from '@game/world/lighting';
 import { loadRegion, type WorldMap } from '@game/world/map';
 import type { NpcActor, Roamer } from '@game/world/overworld/actors';
+import { Atmosphere } from '@game/world/overworld/atmosphere';
 import { Camera } from '@game/world/overworld/camera';
+import { WorldFx } from '@game/world/overworld/fx';
 import {
   buildCharacterSheet,
   CHARACTER_H,
@@ -92,7 +97,9 @@ import { outfitOf } from '@game/world/overworld/outfits';
 import { pathToward } from '@game/world/overworld/path';
 import { OverworldSim, type Occupant } from '@game/world/overworld/sim';
 import { TerrainStream } from '@game/world/overworld/stream';
-import { speciesLook } from '@game/zorlings/species-look';
+import { battleLook, speciesLook } from '@game/zorlings/species-look';
+import { pixelTexture } from '@engine/render/pixel-texture';
+import type { IntroSpec } from '@game/ui/intro-splash';
 import { renderZorling, SPRITE_SIZE } from '@game/zorlings/render';
 import { OverworldMenus } from './overworld-menus';
 
@@ -161,6 +168,12 @@ export class OverworldScene implements Scene<Container> {
   readonly map: WorldMap;
   readonly sim: OverworldSim;
   private readonly stream: TerrainStream;
+  private readonly atmosphere: Atmosphere;
+  private readonly fx: WorldFx;
+  /** Last tile of each wild Zorling (grass rustle when it steps into tall grass). */
+  private readonly roamerTiles = new Map<Roamer, number>();
+  /** Camera nudge after bumping into something: direction and time left. */
+  private nudge = { x: 0, y: 0, t: 0 };
   private readonly camera = new Camera();
   private readonly sheet: CharacterSheet;
   private readonly npcSheets = new Map<NpcActor, CharacterSheet>();
@@ -179,6 +192,8 @@ export class OverworldScene implements Scene<Container> {
   private readonly money = new MoneyLabel();
   private readonly layer = new Container({ label: 'dialogs' });
   private readonly stack: FocusStack<Container>;
+  private readonly motion: UiMotion;
+  private readonly toasts = new ToastQueue();
   private current: Party;
   readonly menus: OverworldMenus;
   /** Where the player wakes up after losing: in front of the last center used. */
@@ -192,6 +207,8 @@ export class OverworldScene implements Scene<Container> {
   private context = '';
   /** The NPC whose center or shop is open. */
   private talkingTo: NpcActor | undefined;
+  /** The NPC whose dialogue is running (its sprite is a trainer's intro portrait). */
+  private dialogueNpc: NpcActor | undefined;
   /** A pack dialogue is running: the stack empties between its boxes, which is no "close". */
   private inDialogue = false;
   /** Choices shown over the dialog box. */
@@ -229,6 +246,9 @@ export class OverworldScene implements Scene<Container> {
       ...(start ? { start, facing: start.facing } : {}),
     });
     this.stream = new TerrainStream(this.map, BIOMES[this.map.biome]);
+    this.atmosphere = new Atmosphere(this.map, BIOMES[this.map.biome], this.map.seed);
+    this.atmosphere.update(0, this.player.x, this.player.y, true);
+    this.fx = new WorldFx(this.map.seed + 7);
     this.sheet = buildCharacterSheet(PLAYER_OUTFIT);
     for (const npc of this.sim.allNpcs) {
       if (!npc.npc.zorling && !npc.npc.object) {
@@ -243,11 +263,9 @@ export class OverworldScene implements Scene<Container> {
     this.texture = Texture.from(this.canvas);
     this.texture.source.scaleMode = 'nearest';
     this.view.addChild(new Sprite(this.texture));
-    this.ui.addChild(this.panel, this.place, this.help, this.money, this.layer);
-    this.stack = new FocusStack<Container>(
-      { attach: (v) => this.layer.addChild(v), detach: (v) => this.layer.removeChild(v) },
-      options.ui,
-    );
+    this.ui.addChild(this.panel, this.place, this.help, this.money, this.layer, this.toasts.view);
+    this.motion = new UiMotion(this.layer);
+    this.stack = new FocusStack<Container>(this.motion, options.ui);
     this.stack.onEmpty = () => {
       if (this.inDialogue) return;
       // Something a menu changed may finish a quest step: tell it before saving.
@@ -408,7 +426,9 @@ export class OverworldScene implements Scene<Container> {
     fieldAudio(this.map.biome);
     const quests = advanceQuests(this.options.content, this.party);
     this.party = quests.party;
-    const pages = [...this.afterBattle, ...quests.notes];
+    const split = splitNotes(quests.notes);
+    this.toasts.push(...split.toasts);
+    const pages = [...this.afterBattle, ...split.pages];
     if (quests.notes.length) questSound(quests.notes);
     this.afterBattle = [];
     // Messages first, then the rest of a story battle's dialogue, then the level-up choices.
@@ -440,7 +460,22 @@ export class OverworldScene implements Scene<Container> {
   private syncPresence(): void {
     this.presenceDirty = false;
     const { content } = this.options;
+    const before = [...this.sim.npcs];
     this.sim.present((n) => !n.when || holds(content, this.party, n.when));
+    for (const npc of before) {
+      if (this.sim.npcs.includes(npc) || !this.onScreen(npc.mover)) continue;
+      const x = npc.mover.x * TILE + TILE / 2;
+      const y = npc.mover.y * TILE + TILE - 4;
+      if (npc.npc.object === 'item') {
+        this.fx.sparkle(x, y - 4);
+        playSfx('world.pickup');
+      } else if (npc.npc.zorling) this.fx.puff(x, y - 8);
+    }
+  }
+
+  /** Debug (dev console): moves the play clock on to the next `phase` of the day. */
+  skipTo(phase: DayPhase): void {
+    this.playtime = nextPhaseStart(this.playtime, phase);
   }
 
   exit(): void {
@@ -458,6 +493,8 @@ export class OverworldScene implements Scene<Container> {
     this.canvas.height = height;
     this.image = new ImageData(this.buf.bytes, width, height);
     this.texture.source.resize(width, height);
+    this.atmosphere.resize(width, height);
+    this.toasts.layout(width, HUD_H + 4);
     const [cx, cy] = this.focus();
     this.camera.snap(cx, cy, width, height, this.bounds);
     this.lastZone = '-';
@@ -494,6 +531,13 @@ export class OverworldScene implements Scene<Container> {
     const { input } = this.options;
     this.time += dt;
     this.playtime += dt;
+    this.motion.update(dt);
+    if (!this.inBattle) this.toasts.update(dt);
+    if (!this.inBattle) {
+      this.atmosphere.update(dt, this.player.x, this.player.y);
+      this.fx.update(dt);
+      if (this.nudge.t > 0) this.nudge.t -= dt;
+    }
     if (this.savedNote > 0 && (this.savedNote -= dt) <= 0) this.lastZone = '-';
     if (this.inBattle) return;
     if (this.stack.size) {
@@ -520,9 +564,13 @@ export class OverworldScene implements Scene<Container> {
     const intent = (at: Tile): Intent | undefined => (key ? { dir: key } : this.followPath(at));
     for (const e of this.sim.update(dt, intent, this.viewTiles())) {
       if (e.kind === 'encounter') this.touch(e.roamer);
-      else if (e.kind === 'player' && e.event.kind === 'bump')
+      else if (e.kind === 'player' && e.event.kind === 'bump') {
         playSfx('world.bump', { key: 'bump', throttle: 0.25 });
+        this.bumpNudge(e.event.dir);
+      } else if (e.kind === 'player' && e.event.kind === 'step')
+        this.stepFx(e.event.from, e.event.to);
     }
+    this.roamerFx();
     this.logSeen();
     if ((this.autosaveTimer -= dt) <= 0) this.autosave();
 
@@ -573,14 +621,65 @@ export class OverworldScene implements Scene<Container> {
     if (!r.notes.length) return false;
     this.party = r.party;
     questSound(r.notes);
-    this.say(r.notes);
+    const { toasts, pages } = splitNotes(r.notes);
+    this.toasts.push(...toasts);
+    if (!pages.length) return false;
+    this.say(pages);
     return true;
   }
 
+  /** The player's middle on the game screen (iris transitions center on it). */
+  playerScreen(): { x: number; y: number } {
+    const v = this.viewRect();
+    const [cx, cy] = this.focus();
+    return { x: Math.round(cx - v.x), y: Math.round(cy - v.y) };
+  }
+
+  private onScreen(m: GridMover): boolean {
+    const v = this.viewRect();
+    const x = m.x * TILE;
+    const y = m.y * TILE;
+    return x > v.x - TILE && y > v.y - TILE && x < v.x + v.width && y < v.y + v.height;
+  }
+
+  /** Grass bits stepping into tall grass, or a dust puff leaving a path tile. */
+  private stepFx(from: Tile, to: Tile): void {
+    const biome = BIOMES[this.map.biome];
+    if (this.map.tall(to.x, to.y)) {
+      this.fx.rustle(to.x * TILE + TILE / 2, to.y * TILE + TILE - 2, biome.ramps.tall);
+      playSfx('world.rustle', { key: 'rustle', throttle: 0.12 });
+    } else if (coverage(this.map.path, from.x * TILE + 8, from.y * TILE + 8, TILE) >= 0.5) {
+      const color = biome.ramps.path[3] ?? 0xecd2a4;
+      this.fx.dust(from.x * TILE + TILE / 2, from.y * TILE + TILE - 2, to.x - from.x, color);
+    }
+  }
+
+  /** Wild Zorlings in view rustle the grass they step into. */
+  private roamerFx(): void {
+    const tall = BIOMES[this.map.biome].ramps.tall;
+    for (const r of this.sim.roamers) {
+      const m = r.mover;
+      const tile = m.destination.y * this.map.width + m.destination.x;
+      const last = this.roamerTiles.get(r);
+      this.roamerTiles.set(r, tile);
+      if (last === undefined || last === tile) continue;
+      if (this.map.tall(m.destination.x, m.destination.y) && this.onScreen(m))
+        this.fx.rustle(m.destination.x * TILE + TILE / 2, m.destination.y * TILE + TILE - 2, tall);
+    }
+    for (const r of this.roamerTiles.keys())
+      if (!this.sim.roamers.includes(r)) this.roamerTiles.delete(r);
+  }
+
+  private bumpNudge(dir: Dir): void {
+    const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[dir];
+    this.nudge = { x: d[0] ?? 0, y: d[1] ?? 0, t: 0.07 };
+  }
+
   private viewRect(): { x: number; y: number; width: number; height: number } {
+    const n = this.nudge.t > 0 ? 1 : 0;
     return {
-      x: Math.round(this.camera.x),
-      y: Math.round(this.camera.y),
+      x: Math.round(this.camera.x) + this.nudge.x * n,
+      y: Math.round(this.camera.y) + this.nudge.y * n,
       width: this.width,
       height: this.height,
     };
@@ -627,6 +726,7 @@ export class OverworldScene implements Scene<Container> {
     const { dialogue, lines } = npc.npc;
     // Signs and items speak without a name tag.
     const name = object ? undefined : npc.npc.name;
+    this.dialogueNpc = npc;
     if (dialogue)
       this.runDialogue(new DialogueRun(this.options.content, dialogue, this.party, name), after);
     else this.say(lines ?? [], name, after);
@@ -661,8 +761,11 @@ export class OverworldScene implements Scene<Container> {
 
   /** The pages (with the speaker), then the notes, then the choices over the last box. */
   private showView(view: DialogueView, next: (choice?: number) => void): void {
-    const { notes, pages, choices } = view;
-    if (notes.length) questSound(notes);
+    const { pages, choices } = view;
+    if (view.notes.length) questSound(view.notes);
+    const split = splitNotes(view.notes);
+    this.toasts.push(...split.toasts);
+    const notes = split.pages;
     const ask = choices.length ? (box?: DialogBox) => this.ask(choices, box, next) : undefined;
     const notesBox = (): void => {
       if (!notes.length) {
@@ -766,7 +869,38 @@ export class OverworldScene implements Scene<Container> {
       return;
     }
     this.battleRun = { run, step, won: false };
-    this.launch(plan.setup, plan.trainer, (result) => this.finishStoryBattle(plan, result));
+    const intro = this.introFor(plan, 'trainer' in battle);
+    this.launch(plan.setup, plan.trainer, (result) => this.finishStoryBattle(plan, result), intro);
+  }
+
+  /** The intro splash of a story battle: the boss Zorling, or the trainer's sprite. */
+  private introFor(plan: StoryBattle, trainerBattle: boolean): IntroSpec | undefined {
+    const { content } = this.options;
+    const bossRef = plan.setup.boss;
+    if (bossRef) {
+      const boss = content.bosses.require(bossRef.id);
+      const look = battleLook(content, boss.species, { boss: boss.kind });
+      const sprite = renderZorling(look.genome, { size: look.size, fill: look.fill });
+      const kind = boss.kind === 'legendary' ? 'Legendary' : 'Titan';
+      return {
+        title: boss.name,
+        subtitle: trainerBattle && plan.trainer ? plan.trainer : kind,
+        boss: true,
+        portrait: pixelTexture(sprite),
+        scale: 1,
+      };
+    }
+    if (!trainerBattle || !plan.trainer) return undefined;
+    const npc = this.dialogueNpc;
+    const sheet = npc ? this.npcSheets.get(npc) : undefined;
+    const frame = sheet?.down[0];
+    if (!frame) return undefined;
+    return {
+      title: plan.trainer,
+      boss: false,
+      portrait: pixelTexture(frameSprite(frame)),
+      scale: 5,
+    };
   }
 
   private finishStoryBattle(plan: StoryBattle, result: BattleResult): void {
@@ -820,6 +954,7 @@ export class OverworldScene implements Scene<Container> {
     setup: BattleSetup,
     trainer: string | undefined,
     end: (result: BattleResult) => void,
+    intro?: IntroSpec,
   ): void {
     const { engine, content, input, ui, theme } = this.options;
     this.clearPath();
@@ -833,6 +968,7 @@ export class OverworldScene implements Scene<Container> {
       theme,
       setup: { ...setup, player: this.party.team, bag: this.party.bag },
       ...(trainer ? { trainer } : {}),
+      ...(intro ? { intro } : {}),
       badges: this.party.badges.length,
       speed: this.options.battleSpeed ?? 1,
       money: this.party.money,
@@ -840,7 +976,7 @@ export class OverworldScene implements Scene<Container> {
       biome: this.map.biome,
       onEnd: (result) => {
         end(result);
-        void engine.scenes.pop({ transition: engine.fade({ duration: 0.3 }) });
+        void engine.scenes.pop({ transition: engine.iris(() => this.playerScreen()) });
       },
     });
     const transition = battleTransition(engine.layers.transitions, () => ({
@@ -861,6 +997,7 @@ export class OverworldScene implements Scene<Container> {
     switch (result.outcome) {
       case 'win':
         this.sim.remove(roamer);
+        this.fx.puff(roamer.mover.x * TILE + TILE / 2, roamer.mover.y * TILE + TILE - 8);
         break;
       case 'caught':
         this.sim.remove(roamer);
@@ -948,7 +1085,8 @@ export class OverworldScene implements Scene<Container> {
     const { buf } = this;
     const v = this.viewRect();
     buf.fill(surface.background);
-    this.stream.draw(buf, v.x, v.y, this.time);
+    const glow = this.atmosphere.begin(this.playtime, v.x, v.y);
+    this.stream.draw(buf, v.x, v.y, this.time, glow);
     if (this.target) this.drawMarker(this.target, v.x, v.y);
     const list: Drawable[] = [];
     list.push(this.characterDrawable(this.player, this.sheet));
@@ -968,6 +1106,8 @@ export class OverworldScene implements Scene<Container> {
     }
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.draw(v.x, v.y);
+    this.fx.draw(buf, v.x, v.y);
+    this.atmosphere.finish(buf);
     this.ctx.putImageData(this.image, 0, 0);
     this.texture.source.update();
   }
@@ -1223,7 +1363,7 @@ function inFront(at: Tile, facing: Dir): { x: number; y: number; facing: Dir } {
 /** A chime for quest notes: a fanfare when one completed. */
 function questSound(notes: readonly string[]): void {
   if (notes.some((n) => n.startsWith(QUEST_NOTE.done) || n.startsWith(BADGE_NOTE))) {
-    playSfx('world.questDone');
+    playJingle('world.questDone');
   } else if (
     notes.some((n) => n.startsWith(QUEST_NOTE.started) || n.startsWith(QUEST_NOTE.updated))
   ) {
@@ -1259,4 +1399,15 @@ function bitmapFrame(bitmap: string, colors: Readonly<Record<string, number>>): 
     }
   });
   return { width, height: rows.length, data };
+}
+
+/** A packed character frame as an RGBA sprite (for a texture). */
+function frameSprite(f: CharacterFrame): {
+  width: number;
+  height: number;
+  data: Uint8ClampedArray;
+} {
+  // Packed pixels are RGBA bytes in memory order (little-endian), as a sprite wants.
+  const data = new Uint8ClampedArray(new Uint32Array(f.data).buffer);
+  return { width: f.width, height: f.height, data };
 }

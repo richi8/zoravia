@@ -9,7 +9,7 @@
  */
 
 import type { PixelBuffer } from '@engine/render/pixel-buffer';
-import { TerrainRenderer } from '../animate';
+import { TerrainRenderer, type GlowSink } from '../animate';
 import { TILE, type Biome } from '../biomes';
 import type { WorldMap } from '../map';
 import { bakeTerrain, type PropPlacement, type TerrainMap, type TileRect } from '../terrain';
@@ -63,9 +63,9 @@ export class TerrainStream {
   }
 
   /** Draws terrain for the view (camera top-left at `camX`, `camY`). */
-  draw(buf: PixelBuffer, camX: number, camY: number, t: number): void {
+  draw(buf: PixelBuffer, camX: number, camY: number, t: number, sink?: GlowSink): void {
     for (const r of this.visible({ x: camX, y: camY, width: buf.width, height: buf.height }))
-      r.draw(buf, camX, camY, t);
+      r.draw(buf, camX, camY, t, sink);
   }
 
   /** Bakes blocks near the view ahead of time and drops far ones. */
