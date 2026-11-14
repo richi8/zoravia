@@ -144,10 +144,10 @@ describe('conditions and actions', () => {
     no({ seen: 'core:voltbat' });
     yes({ boss: 'core:thornwing-titan' });
     yes({ boss: 'core:thornwing-titan', caught: true });
-    no({ boss: 'core:glacivar' });
+    no({ boss: 'core:verdion' });
     expect(
-      holds(content, fresh({ bosses: { 'core:glacivar': { result: 'defeated' } } }), {
-        boss: 'core:glacivar',
+      holds(content, fresh({ bosses: { 'core:verdion': { result: 'defeated' } } }), {
+        boss: 'core:verdion',
         caught: true,
       }),
     ).toBe(false);

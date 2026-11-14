@@ -732,7 +732,7 @@ const sideDialogues: Record<string, DialogueInput> = {
       },
       ask: {
         say: [
-          'The ferry to the frozen coast isn’t running yet. And now there are cold lights drifting over the water at night!',
+          'The ferry to the Rimeholm Isles runs again, but now there are cold lights drifting over the water at night!',
           'My passengers won’t come near the dock. They say the old stones at the Drowned Ruins tell of the lights. Would you look?',
         ],
         choices: [
@@ -749,12 +749,14 @@ const sideDialogues: Record<string, DialogueInput> = {
       report: {
         say: [
           'So that’s a Rimewisp? It’s… kind of cute, really. A little cold light.',
-          'Wait till my passengers see this! Here, you’ve earned it. Once the ferry runs, your ride is on me.',
+          'Wait till my passengers see this! Here, you’ve earned it. And your ride to Rimeholm is on me.',
         ],
         do: [{ set: c('lights-told') }],
       },
       thanks: {
-        say: ['Nobody’s scared of the lights anymore. Now I just need the ferry to run!'],
+        say: [
+          'Nobody’s scared of the lights anymore. The ferry to Rimeholm leaves from the end of the dock.',
+        ],
       },
     },
   },
@@ -836,7 +838,7 @@ const SIGNS: Record<string, Sign> = {
     x: 86,
     y: 196,
     name: 'Sign',
-    text: ['Willowmere ferry dock. Ferries to the frozen coast: not running.'],
+    text: ['Willowmere ferry dock. Ferries to the Rimeholm Isles leave from the end of the dock.'],
   },
   'stone-trial': {
     x: 99,

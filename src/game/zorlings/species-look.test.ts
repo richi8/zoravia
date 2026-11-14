@@ -35,7 +35,7 @@ describe('species looks', () => {
       speciesLook(content, 'core:thornwing').genome.body.bulk,
     );
     expect(battleLook(content, 'core:thornwing', { titanMark: true }).titan).toBe(true);
-    expect(battleLook(content, 'core:glacivar')).toMatchObject({ size: TITAN_SIZE, titan: false });
+    expect(battleLook(content, 'core:verdion')).toMatchObject({ size: TITAN_SIZE, titan: false });
   });
 
   it('rejects a look on an earlier stage', () => {

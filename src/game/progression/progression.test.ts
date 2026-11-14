@@ -71,7 +71,7 @@ describe('XP curve and level cap', () => {
     const emberkit = content.species.require(c('emberkit')); // total 300 → yield 60
     expect(defeatXp(emberkit, 7)).toBe(60);
     expect(defeatXp(emberkit, 7, { trainer: true })).toBe(90);
-    expect(defeatXp(content.species.require(c('glacivar')), 40)).toBeGreaterThan(
+    expect(defeatXp(content.species.require(c('verdion')), 40)).toBeGreaterThan(
       defeatXp(emberkit, 40),
     );
   });
@@ -229,7 +229,7 @@ describe('evolution', () => {
     expect(z.species).toBe(c('infernyx'));
     expect(canEvolve(content, z)).toBe(false);
     expect(() => evolve(content, z)).toThrow(/cannot evolve/);
-    expect(() => evolve(content, make('glacivar', 60))).toThrow(/cannot evolve/);
+    expect(() => evolve(content, make('verdion', 60))).toThrow(/cannot evolve/);
     expect(() => evolve(content, make('emberkit', 10))).toThrow(/cannot evolve/);
   });
 });

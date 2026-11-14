@@ -3,8 +3,8 @@
  * Hollow, Reed Marsh) and the legendary Verdion (Heartwood Shrine, Old Grove). Each lists the
  * reaction that breaks its Armor. Their aura gives ×2 HP rather than the default ×3: on these
  * bulky species ×3 was out of reach for a team of their level in the C29 simulations (tuned in
- * C31). The Storm Galehawk is the region boss's (C30). The Thornwing Titan and Glacivar are
- * the test region's.
+ * C31). The Storm Galehawk is the region boss's (C30). The Thornwing Titan is the test
+ * region's. Glacivar moved to the `rimeholm` pack (C35).
  */
 
 import type { BossInput } from '@game/data';
@@ -20,17 +20,6 @@ export const bosses = {
     armor: { breaks: ['core:overload'] },
     theme: 'core:titan-theme',
     rematch: { levels: 8, prize: 1200 },
-  },
-  glacivar: {
-    name: 'Glacivar',
-    description: 'Test legendary. Lift it up with Wind, then bring it down with Earth: Slam.',
-    kind: 'legendary',
-    species: 'core:glacivar',
-    level: 40,
-    signatureMove: 'core:whiteout',
-    armor: { breaks: ['core:slam'] },
-    theme: 'core:glacivar-theme',
-    rematch: { levels: 5, prize: 2000 },
   },
   'mossback-titan': {
     name: 'Mossback Titan',

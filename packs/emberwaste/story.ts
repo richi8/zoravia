@@ -21,7 +21,8 @@
  * after the badge, and in Slagwatch once both Titans are beaten. Her starter line beats the
  * player's, from the player's own region: against an Emberwaste starter she has the Emberwaste
  * line that wins (Earth against Sizzlet, Nature against Pebbit, Fire against Pricklet), against
- * a Verdale one the Verdale line, like in Verdale.
+ * a Verdale one the Verdale line, like in Verdale. Against a Rimeholm starter (C35) she brings
+ * the Emberwaste line that wins (Nature against Selkit and Woolump, Earth against Sparkit).
  *
  * **Side quests:** The Brass Bell (Juna, catch a Sandskink), The Mirage Spring (Water-carrier
  * Odo and Nira at the hidden spring), The Smith's Apprentice (Smith Brenna, catch a Rivetling),
@@ -84,10 +85,18 @@ const LINES = {
   coreWater: ['core:drizzlet', 'core:brooklet', 'core:tidefang'],
 } as const;
 const id = (s: string): string => (s.includes(':') ? s : e(s));
-/** Verdale's starter flags (C33), written out: a pack does not import another pack's code. */
+/**
+ * Other regions' starter flags (Verdale's from C33, Rimeholm's from C35), written out: a pack
+ * does not import another pack's code, and a flag is only a name, so this needs no dependency.
+ */
 const CORE_STARTERS = {
   drizzlet: 'core:starter-drizzlet',
   emberkit: 'core:starter-emberkit',
+} as const;
+const RIMEHOLM_STARTERS = {
+  selkit: 'rimeholm:starter-selkit',
+  woolump: 'rimeholm:starter-woolump',
+  sparkit: 'rimeholm:starter-sparkit',
 } as const;
 
 function miraAce(stage: Stage, level: number): TrainerMemberInput {
@@ -101,6 +110,10 @@ function miraAce(stage: Stage, level: number): TrainerMemberInput {
       { if: { flag: STARTER_FLAGS.pricklet }, species: at('fire') },
       { if: { flag: CORE_STARTERS.drizzlet }, species: at('coreNature') },
       { if: { flag: CORE_STARTERS.emberkit }, species: at('coreWater') },
+      // Rimeholm's starters (C35): Nature beats Water and Earth, Earth beats Electric.
+      { if: { flag: RIMEHOLM_STARTERS.selkit }, species: at('nature') },
+      { if: { flag: RIMEHOLM_STARTERS.woolump }, species: at('nature') },
+      { if: { flag: RIMEHOLM_STARTERS.sparkit }, species: at('earth') },
     ],
   };
 }

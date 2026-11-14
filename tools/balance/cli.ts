@@ -1,5 +1,5 @@
 /**
- * `npm run balance [-- --region verdale|emberwaste] [--seeds N] [--out file.md]`: the C31
+ * `npm run balance [-- --region verdale|emberwaste|rimeholm] [--seeds N] [--out file.md]`: the C31
  * balance report for a region (default Verdale). Prints Markdown, or writes it to `--out`.
  */
 

@@ -42,6 +42,8 @@ export interface BiomeRules {
   readonly alt: number;
   /** Solid prop that clusters (forests) and lines the border. */
   readonly tree: PropKind;
+  /** Walkable prop on a ford's water tiles (C35; default lily pads). */
+  readonly ford?: PropKind;
   /** Tall-grass noise above this (minus a bit per tier). */
   readonly grass: number;
   decorate(c: DecorCtx): PropKind | 'tall' | undefined;
@@ -97,6 +99,7 @@ export const RULES: Readonly<Record<BiomeId, BiomeRules>> = {
     coast: true,
     alt: 0.58,
     tree: 'pine',
+    ford: 'floe',
     grass: 0.64,
     decorate: (c) => {
       if (c.wet) return c.h < 0.06 ? 'floe' : undefined;

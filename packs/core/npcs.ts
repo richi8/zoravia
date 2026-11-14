@@ -1,8 +1,8 @@
 /**
  * Test NPCs for the C21 test region (C22: a center attendant and a shop; C26: Ranger Ode and
  * Fisher Lou run the dialogues of the sample quest in `story.ts`; C27: the Grove Trial, Rival
- * Mira's two encounters and Glacivar's shrine, see `trainers.ts`). Verdale's townsfolk (C28)
- * are in `verdale-npcs.ts`.
+ * Mira's two encounters, see `trainers.ts`; Glacivar's shrine moved to the `rimeholm` pack in
+ * C35). Verdale's townsfolk (C28) are in `verdale-npcs.ts`.
  */
 
 import type { NpcInput } from '@game/data';
@@ -122,16 +122,6 @@ export const npcs: Record<string, NpcInput> = {
       all: [{ badge: 'core:grove-badge' }, { not: { beat: 'core:rival-mira-grove' } }],
     },
     dialogue: 'core:rival-mira-grove',
-  },
-  glacivar: {
-    name: 'Glacivar',
-    map: 'core:test-region',
-    x: 48,
-    y: 12,
-    facing: 'down',
-    zorling: 'core:glacivar',
-    when: { not: { caught: 'core:glacivar' } },
-    dialogue: 'core:glacivar-shrine',
   },
   ...verdaleNpcs,
   ...verdaleTrainerNpcs,

@@ -141,10 +141,10 @@ describe('save format', () => {
   it('keeps boss rematches and refuses unknown badges or trainers', () => {
     const base = state();
     const s = state({
-      party: { ...base.party, bosses: { 'core:glacivar': { result: 'caught', rematches: 2 } } },
+      party: { ...base.party, bosses: { 'core:verdion': { result: 'caught', rematches: 2 } } },
     });
     expect(readSave(content, raw(s)).party.bosses).toEqual({
-      'core:glacivar': { result: 'caught', rematches: 2 },
+      'core:verdion': { result: 'caught', rematches: 2 },
     });
     const badge = raw() as Raw & { party: { badges: string[] } };
     badge.party.badges = ['gone:badge'];
@@ -292,15 +292,15 @@ describe('save slots', () => {
 
 describe('one boss per save', () => {
   it('logs wins and catches, not losses or running', () => {
-    let log = recordBoss(EMPTY_BOSS_LOG, 'core:glacivar', 'lose');
+    let log = recordBoss(EMPTY_BOSS_LOG, 'core:verdion', 'lose');
     expect(log).toBe(EMPTY_BOSS_LOG);
-    log = recordBoss(log, 'core:glacivar', 'ran');
-    expect(bossDone(log, 'core:glacivar')).toBe(false);
-    log = recordBoss(log, 'core:glacivar', 'win');
-    expect(log['core:glacivar']).toEqual({ result: 'defeated' });
-    log = recordBoss(log, 'core:glacivar', 'caught');
-    expect(log['core:glacivar']).toEqual({ result: 'caught' });
-    expect(recordBoss(log, 'core:glacivar', 'win')).toBe(log);
+    log = recordBoss(log, 'core:verdion', 'ran');
+    expect(bossDone(log, 'core:verdion')).toBe(false);
+    log = recordBoss(log, 'core:verdion', 'win');
+    expect(log['core:verdion']).toEqual({ result: 'defeated' });
+    log = recordBoss(log, 'core:verdion', 'caught');
+    expect(log['core:verdion']).toEqual({ result: 'caught' });
+    expect(recordBoss(log, 'core:verdion', 'win')).toBe(log);
   });
 
   it('is written by applyBattleResult and survives a save', () => {
@@ -314,9 +314,9 @@ describe('one boss per save', () => {
       bag: {},
       caught: null,
     };
-    party = applyBattleResult(party, result, { boss: 'core:glacivar' }).party;
-    expect(bossDone(party.bosses, 'core:glacivar')).toBe(true);
+    party = applyBattleResult(party, result, { boss: 'core:verdion' }).party;
+    expect(bossDone(party.bosses, 'core:verdion')).toBe(true);
     const back = readSave(content, toSave(content, { ...state(), party }));
-    expect(bossDone(back.party.bosses, 'core:glacivar')).toBe(true);
+    expect(bossDone(back.party.bosses, 'core:verdion')).toBe(true);
   });
 });

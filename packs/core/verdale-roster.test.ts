@@ -31,12 +31,10 @@ const map = loadRegion(content, 'core:verdale');
 const c = (local: string): string => `core:${local}`;
 
 const STARTERS = ['sprigling', 'drizzlet', 'emberkit'];
-/** Not part of Verdale: the frozen coast's legendary, kept in core until Region 3 (C35). */
-const NOT_VERDALE = ['glacivar'];
 
 const zones = Object.values(map.zones);
 const wild = new Set(zones.flatMap((z) => z.spawns.map((s) => s.species)));
-const verdale = content.species.values().filter((s) => !NOT_VERDALE.includes(s.id.slice(5)));
+const verdale = content.species.values();
 const verdaleNpcs = content.npcs.values().filter((n) => n.map === 'core:verdale');
 /** Route trainers (C29); the story's trainers are tested in `verdale-story.test.ts`. */
 const trainerNpcs = verdaleNpcs.filter(

@@ -4,7 +4,7 @@
  * adds the organic detail: wobbly edges, ponds, second ground, props and tall grass.
  *
  * - Routes become paths. Where a route crosses water it gets a bridge (walkable deck props).
- * - Fords become walkable lily pads.
+ * - Fords become walkable lily pads (ice floes on the frozen coast).
  * - Towns and clearings are cleared ground without a zone (clearings keep their zone).
  * - Every tile outside a town joins the zone whose nearest seed is closest (noise-warped).
  * - The edge is closed by trees except at exits.
@@ -297,7 +297,9 @@ export function generateLayout(cfg: RegionConfig, L: Layout): WorldMap {
         const i = ty * W + tx;
         if (m.liquidCorners(tx, ty) === 0 || lineDist(tx + 0.5, ty + 0.5, f) > 0.75) continue;
         m.flags[i] = (m.flags[i] ?? 0) | TILE_OPEN;
-        if (!taken.has(i)) props.push({ kind: 'pad', tx, ty, variant: (tx * 5 + ty * 3) & 7 });
+        if (!taken.has(i)) {
+          props.push({ kind: rules.ford ?? 'pad', tx, ty, variant: (tx * 5 + ty * 3) & 7 });
+        }
         taken.add(i);
       }
     }

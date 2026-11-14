@@ -261,7 +261,7 @@ describe('fainting, winning and losing', () => {
   });
 
   it('loses when the whole player team has fainted', () => {
-    const { state } = playOut(start([make('puddlit', 5)], [make('glacivar', 60)]));
+    const { state } = playOut(start([make('puddlit', 5)], [make('verdion', 60)]));
     expect(state.outcome).toBe('lose');
     expect(teamAfter(state, PLAYER)[0]?.hp).toBe(0);
   });
@@ -289,7 +289,7 @@ describe('fainting, winning and losing', () => {
 
   it('trainer battles go on until every opposing Zorling has fainted', () => {
     const foes = [make('sproutle', 5), make('puddlit', 5), make('emberkit', 5)];
-    const { state, log } = playOut(start([make('glacivar', 60)], foes, 7, 'trainer'));
+    const { state, log } = playOut(start([make('verdion', 60)], foes, 7, 'trainer'));
     expect(state.outcome).toBe('win');
     expect(log.filter((e) => e.kind === 'fainted' && e.side === OPPONENT)).toHaveLength(3);
     expect(log.filter((e) => e.kind === 'sendOut' && e.side === OPPONENT)).toHaveLength(3);
@@ -433,7 +433,7 @@ describe('finishBattle', () => {
 
   it('gives trainer XP for every opposing Zorling', () => {
     const foes = [make('sproutle', 5), make('emberkit', 6)];
-    const { state } = playOut(start([make('glacivar', 60)], foes, 2, 'trainer'));
+    const { state } = playOut(start([make('verdion', 60)], foes, 2, 'trainer'));
     const sum = foes.reduce(
       (s, f) => s + defeatXp(content.species.require(f.species), f.level, { trainer: true }),
       0,

@@ -167,13 +167,13 @@ describe('boss data', () => {
 
   it('core bosses load, with ×3 HP by default', () => {
     expect(content.bosses.require('core:thornwing-titan').hpMultiplier).toBe(3);
-    expect(content.bosses.require('core:glacivar').kind).toBe('legendary');
+    expect(content.bosses.require('core:verdion').kind).toBe('legendary');
   });
 
   it('rejects bosses that break the rules', () => {
     expect(() => load(base)).not.toThrow();
     expect(() => load({ ...base, kind: 'legendary' })).toThrow(PackError);
-    expect(() => load({ ...base, species: 'core:glacivar' })).toThrow(PackError);
+    expect(() => load({ ...base, species: 'core:verdion' })).toThrow(PackError);
     expect(() => load({ ...base, signatureMove: 'core:iron-bash' })).toThrow(/learnset/);
     expect(() => load({ ...base, armor: { breaks: ['core:nope'] } })).toThrow(PackError);
     const twice = { breaks: ['core:overload', 'core:overload'] };
@@ -336,18 +336,18 @@ describe('Subdued and capture', () => {
     expect(withSignature(['a'], 's', 3)).toEqual(['a', 's']);
     expect(withSignature(['a', 's'], 's', 3)).toEqual(['a', 's']);
 
-    const legend = bossZorling(content, 'core:glacivar', { uid: 'l' });
+    const legend = bossZorling(content, 'core:verdion', { uid: 'l' });
     const s = createBattle(content, {
       kind: 'wild',
       seed: 1,
       player: [ace(['hit-metal'])],
       opponent: [legend],
-      boss: { id: 'core:glacivar' },
+      boss: { id: 'core:verdion' },
     }).state;
     const caught = capturedForm(content, activeOf(s, OPPONENT));
     expect(caught.titanMark).toBe(false);
     expect(caught.moves).toHaveLength(3);
-    expect(caught.moves.at(-1)).toBe('core:whiteout');
+    expect(caught.moves.at(-1)).toBe('core:verdant-gale');
     expect(statsOf(content, caught).hp).toBe(statsOf(content, legend).hp); // no aura
   });
 });

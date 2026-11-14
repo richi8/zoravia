@@ -1,0 +1,434 @@
+{
+  "name": "Rimeholm Isles",
+  "biome": "frozen",
+  "seed": 3535,
+  "width": 200,
+  "height": 200,
+  "chunkSize": 32,
+  "zones": {
+    "shingle": {
+      "name": "Shingle Shore",
+      "tier": "t1"
+    },
+    "heath": {
+      "name": "Hoarfrost Heath",
+      "tier": "t1"
+    },
+    "strand": {
+      "name": "Driftwood Strand",
+      "tier": "t1"
+    },
+    "sleet-fells": {
+      "name": "Sleet Fells",
+      "tier": "t2"
+    },
+    "kelp": {
+      "name": "Kelp Shallows",
+      "tier": "t2"
+    },
+    "thunder-bluffs": {
+      "name": "Thunder Bluffs",
+      "tier": "t2"
+    },
+    "squall-reach": {
+      "name": "Squall Reach",
+      "tier": "t2"
+    },
+    "frostfen": {
+      "name": "Frostfen",
+      "tier": "t2"
+    },
+    "shoals": {
+      "name": "Shipwreck Shoals",
+      "tier": "t3"
+    },
+    "glacier": {
+      "name": "Glacier Steps",
+      "tier": "t3"
+    },
+    "crown": {
+      "name": "White Crown",
+      "tier": "t3"
+    }
+  },
+  "layout": {
+    "towns": {
+      "brinewick": {
+        "name": "Brinewick",
+        "at": [100, 34],
+        "radius": 9,
+        "plaza": 3.5
+      },
+      "glimmerholm": {
+        "name": "Glimmerholm",
+        "at": [160, 62],
+        "radius": 8
+      },
+      "rimeport": {
+        "name": "Rimeport",
+        "at": [150, 132],
+        "radius": 6,
+        "plaza": 2.5
+      }
+    },
+    "routes": [
+      {
+        "points": [
+          [100, 0],
+          [100, 34]
+        ],
+        "wobble": 0
+      },
+      {
+        "points": [
+          [100, 34],
+          [78, 42],
+          [60, 52],
+          [40, 58],
+          [32, 72]
+        ]
+      },
+      {
+        "points": [
+          [100, 34],
+          [124, 40],
+          [140, 52],
+          [160, 62]
+        ]
+      },
+      {
+        "points": [
+          [100, 34],
+          [100, 58],
+          [100, 82],
+          [96, 102],
+          [88, 112]
+        ],
+        "wobble": 1.5
+      },
+      {
+        "points": [
+          [96, 102],
+          [72, 116],
+          [52, 128],
+          [40, 146]
+        ]
+      },
+      {
+        "points": [
+          [100, 104],
+          [126, 118],
+          [150, 132]
+        ]
+      },
+      {
+        "points": [
+          [160, 62],
+          [164, 88],
+          [156, 112],
+          [150, 132]
+        ]
+      },
+      {
+        "points": [
+          [160, 62],
+          [176, 56],
+          [182, 48]
+        ],
+        "wobble": 2
+      },
+      {
+        "points": [
+          [150, 132],
+          [166, 144],
+          [176, 150]
+        ]
+      },
+      {
+        "points": [
+          [150, 132],
+          [172, 120],
+          [186, 104]
+        ]
+      },
+      {
+        "points": [
+          [150, 132],
+          [140, 156],
+          [122, 172],
+          [100, 184]
+        ]
+      },
+      {
+        "points": [
+          [40, 146],
+          [60, 168],
+          [80, 180],
+          [100, 184]
+        ]
+      },
+      {
+        "points": [
+          [40, 146],
+          [24, 140]
+        ],
+        "wobble": 1
+      },
+      {
+        "points": [
+          [32, 72],
+          [22, 60]
+        ],
+        "wobble": 1
+      }
+    ],
+    "rivers": [],
+    "lakes": [
+      {
+        "at": [100, 100],
+        "radius": [150, 150],
+        "wobble": 0
+      }
+    ],
+    "islands": [
+      {
+        "at": [100, 36],
+        "radius": [36, 24]
+      },
+      {
+        "at": [40, 64],
+        "radius": [26, 30]
+      },
+      {
+        "at": [158, 62],
+        "radius": [30, 26]
+      },
+      {
+        "at": [100, 104],
+        "radius": [28, 22]
+      },
+      {
+        "at": [42, 140],
+        "radius": [30, 32]
+      },
+      {
+        "at": [156, 144],
+        "radius": [32, 30]
+      },
+      {
+        "at": [100, 178],
+        "radius": [46, 17]
+      },
+      {
+        "at": [184, 106],
+        "radius": [13, 13]
+      },
+      {
+        "at": [132, 94],
+        "radius": [6, 5]
+      },
+      {
+        "at": [20, 22],
+        "radius": [5, 3]
+      },
+      {
+        "at": [168, 18],
+        "radius": [6, 4]
+      },
+      {
+        "at": [182, 182],
+        "radius": [4, 4]
+      },
+      {
+        "at": [22, 184],
+        "radius": [5, 3]
+      },
+      {
+        "at": [96, 142],
+        "radius": [6, 4]
+      },
+      {
+        "at": [62, 96],
+        "radius": [3, 2]
+      },
+      {
+        "at": [14, 104],
+        "radius": [3, 3]
+      }
+    ],
+    "ponds": 0.1,
+    "clearings": [
+      {
+        "id": "tusk-rookery",
+        "kind": "lair",
+        "at": [88, 112],
+        "radius": 4
+      },
+      {
+        "id": "thunder-eyrie",
+        "kind": "lair",
+        "at": [176, 150],
+        "radius": 4
+      },
+      {
+        "id": "crown-shrine",
+        "kind": "shrine",
+        "at": [100, 186],
+        "radius": 5
+      },
+      {
+        "id": "stormspire",
+        "kind": "arena",
+        "at": [186, 104],
+        "radius": 5
+      },
+      {
+        "id": "skerry-circle",
+        "kind": "landmark",
+        "at": [34, 76],
+        "radius": 4
+      },
+      {
+        "id": "whalebone-arch",
+        "kind": "landmark",
+        "at": [24, 140],
+        "radius": 3
+      },
+      {
+        "id": "seal-rock",
+        "kind": "landmark",
+        "at": [182, 48],
+        "radius": 3
+      },
+      {
+        "id": "floe-garden",
+        "kind": "secret",
+        "at": [132, 94],
+        "radius": 3
+      },
+      {
+        "id": "frozen-wreck",
+        "kind": "secret",
+        "at": [66, 180],
+        "radius": 4,
+        "ring": true,
+        "gap": "east"
+      },
+      {
+        "id": "hot-spring",
+        "kind": "secret",
+        "at": [22, 60],
+        "radius": 3,
+        "ring": true,
+        "gap": "east"
+      }
+    ],
+    "fords": [
+      {
+        "points": [
+          [122, 104],
+          [127, 99],
+          [130, 96]
+        ]
+      }
+    ],
+    "zones": {
+      "shingle": {
+        "seeds": [
+          [86, 44],
+          [114, 44],
+          [100, 52],
+          [100, 18]
+        ],
+        "trees": -0.2,
+        "grass": 0.2
+      },
+      "heath": {
+        "seeds": [
+          [40, 48],
+          [30, 64],
+          [52, 66],
+          [70, 44]
+        ],
+        "trees": 0
+      },
+      "strand": {
+        "seeds": [
+          [136, 46],
+          [146, 72],
+          [126, 30]
+        ],
+        "trees": -0.1
+      },
+      "sleet-fells": {
+        "seeds": [
+          [100, 98],
+          [86, 112],
+          [114, 110]
+        ],
+        "trees": -0.2,
+        "grass": 0.2
+      },
+      "kelp": {
+        "seeds": [
+          [178, 58],
+          [172, 80],
+          [132, 94]
+        ],
+        "trees": 0.1
+      },
+      "thunder-bluffs": {
+        "seeds": [
+          [172, 138],
+          [178, 154],
+          [164, 120]
+        ],
+        "trees": 0.1
+      },
+      "squall-reach": {
+        "seeds": [
+          [40, 124],
+          [28, 146],
+          [58, 150],
+          [36, 92]
+        ],
+        "trees": 0
+      },
+      "frostfen": {
+        "seeds": [
+          [136, 156],
+          [160, 168]
+        ],
+        "trees": -0.1,
+        "wet": 0.3
+      },
+      "shoals": {
+        "seeds": [
+          [186, 104],
+          [190, 88]
+        ],
+        "trees": 0.1
+      },
+      "glacier": {
+        "seeds": [
+          [66, 176],
+          [134, 176]
+        ],
+        "trees": 0.1
+      },
+      "crown": {
+        "seeds": [
+          [100, 184],
+          [100, 196]
+        ],
+        "trees": 0
+      }
+    },
+    "exits": {
+      "ferry": {
+        "at": [100, 0],
+        "kind": "ferry"
+      }
+    }
+  }
+}

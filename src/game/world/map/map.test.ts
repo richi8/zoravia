@@ -174,7 +174,7 @@ describe('map validation', () => {
     const data = encodeRegion(sample());
     need(data.zones['field']).spawns = [
       { species: 'core:sproutl' as NamespacedId, weight: 1 },
-      { species: 'core:glacivar' as NamespacedId, weight: 1 },
+      { species: 'core:verdion' as NamespacedId, weight: 1 },
     ];
     // C34: battle weather names conditions.
     need(data.zones['field']).battleWeather = ['core:burnin' as NamespacedId];

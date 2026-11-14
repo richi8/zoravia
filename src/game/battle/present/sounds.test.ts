@@ -85,7 +85,7 @@ describe('battle sounds', () => {
         weather: seed % 2 ? ['core:wet'] : [],
       });
     }
-    for (const boss of ['core:thornwing-titan', 'core:glacivar']) {
+    for (const boss of ['core:thornwing-titan', 'core:verdion']) {
       setups.push({
         kind: 'wild',
         seed: 3,

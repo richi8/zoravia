@@ -117,13 +117,13 @@ describe('game data validation', () => {
         },
       },
       patches: {
-        species: { 'core:glacivar': { evolution: { into: 'core:ironshell', level: 50 } } },
+        species: { 'core:verdion': { evolution: { into: 'core:ironshell', level: 50 } } },
       },
     });
     expect(issues).toContain(
       'content.species.c: More than one species evolves into it ("mod:a", "mod:b")',
     );
-    expect(issues).toContain('patches.species.core:glacivar.legendary: Legendaries never evolve');
+    expect(issues).toContain('patches.species.core:verdion.legendary: Legendaries never evolve');
   });
 
   it('rejects unordered or duplicate learnsets', () => {

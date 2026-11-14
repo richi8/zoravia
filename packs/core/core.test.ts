@@ -154,13 +154,13 @@ describe('species', () => {
       'Blazekit',
       'Infernyx',
     ]);
-    // Verdion (Verdale) and Glacivar (the frozen coast's, until Region 3 has its pack).
+    // Verdion (Verdale). Glacivar moved to the `rimeholm` pack (C35).
     expect(
       content.species
         .values()
         .filter((s) => s.legendary)
         .map((s) => s.name),
-    ).toEqual(['Verdion', 'Glacivar']);
+    ).toEqual(['Verdion']);
   });
 
   it('every species knows a move at level 1', () => {

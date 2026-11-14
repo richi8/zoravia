@@ -148,7 +148,7 @@ describe('trainer and badge data', () => {
             map: 'core:test-region',
             x: 1,
             y: 1,
-            zorling: 'core:glacivar',
+            zorling: 'core:verdion',
             behavior: { kind: 'wander' },
             lines: ['…'],
           },
@@ -326,40 +326,40 @@ describe('sample trial and rival (core pack)', () => {
   });
 
   it('fights the legendary once per save, then offers rematches it cannot be caught in', () => {
-    const shrine = content.npcs.require('core:glacivar');
+    const shrine = content.npcs.require('core:verdion-lair');
     let party = strong(60);
     // "Step back" (the last choice) leaves it waiting.
-    expect(talk(content, 'core:glacivar-shrine', party, [1]).battles).toHaveLength(0);
+    expect(talk(content, 'core:verdion-lair', party, [1]).battles).toHaveLength(0);
 
-    const t = talk(content, 'core:glacivar-shrine', party, [0]);
+    const t = talk(content, 'core:verdion-lair', party, [0]);
     const plan = t.battles[0] as StoryBattle;
     expect(plan.setup.kind).toBe('wild');
-    expect(plan.setup.boss).toEqual({ id: 'core:glacivar' });
+    expect(plan.setup.boss).toEqual({ id: 'core:verdion' });
     expect(t.results[0]?.outcome).toBe('caught');
-    expect(t.pages.at(-1)).toMatch(/shrine is quiet/);
+    expect(t.pages.at(-1)).toMatch(/All is quiet/);
     // Rematches play the boss with the trainer AI, a much harder fight: bring a bigger team.
     party = { ...t.party, team: strong(85).team };
-    expect(bossDone(party.bosses, 'core:glacivar')).toBe(true);
-    expect(party.dex.caught).toContain('core:glacivar');
+    expect(bossDone(party.bosses, 'core:verdion')).toBe(true);
+    expect(party.dex.caught).toContain('core:verdion');
     // Caught: the shrine NPC is gone.
     expect(holds(content, party, shrine.when ?? { badges: 0 })).toBe(false);
 
     // Rematch (e.g. through the dialogue again): a trainer-style boss battle 5 levels up.
-    const r = talk(content, 'core:glacivar-shrine', party, [0]);
+    const r = talk(content, 'core:verdion-lair', party, [0]);
     const re = r.battles[0] as StoryBattle;
     expect(re.rematch).toBe(true);
     expect(re.setup.kind).toBe('trainer');
-    expect(re.trainer).toBe('Glacivar');
-    expect(re.setup.opponent[0]?.level).toBe(45);
+    expect(re.trainer).toBe('Verdion');
+    expect(re.setup.opponent[0]?.level).toBe(41);
     expect(r.results[0]?.outcome).toBe('win');
     expect(r.results[0]?.caught).toBeNull();
     expect(r.party.money).toBe(party.money + 2000);
-    expect(r.party.bosses['core:glacivar']).toEqual({ result: 'caught', rematches: 1 });
-    expect(r.pages.at(-1)).toMatch(/rise again/);
+    expect(r.party.bosses['core:verdion']).toEqual({ result: 'caught', rematches: 1 });
+    expect(r.pages.at(-1)).toMatch(/It will return/);
     // Second rematch: no money, only XP.
-    const r2 = talk(content, 'core:glacivar-shrine', healTeam(content, r.party), [0]);
+    const r2 = talk(content, 'core:verdion-lair', healTeam(content, r.party), [0]);
     expect(r2.battles[0]?.prize).toBe(0);
-    expect(r2.party.bosses['core:glacivar']).toEqual({ result: 'caught', rematches: 2 });
+    expect(r2.party.bosses['core:verdion']).toEqual({ result: 'caught', rematches: 2 });
   });
 
   it('skips the battle of a boss that is done and has no rematch', () => {

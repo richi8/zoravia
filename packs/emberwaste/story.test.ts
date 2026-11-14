@@ -313,6 +313,10 @@ describe('Emberwaste campaign', () => {
     expect(lead('core:starter-sprigling')).toBe('core:emberkit');
     expect(lead('core:starter-drizzlet')).toBe('core:sprigling');
     expect(lead('core:starter-emberkit')).toBe('core:drizzlet');
+    // Rimeholm's starters (C35), by flag only.
+    expect(lead('rimeholm:starter-selkit')).toBe(e('pricklet'));
+    expect(lead('rimeholm:starter-woolump')).toBe(e('pricklet'));
+    expect(lead('rimeholm:starter-sparkit')).toBe(e('pebbit'));
     expect(lead(undefined)).toBe('core:emberkit');
   });
 

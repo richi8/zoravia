@@ -189,29 +189,4 @@ export const dialogues: Record<string, DialogueInput> = {
       won: { say: ["Again?! Next region, I'll be the one with the badge first."] },
     },
   },
-  'glacivar-shrine': {
-    start: 'hello',
-    nodes: {
-      hello: {
-        branch: [{ if: { boss: 'core:glacivar' }, goto: 'back' }],
-        goto: 'first',
-      },
-      first: {
-        say: ['The air turns to frost. Glacivar watches you from the ice.'],
-        choices: [{ text: 'Face it', goto: 'fight' }, { text: 'Step back' }],
-      },
-      fight: { battle: { boss: 'core:glacivar' }, win: 'after' },
-      after: {
-        branch: [{ if: { caught: 'core:glacivar' }, goto: 'caught' }],
-        goto: 'beaten',
-      },
-      caught: { say: ['The frost lifts. The shrine is quiet now.'] },
-      beaten: { say: ['Glacivar sinks back into the ice. It will rise again, stronger.'] },
-      back: {
-        say: ['Glacivar has risen again, colder than before.'],
-        choices: [{ text: 'Face it', goto: 'rematch' }, { text: 'Step back' }],
-      },
-      rematch: { battle: { boss: 'core:glacivar' }, win: 'beaten' },
-    },
-  },
 };

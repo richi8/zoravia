@@ -1,10 +1,11 @@
 /**
- * The regions the balance report knows (C34): each one's map, campaign route, team plans,
+ * The regions the balance report knows (C34; Rimeholm since C35): each one's map, campaign route, team plans,
  * start, first zone and the reaction teams of its roster test's boss sims.
  */
 
 import { EMBERWASTE_ROUTE, EMBERWASTE_START, EMBERWASTE_TEAMS } from './emberwaste';
 import type { PlaythroughSetup, RouteStage } from './playthrough';
+import { RIMEHOLM_ROUTE, RIMEHOLM_START, RIMEHOLM_TEAMS } from './rimeholm';
 import { VERDALE_ROUTE, VERDALE_START, VERDALE_TEAMS } from './verdale';
 
 export interface BossCase {
@@ -12,7 +13,7 @@ export interface BossCase {
   readonly boss: string;
   /** `[species, moves]` (full ids): a team built for the boss's Armor-breaking reaction. */
   readonly team: readonly (readonly [string, readonly string[]])[];
-  /** Battle weather of the lair (an ash storm). */
+  /** Battle weather of the lair (an ash or sleet storm). */
   readonly weather?: readonly string[];
 }
 
@@ -33,6 +34,7 @@ export interface BalanceRegion {
 
 const core = (ids: readonly string[]): string[] => ids.map((m) => `core:${m}`);
 const ew = (s: string): string => `emberwaste:${s}`;
+const rh = (s: string): string => `rimeholm:${s}`;
 
 export const REGIONS: Readonly<Record<string, BalanceRegion>> = {
   verdale: {
@@ -104,6 +106,43 @@ export const REGIONS: Readonly<Record<string, BalanceRegion>> = {
           [ew('dunemaul'), core(['rock-slam', 'quake', 'steel-claw'])],
         ],
         weather: ['core:burning'],
+      },
+    ],
+  },
+  rimeholm: {
+    name: 'Rimeholm Isles',
+    map: 'rimeholm:rimeholm',
+    route: RIMEHOLM_ROUTE,
+    teams: RIMEHOLM_TEAMS,
+    start: RIMEHOLM_START,
+    firstZone: 'shingle',
+    // The reaction teams of the C35 roster test (`packs/rimeholm/roster.test.ts`).
+    bosses: [
+      {
+        boss: rh('floemaw-titan'),
+        team: [
+          [rh('selkurr'), core(['drench', 'tide-crash', 'frost-fang'])],
+          [rh('fluxine'), core(['static-bite', 'volt-lash', 'frost-fang'])],
+          [rh('shagtusk'), core(['mud-toss', 'rock-slam', 'frost-fang'])],
+        ],
+        weather: ['core:wet'],
+      },
+      {
+        boss: rh('squallwing-titan'),
+        team: [
+          [rh('urchivolt'), core(['static-bite', 'iron-bash', 'steel-claw'])],
+          [rh('brineclaw'), core(['splash-shot', 'iron-bash', 'steel-claw'])],
+          [rh('shagtusk'), core(['mud-toss', 'rock-slam', 'hail-dash'])],
+        ],
+      },
+      {
+        boss: rh('glacivar'),
+        team: [
+          ['core:galehawk', core(['updraft', 'gale-dash', 'steel-claw'])],
+          [rh('tundramoth'), core(['rock-slam', 'quake', 'steel-claw'])],
+          [rh('frostcairn'), core(['mud-toss', 'quake', 'hail-dash'])],
+        ],
+        weather: ['core:wet'],
       },
     ],
   },

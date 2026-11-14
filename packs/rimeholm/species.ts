@@ -1,0 +1,300 @@
+/**
+ * Region 3, the Rimeholm Isles (C35): its species in Dex order. The three starter lines
+ * (Selkit, Woolump, Sparkit: Water > Earth > Electric > Water), then the wild Zorlings from the
+ * shore outward, the Titans' species and the legendary Glacivar (which lived in core as a test
+ * legendary until this pack). Rimeholm's own types are Ice, Water and Electric; the rest are
+ * rarer. Core's Rimewisp, Voltbat, Mudpaddle and Hearthog live here too.
+ *
+ * Only a line's final form has a `look`. `look.young` gives earlier stages another body plan.
+ * Every look comes from Rimeholm's frozen model kit (`kits.ts`, C35a).
+ */
+
+import type { SpeciesInput } from '@game/data';
+
+const learn = (...pairs: [number, string][]): { level: number; move: string }[] =>
+  pairs.map(([level, move]) => ({ level, move: move.includes(':') ? move : `core:${move}` }));
+const r = (local: string): string => `rimeholm:${local}`;
+const KIT = 'rimeholm:frozen';
+
+export const species = {
+  selkit: {
+    name: 'Selkit',
+    description: 'A round seal pup that slides down snowbanks on its belly. A Rimeholm starter.',
+    types: ['core:water'],
+    baseStats: { hp: 80, attack: 70, defense: 75, speed: 75 },
+    trait: 'core:torrent',
+    learnset: learn([1, 'splash-shot'], [1, 'gust'], [7, 'drench'], [12, 'frost-fang']),
+    evolution: { into: r('selkurr'), level: 16 },
+  },
+  selkurr: {
+    name: 'Selkurr',
+    description: 'Dives under the ice to fetch shells, and brings back the shiniest one.',
+    types: ['core:water'],
+    baseStats: { hp: 105, attack: 105, defense: 100, speed: 100 },
+    trait: 'core:torrent',
+    learnset: learn([1, 'splash-shot'], [1, 'drench'], [16, 'tide-crash'], [24, 'hail-dash']),
+    evolution: { into: r('selkaris'), level: 32 },
+  },
+  selkaris: {
+    name: 'Selkaris',
+    description: 'Sings to the boats in the fog so they find the harbor. Sailors sing back.',
+    types: ['core:water'],
+    baseStats: { hp: 135, attack: 130, defense: 125, speed: 130 },
+    trait: 'core:torrent',
+    learnset: learn([1, 'tide-crash'], [1, 'hail-dash'], [32, 'riptide'], [40, 'blizzard']),
+    look: { seed: 3900, plan: 'pinniped', mood: 'cute', kit: KIT },
+  },
+  woolump: {
+    name: 'Woolump',
+    description:
+      'A woolly calf that naps in snowdrifts and wakes up as a snowdrift. A Rimeholm starter.',
+    types: ['core:earth'],
+    baseStats: { hp: 85, attack: 75, defense: 85, speed: 55 },
+    trait: 'core:grounded',
+    learnset: learn([1, 'mud-toss'], [1, 'frost-fang'], [7, 'mud-bath'], [12, 'iron-bash']),
+    evolution: { into: r('shagtusk'), level: 16 },
+  },
+  shagtusk: {
+    name: 'Shagtusk',
+    description: 'Digs through frozen ground with its tusks to find the moss underneath.',
+    types: ['core:earth'],
+    baseStats: { hp: 110, attack: 110, defense: 115, speed: 75 },
+    trait: 'core:grounded',
+    learnset: learn([1, 'mud-toss'], [1, 'mud-bath'], [16, 'rock-slam'], [24, 'hail-dash']),
+    evolution: { into: r('tundramoth'), level: 32 },
+  },
+  tundramoth: {
+    name: 'Tundramoth',
+    description: 'Lightning cannot hurt it. Herds of them stand out the storms on the open fells.',
+    types: ['core:earth'],
+    baseStats: { hp: 140, attack: 140, defense: 145, speed: 95 },
+    trait: 'core:grounded',
+    learnset: learn([1, 'rock-slam'], [1, 'hail-dash'], [32, 'quake'], [40, 'steel-claw']),
+    look: { seed: 3913, plan: 'tusker', mood: 'fierce', kit: KIT },
+  },
+  sparkit: {
+    name: 'Sparkit',
+    description:
+      'A fawn whose fur crackles when you pet it. It loves being petted. A Rimeholm starter.',
+    types: ['core:electric'],
+    baseStats: { hp: 70, attack: 80, defense: 65, speed: 85 },
+    trait: r('live-wire'),
+    learnset: learn([1, 'static-bite'], [1, 'gust'], [7, 'static-field'], [12, 'frost-fang']),
+    evolution: { into: r('fluxine'), level: 16 },
+  },
+  fluxine: {
+    name: 'Fluxine',
+    description: 'Its tail flickers blue in the dark. Lost travelers follow it home.',
+    types: ['core:electric'],
+    baseStats: { hp: 95, attack: 110, defense: 90, speed: 115 },
+    trait: r('live-wire'),
+    learnset: learn([1, 'static-bite'], [1, 'static-field'], [16, 'volt-lash'], [24, 'wing-cut']),
+    evolution: { into: r('auroryx'), level: 32 },
+  },
+  auroryx: {
+    name: 'Auroryx',
+    description: 'When it runs across the fells at night, the sky lights up in its wake.',
+    types: ['core:electric'],
+    baseStats: { hp: 120, attack: 140, defense: 115, speed: 145 },
+    trait: r('live-wire'),
+    learnset: learn([1, 'volt-lash'], [1, 'hail-dash'], [32, r('thunderclap')], [40, 'gale-dash']),
+    look: { seed: 4204, plan: 'caribou', mood: 'cute', kit: KIT },
+  },
+  flurret: {
+    name: 'Flurret',
+    description: 'A snow ferret. It steals mittens and hides them in drifts.',
+    types: ['core:ice'],
+    baseStats: { hp: 75, attack: 85, defense: 75, speed: 95 },
+    trait: r('rimebound'),
+    learnset: learn([1, 'frost-fang'], [5, 'cold-snap'], [12, 'gust']),
+    evolution: { into: r('rimestoat'), level: 20 },
+  },
+  rimestoat: {
+    name: 'Rimestoat',
+    description: 'Its white winter coat is so cold that snowflakes land on it and stay.',
+    types: ['core:ice'],
+    baseStats: { hp: 110, attack: 130, defense: 105, speed: 145 },
+    trait: r('rimebound'),
+    learnset: learn(
+      [1, 'frost-fang'],
+      [1, 'cold-snap'],
+      [20, 'hail-dash'],
+      [26, 'wing-cut'],
+      [34, 'blizzard'],
+    ),
+    look: { seed: 4210, plan: 'mustelid', mood: 'cute', kit: KIT },
+  },
+  glimfry: {
+    name: 'Glimfry',
+    description: 'A little fish with a light on its head. Schools of them glow under the ice.',
+    types: ['core:water'],
+    baseStats: { hp: 85, attack: 80, defense: 80, speed: 85 },
+    learnset: learn([1, 'splash-shot'], [5, 'drench'], [12, 'static-bite']),
+    evolution: { into: r('lumenaw'), level: 24 },
+  },
+  lumenaw: {
+    name: 'Lumenaw',
+    description: 'Lures prey with the lamp on its head, then gives it a shock.',
+    types: ['core:water', 'core:electric'],
+    baseStats: { hp: 120, attack: 125, defense: 115, speed: 130 },
+    learnset: learn(
+      [1, 'splash-shot'],
+      [1, 'static-bite'],
+      [24, 'tide-crash'],
+      [30, 'volt-lash'],
+      [36, r('thunderclap')],
+    ),
+    look: { seed: 4220, plan: 'angler', mood: 'dark', kit: KIT },
+  },
+  pinchill: {
+    name: 'Pinchill',
+    description: 'Clacks its claws on the rocks to call the tide back in.',
+    types: ['core:water'],
+    baseStats: { hp: 80, attack: 85, defense: 100, speed: 65 },
+    learnset: learn([1, 'splash-shot'], [5, 'iron-bash'], [12, 'corrode']),
+    evolution: { into: r('brineclaw'), level: 22 },
+  },
+  brineclaw: {
+    name: 'Brineclaw',
+    description: 'Its shell is armored with old ship nails. It wears an anchor as a crown.',
+    types: ['core:water', 'core:metal'],
+    baseStats: { hp: 120, attack: 130, defense: 145, speed: 95 },
+    learnset: learn(
+      [1, 'splash-shot'],
+      [1, 'iron-bash'],
+      [22, 'steel-claw'],
+      [28, 'tide-crash'],
+      [34, 'riptide'],
+    ),
+    look: { seed: 3950, plan: 'crab', mood: 'fierce', kit: KIT },
+  },
+  kelpling: {
+    name: 'Kelpling',
+    description: 'An otter pup tangled in a sprig of kelp. It washed ashore and decided to stay.',
+    types: ['core:nature', 'core:water'],
+    baseStats: { hp: 85, attack: 80, defense: 85, speed: 80 },
+    trait: 'core:overgrowth',
+    learnset: learn([1, 'vine-snap'], [1, 'splash-shot'], [6, 'spore-cloud'], [12, 'drench']),
+    evolution: { into: r('tanglekelp'), level: 20 },
+  },
+  tanglekelp: {
+    name: 'Tanglekelp',
+    description: 'Sleeps wrapped in kelp in the shallows. Boats steer well around the bundle.',
+    types: ['core:nature', 'core:water'],
+    baseStats: { hp: 125, attack: 120, defense: 125, speed: 120 },
+    trait: 'core:overgrowth',
+    learnset: learn(
+      [1, 'vine-snap'],
+      [1, 'spore-cloud'],
+      [20, 'thorn-volley'],
+      [26, 'tide-crash'],
+      [32, 'timber-crush'],
+    ),
+    look: { seed: 4234, plan: 'mustelid', mood: 'cute', kit: KIT },
+  },
+  tuskit: {
+    name: 'Tuskit',
+    description: 'A walrus pup with tiny tusks. It barks at its own reflection.',
+    types: ['core:water'],
+    baseStats: { hp: 90, attack: 85, defense: 90, speed: 65 },
+    learnset: learn([1, 'splash-shot'], [5, 'frost-fang'], [12, 'mud-toss']),
+    evolution: { into: r('floemaw'), level: 22 },
+  },
+  floemaw: {
+    name: 'Floemaw',
+    description: 'Hauls itself onto drifting floes to sleep. The floe usually sinks.',
+    types: ['core:water', 'core:ice'],
+    baseStats: { hp: 135, attack: 130, defense: 135, speed: 90 },
+    learnset: learn(
+      [1, 'splash-shot'],
+      [1, 'frost-fang'],
+      [22, 'hail-dash'],
+      [28, 'tide-crash'],
+      [34, 'blizzard'],
+    ),
+    catchRate: 0.8,
+    look: { seed: 3974, plan: 'pinniped', mood: 'fierce', kit: KIT },
+  },
+  spinzap: {
+    name: 'Spinzap',
+    description: 'A spiny urchin. Step on it once and you will never forget it.',
+    types: ['core:electric'],
+    baseStats: { hp: 75, attack: 85, defense: 95, speed: 75 },
+    learnset: learn([1, 'static-bite'], [5, 'static-field'], [12, 'iron-bash']),
+    evolution: { into: r('urchivolt'), level: 20 },
+  },
+  urchivolt: {
+    name: 'Urchivolt',
+    description: 'Its iron spines hum before a storm. Fishers listen for it.',
+    types: ['core:electric', 'core:metal'],
+    baseStats: { hp: 110, attack: 130, defense: 140, speed: 110 },
+    learnset: learn(
+      [1, 'static-bite'],
+      [1, 'iron-bash'],
+      [20, 'volt-lash'],
+      [26, 'steel-claw'],
+      [34, r('thunderclap')],
+    ),
+    look: { seed: 4241, plan: 'urchin', mood: 'fierce', kit: KIT },
+  },
+  jellivolt: {
+    name: 'Jellivolt',
+    description: 'Drifts under the ice and glows. On still nights you can hear it hum.',
+    types: ['core:electric', 'core:water'],
+    baseStats: { hp: 110, attack: 120, defense: 105, speed: 135 },
+    learnset: learn(
+      [1, 'static-bite'],
+      [1, 'splash-shot'],
+      [1, 'static-field'],
+      [20, 'volt-lash'],
+      [26, 'tide-crash'],
+      [34, r('thunderclap')],
+    ),
+    look: { seed: 3994, plan: 'jelly', mood: 'cute', kit: KIT },
+  },
+  frostcairn: {
+    name: 'Frostcairn',
+    description:
+      'A crab whose shell looks like a pile of icy stones. Travelers who sit on it get a surprise.',
+    types: ['core:ice', 'core:earth'],
+    baseStats: { hp: 125, attack: 120, defense: 145, speed: 80 },
+    learnset: learn(
+      [1, 'frost-fang'],
+      [1, 'mud-toss'],
+      [1, 'cold-snap'],
+      [20, 'rock-slam'],
+      [26, 'hail-dash'],
+      [34, 'quake'],
+    ),
+    look: { seed: 4250, plan: 'crab', mood: 'fierce', kit: KIT },
+  },
+  squallwing: {
+    name: 'Squallwing',
+    description:
+      'Rides the front of the storms. Its cry comes just before the thunder. Rarely seen.',
+    types: ['core:electric', 'core:wind'],
+    baseStats: { hp: 105, attack: 130, defense: 100, speed: 135 },
+    trait: 'core:tailwind',
+    learnset: learn(
+      [1, 'static-bite'],
+      [1, 'gust'],
+      [1, 'static-field'],
+      [20, 'volt-lash'],
+      [26, 'gale-dash'],
+      [34, r('thunderclap')],
+    ),
+    catchRate: 0.7,
+    look: { seed: 4262, plan: 'owl', mood: 'fierce', kit: KIT },
+  },
+  glacivar: {
+    name: 'Glacivar',
+    description:
+      'Rimeholm’s legendary. It sleeps under the White Crown and wakes the winter lights.',
+    types: ['core:ice', 'core:electric'],
+    baseStats: { hp: 150, attack: 150, defense: 135, speed: 140 },
+    trait: 'core:frostproof',
+    learnset: learn([1, 'frost-fang'], [1, 'hail-dash'], [1, 'volt-lash'], [1, 'blizzard']),
+    legendary: true,
+    look: { seed: 5020, plan: 'frostwyrm', mood: 'fierce', kit: KIT },
+  },
+} satisfies Record<string, SpeciesInput>;

@@ -1,8 +1,8 @@
 /**
  * Region 1 (Verdale) species, in Dex order (C29): the three starter lines (Sprigling,
  * Drizzlet, Emberkit), then the wild Zorlings from the meadow outward, the Titans' species
- * and the legendary Verdion. Glacivar is the frozen coast's legendary; it lives here until
- * Region 3 gets its own pack (C35).
+ * and the legendary Verdion. (Glacivar, the frozen coast's legendary, lived here until it moved
+ * to the `rimeholm` pack in C35.)
  *
  * Only a line's final form has a `look`. `look.young` gives earlier stages another body plan.
  */
@@ -261,15 +261,5 @@ export const species = {
     learnset: learn([1, 'thorn-volley'], [1, 'gale-dash'], [1, 'timber-crush'], [1, 'cyclone']),
     legendary: true,
     look: { seed: 5002, plan: 'leafwyrm', mood: 'fierce', kit: VERDALE },
-  },
-  glacivar: {
-    name: 'Glacivar',
-    description: 'The frozen coast’s legendary, far from home. It moves to Region 3 in C35.',
-    types: ['core:ice'],
-    baseStats: { hp: 150, attack: 150, defense: 135, speed: 140 },
-    trait: 'core:heatproof',
-    learnset: learn([1, 'frost-fang'], [1, 'hail-dash'], [1, 'rock-slam']),
-    legendary: true,
-    look: { seed: 90, plan: 'canine', mood: 'fierce' },
   },
 } satisfies Record<string, SpeciesInput>;

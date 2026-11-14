@@ -1,0 +1,1202 @@
+{
+  "zones": {
+    "shingle": {
+      "levels": [3, 6],
+      "spawns": [
+        {
+          "species": "rimeholm:flurret",
+          "weight": 3
+        },
+        {
+          "species": "rimeholm:tuskit",
+          "weight": 3
+        },
+        {
+          "species": "rimeholm:pinchill",
+          "weight": 2
+        }
+      ]
+    },
+    "heath": {
+      "levels": [5, 9],
+      "spawns": [
+        {
+          "species": "rimeholm:flurret",
+          "weight": 3
+        },
+        {
+          "species": "rimeholm:spinzap",
+          "weight": 3
+        },
+        {
+          "species": "rimeholm:kelpling",
+          "weight": 2
+        },
+        {
+          "species": "core:rimewisp",
+          "weight": 1
+        }
+      ]
+    },
+    "strand": {
+      "levels": [8, 13],
+      "spawns": [
+        {
+          "species": "rimeholm:glimfry",
+          "weight": 3
+        },
+        {
+          "species": "rimeholm:pinchill",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:spinzap",
+          "weight": 2
+        },
+        {
+          "species": "core:mudpaddle",
+          "weight": 1
+        }
+      ]
+    },
+    "sleet-fells": {
+      "levels": [15, 20],
+      "weather": "snow",
+      "battleWeather": ["core:wet"],
+      "spawns": [
+        {
+          "species": "rimeholm:tuskit",
+          "weight": 3,
+          "levels": [15, 20]
+        },
+        {
+          "species": "rimeholm:flurret",
+          "weight": 2,
+          "levels": [15, 19]
+        },
+        {
+          "species": "core:voltbat",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:frostcairn",
+          "weight": 1
+        },
+        {
+          "species": "rimeholm:kelpling",
+          "weight": 1,
+          "levels": [15, 19]
+        }
+      ]
+    },
+    "kelp": {
+      "levels": [16, 22],
+      "spawns": [
+        {
+          "species": "rimeholm:kelpling",
+          "weight": 3,
+          "levels": [16, 19]
+        },
+        {
+          "species": "rimeholm:tanglekelp",
+          "weight": 1,
+          "levels": [20, 22]
+        },
+        {
+          "species": "rimeholm:glimfry",
+          "weight": 3
+        },
+        {
+          "species": "rimeholm:jellivolt",
+          "weight": 1
+        },
+        {
+          "species": "rimeholm:pinchill",
+          "weight": 2,
+          "levels": [16, 21]
+        }
+      ]
+    },
+    "thunder-bluffs": {
+      "levels": [17, 23],
+      "spawns": [
+        {
+          "species": "rimeholm:spinzap",
+          "weight": 2,
+          "levels": [17, 19]
+        },
+        {
+          "species": "rimeholm:urchivolt",
+          "weight": 2,
+          "levels": [20, 23]
+        },
+        {
+          "species": "core:voltbat",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:squallwing",
+          "weight": 1
+        },
+        {
+          "species": "core:rimewisp",
+          "weight": 1
+        }
+      ]
+    },
+    "squall-reach": {
+      "levels": [19, 25],
+      "weather": "snow",
+      "battleWeather": ["core:wet"],
+      "spawns": [
+        {
+          "species": "rimeholm:rimestoat",
+          "weight": 2,
+          "levels": [20, 25]
+        },
+        {
+          "species": "rimeholm:floemaw",
+          "weight": 2,
+          "levels": [22, 25]
+        },
+        {
+          "species": "rimeholm:tuskit",
+          "weight": 1,
+          "levels": [19, 21]
+        },
+        {
+          "species": "rimeholm:jellivolt",
+          "weight": 2
+        },
+        {
+          "species": "core:hearthog",
+          "weight": 1
+        }
+      ]
+    },
+    "frostfen": {
+      "levels": [23, 29],
+      "spawns": [
+        {
+          "species": "rimeholm:lumenaw",
+          "weight": 2,
+          "levels": [24, 29]
+        },
+        {
+          "species": "rimeholm:brineclaw",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:tanglekelp",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:frostcairn",
+          "weight": 1
+        },
+        {
+          "species": "rimeholm:urchivolt",
+          "weight": 1
+        }
+      ]
+    },
+    "shoals": {
+      "levels": [30, 36],
+      "weather": "mist",
+      "spawns": [
+        {
+          "species": "rimeholm:brineclaw",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:lumenaw",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:jellivolt",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:urchivolt",
+          "weight": 1
+        },
+        {
+          "species": "core:galehawk",
+          "weight": 1
+        }
+      ]
+    },
+    "glacier": {
+      "levels": [32, 38],
+      "spawns": [
+        {
+          "species": "rimeholm:frostcairn",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:rimestoat",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:floemaw",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:squallwing",
+          "weight": 1
+        },
+        {
+          "species": "core:hearthog",
+          "weight": 1
+        }
+      ]
+    },
+    "crown": {
+      "levels": [36, 42],
+      "weather": "snow",
+      "battleWeather": ["core:wet"],
+      "spawns": [
+        {
+          "species": "rimeholm:rimestoat",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:floemaw",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:jellivolt",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:squallwing",
+          "weight": 1
+        },
+        {
+          "species": "rimeholm:lumenaw",
+          "weight": 1
+        }
+      ]
+    }
+  },
+  "anchors": {
+    "center": {
+      "x": 94,
+      "y": 32,
+      "kind": "center",
+      "facing": "down"
+    },
+    "shop": {
+      "x": 102,
+      "y": 32,
+      "kind": "shop",
+      "facing": "down"
+    },
+    "spawn": {
+      "x": 100,
+      "y": 35,
+      "kind": "spawn",
+      "facing": "down"
+    },
+    "elder": {
+      "x": 97,
+      "y": 29,
+      "kind": "npc",
+      "facing": "down"
+    },
+    "ferryman": {
+      "x": 101,
+      "y": 20,
+      "kind": "npc",
+      "facing": "left"
+    },
+    "center-glimmerholm": {
+      "x": 154,
+      "y": 60,
+      "kind": "center",
+      "facing": "down"
+    },
+    "shop-glimmerholm": {
+      "x": 162,
+      "y": 60,
+      "kind": "shop",
+      "facing": "down"
+    },
+    "trial": {
+      "x": 166,
+      "y": 69,
+      "kind": "npc",
+      "facing": "down"
+    },
+    "center-rimeport": {
+      "x": 144,
+      "y": 130,
+      "kind": "center",
+      "facing": "down"
+    },
+    "ranger": {
+      "x": 158,
+      "y": 130,
+      "kind": "npc",
+      "facing": "left"
+    },
+    "titan-tusk-rookery": {
+      "x": 88,
+      "y": 112,
+      "kind": "titan",
+      "facing": "down"
+    },
+    "titan-thunder-eyrie": {
+      "x": 176,
+      "y": 150,
+      "kind": "titan",
+      "facing": "down"
+    },
+    "legendary": {
+      "x": 100,
+      "y": 186,
+      "kind": "legendary",
+      "facing": "down"
+    },
+    "boss-stormspire": {
+      "x": 186,
+      "y": 104,
+      "kind": "boss",
+      "facing": "down"
+    },
+    "crown-shrine": {
+      "x": 100,
+      "y": 186,
+      "kind": "shrine",
+      "mood": "shrine",
+      "radius": 8
+    },
+    "skerry-circle": {
+      "x": 34,
+      "y": 76,
+      "kind": "landmark",
+      "mood": "shrine",
+      "radius": 6
+    },
+    "tusk-rookery": {
+      "x": 88,
+      "y": 112,
+      "kind": "lair",
+      "mood": "mist",
+      "radius": 7
+    }
+  },
+  "connections": {
+    "ferry": {
+      "x": 100,
+      "y": 0,
+      "kind": "ferry",
+      "to": "core:verdale#ferry"
+    }
+  },
+  "edits": [
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 88,
+        "y": 22,
+        "w": 23,
+        "h": 25
+      },
+      "note": "Brinewick: cleared town ground"
+    },
+    {
+      "op": "zone",
+      "rect": {
+        "x": 88,
+        "y": 22,
+        "w": 23,
+        "h": 25
+      },
+      "zone": null,
+      "note": "No wild Zorlings in town"
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 88,
+        "y": 22,
+        "w": 23,
+        "h": 25
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 88,
+        "y": 33,
+        "w": 23,
+        "h": 2
+      },
+      "note": "Brinewick main street (east-west)"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 99,
+        "y": 22,
+        "w": 2,
+        "h": 25
+      },
+      "note": "Brinewick north-south street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 96,
+        "y": 33,
+        "w": 9,
+        "h": 4
+      },
+      "note": "Brinewick square"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 89,
+        "y": 29,
+        "w": 5,
+        "h": 4
+      },
+      "note": "Brinewick Zorling center"
+    },
+    {
+      "op": "prop",
+      "kind": "center",
+      "at": [91, 32]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 103,
+        "y": 29,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Brinewick shop"
+    },
+    {
+      "op": "prop",
+      "kind": "shop",
+      "at": [103, 32]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 90,
+        "y": 23,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Brinewick north-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [91, 26],
+      "variant": 1
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 91,
+        "y": 27,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the north-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 103,
+        "y": 23,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Brinewick north-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [105, 26],
+      "variant": 4
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 101,
+        "y": 27,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the north-east house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 90,
+        "y": 37,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Brinewick south-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [91, 40],
+      "variant": 2
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 91,
+        "y": 41,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the south-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 103,
+        "y": 37,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Brinewick south-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [105, 40],
+      "variant": 7
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 101,
+        "y": 41,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the south-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "well",
+      "at": [97, 36],
+      "note": "Square well"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [94, 31]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [107, 31]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [103, 36]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [98, 21],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [111, 35],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [87, 33],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [101, 47],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "snowrock",
+      "at": [91, 25],
+      "variant": 1,
+      "note": "Brinewick garden rocks"
+    },
+    {
+      "op": "prop",
+      "kind": "snowrock",
+      "at": [108, 25],
+      "variant": 2,
+      "note": "Brinewick garden rocks"
+    },
+    {
+      "op": "prop",
+      "kind": "snowrock",
+      "at": [90, 43],
+      "variant": 3,
+      "note": "Brinewick garden rocks"
+    },
+    {
+      "op": "prop",
+      "kind": "snowrock",
+      "at": [108, 43],
+      "variant": 4,
+      "note": "Brinewick garden rocks"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 149,
+        "y": 52,
+        "w": 23,
+        "h": 21
+      },
+      "note": "Glimmerholm: cleared town ground"
+    },
+    {
+      "op": "zone",
+      "rect": {
+        "x": 149,
+        "y": 52,
+        "w": 23,
+        "h": 21
+      },
+      "zone": null,
+      "note": "No wild Zorlings in town"
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 149,
+        "y": 52,
+        "w": 23,
+        "h": 21
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 149,
+        "y": 61,
+        "w": 23,
+        "h": 2
+      },
+      "note": "Glimmerholm main street (east-west)"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 159,
+        "y": 52,
+        "w": 2,
+        "h": 21
+      },
+      "note": "Glimmerholm north-south street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 156,
+        "y": 61,
+        "w": 9,
+        "h": 4
+      },
+      "note": "Glimmerholm square"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 149,
+        "y": 57,
+        "w": 5,
+        "h": 4
+      },
+      "note": "Glimmerholm Zorling center"
+    },
+    {
+      "op": "prop",
+      "kind": "center",
+      "at": [151, 60]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 163,
+        "y": 57,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Glimmerholm shop"
+    },
+    {
+      "op": "prop",
+      "kind": "shop",
+      "at": [163, 60]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 150,
+        "y": 51,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Glimmerholm north-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [151, 54],
+      "variant": 1
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 151,
+        "y": 55,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the north-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 163,
+        "y": 51,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Glimmerholm north-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [165, 54],
+      "variant": 4
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 161,
+        "y": 55,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the north-east house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 150,
+        "y": 65,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Glimmerholm south-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [151, 68],
+      "variant": 2
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 151,
+        "y": 69,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the south-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 163,
+        "y": 65,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Glimmerholm south-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [165, 68],
+      "variant": 7
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 161,
+        "y": 69,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the south-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "well",
+      "at": [157, 64],
+      "note": "Square well"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [154, 59]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [167, 59]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [163, 64]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [162, 51],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [172, 63],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [148, 61],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [161, 73],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [157, 69],
+      "note": "Trial stone"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 141,
+        "y": 124,
+        "w": 18,
+        "h": 17
+      },
+      "note": "Rimeport: cleared town ground"
+    },
+    {
+      "op": "zone",
+      "rect": {
+        "x": 141,
+        "y": 124,
+        "w": 18,
+        "h": 17
+      },
+      "zone": null,
+      "note": "No wild Zorlings in town"
+    },
+    {
+      "op": "tall",
+      "set": false,
+      "rect": {
+        "x": 141,
+        "y": 124,
+        "w": 18,
+        "h": 17
+      }
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 141,
+        "y": 131,
+        "w": 18,
+        "h": 2
+      },
+      "note": "Rimeport main street (east-west)"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 149,
+        "y": 124,
+        "w": 2,
+        "h": 17
+      },
+      "note": "Rimeport north-south street"
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 146,
+        "y": 131,
+        "w": 9,
+        "h": 4
+      },
+      "note": "Rimeport square"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 139,
+        "y": 127,
+        "w": 5,
+        "h": 4
+      },
+      "note": "Rimeport Zorling center"
+    },
+    {
+      "op": "prop",
+      "kind": "center",
+      "at": [141, 130]
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 140,
+        "y": 121,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Rimeport north-west house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [141, 124],
+      "variant": 1
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 141,
+        "y": 125,
+        "w": 8,
+        "h": 1
+      },
+      "note": "Lane to the north-west house"
+    },
+    {
+      "op": "clearProps",
+      "rect": {
+        "x": 153,
+        "y": 121,
+        "w": 4,
+        "h": 4
+      },
+      "note": "Rimeport north-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "house",
+      "at": [155, 124],
+      "variant": 4
+    },
+    {
+      "op": "terrain",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 151,
+        "y": 125,
+        "w": 5,
+        "h": 1
+      },
+      "note": "Lane to the north-east house"
+    },
+    {
+      "op": "prop",
+      "kind": "well",
+      "at": [147, 134],
+      "note": "Square well"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [144, 129]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [153, 129]
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [153, 134]
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [152, 123],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [159, 133],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "sign",
+      "at": [140, 131],
+      "note": "Road sign at the town edge"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [31, 73],
+      "note": "Skerry Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [37, 73],
+      "note": "Skerry Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [31, 79],
+      "note": "Skerry Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [37, 79],
+      "note": "Skerry Circle"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [96, 183],
+      "note": "Crown Shrine stones"
+    },
+    {
+      "op": "prop",
+      "kind": "menhir",
+      "at": [104, 183],
+      "note": "Crown Shrine stones"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [182, 100],
+      "note": "The Stormspire's signal lamps"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [190, 100],
+      "note": "The Stormspire's signal lamps"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [182, 108],
+      "note": "The Stormspire's signal lamps"
+    },
+    {
+      "op": "prop",
+      "kind": "lamp",
+      "at": [190, 108],
+      "note": "The Stormspire's signal lamps"
+    },
+    {
+      "op": "prop",
+      "kind": "crystal",
+      "at": [172, 146],
+      "note": "Thunder Eyrie: storm-glass"
+    },
+    {
+      "op": "prop",
+      "kind": "crystal",
+      "at": [180, 146],
+      "note": "Thunder Eyrie: storm-glass"
+    },
+    {
+      "op": "prop",
+      "kind": "snowrock",
+      "at": [84, 108],
+      "note": "Tusk Rookery rocks"
+    },
+    {
+      "op": "prop",
+      "kind": "snowrock",
+      "at": [92, 108],
+      "note": "Tusk Rookery rocks"
+    }
+  ]
+}

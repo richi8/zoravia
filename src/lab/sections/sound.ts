@@ -60,7 +60,7 @@ export const soundSection: LabSection = {
     });
     const titans = [
       button('Thornwing Titan', speciesCry(content, 'core:thornwing', { boss: 'titan' })),
-      button('Glacivar (legendary)', speciesCry(content, 'core:glacivar', { boss: 'legendary' })),
+      button('Verdion (legendary)', speciesCry(content, 'core:verdion', { boss: 'legendary' })),
     ];
     const random = h('div', { class: 'snd-grid' });
     const reroll = (): void => {

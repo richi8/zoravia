@@ -109,9 +109,6 @@ describe('boss themes', () => {
     expect(battleMusic(content, { biome: 'forest', boss: 'core:thornwing-titan' }).id).toBe(
       'theme:core:titan-theme',
     );
-    expect(battleMusic(content, { biome: 'frozen', boss: 'core:glacivar' }).id).toBe(
-      'theme:core:glacivar-theme',
-    );
     expect(battleMusic(content, { biome: 'desert' }).id).toBe('battle:desert');
     const noTheme = withMod({
       bosses: {
