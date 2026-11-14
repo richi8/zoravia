@@ -14,6 +14,7 @@ import { Rng } from '@engine/core/rng';
 import { pixelTexture } from '@engine/render/pixel-texture';
 import { type UiInput, type Widget } from '@engine/ui';
 import { brand, paper } from '../style/tokens';
+import { gameSettings } from '@game/settings';
 import { uiText } from './text';
 
 export interface EvolutionOptions {
@@ -157,7 +158,9 @@ export class EvolutionPanel implements Widget<Container> {
     this.newWhite.visible = showNew && t < T.end;
     this.newWhite.alpha = t >= T.reveal ? 1 - clamp01((t - T.reveal) / 0.5) : 1;
     this.flash.visible = t >= T.flash && t < T.reveal + 0.15;
-    this.flash.alpha = 0.92 * (1 - clamp01((t - T.flash) / (T.reveal + 0.15 - T.flash)));
+    // Flashes off (C33): only a soft glow instead of a white screen.
+    const peak = gameSettings().flashes ? 0.92 : 0.2;
+    this.flash.alpha = peak * (1 - clamp01((t - T.flash) / (T.reveal + 0.15 - T.flash)));
     this.title.visible = t < T.flash;
     this.title.alpha = clamp01((t - 0.2) / 0.3);
     this.name.visible = t >= T.reveal && this.name.text !== '';

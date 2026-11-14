@@ -10,6 +10,7 @@ export * from './music';
 export * from './npcs';
 export * from './reactions';
 export * from './species';
+export * from './starts';
 export * from './story';
 export * from './trainers';
 export * from './traits';

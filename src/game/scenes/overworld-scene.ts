@@ -52,6 +52,7 @@ import {
   type Party,
 } from '@game/player';
 import { createZorling, displayName } from '@game/progression';
+import { gameSettings, textCharsPerSecond } from '@game/settings';
 import type { GameState, Place } from '@game/save';
 import {
   advanceQuests,
@@ -114,9 +115,6 @@ export interface OverworldOptions {
   readonly party: Party;
   /** Called whenever the party changes (battles, menus, center, shop). */
   onParty?(party: Party): void;
-  /** Battle speed (1, 1.5, 2) and confirm-before-switch, until settings (C33). */
-  readonly battleSpeed?: number;
-  readonly confirmHotbarSwitch?: boolean;
   /** Seed of the wild spawns and NPC behavior. Default: the map seed. */
   readonly seed?: number;
   /** Saved place to start at (used when it is on this map and walkable). */
@@ -393,6 +391,8 @@ export class OverworldScene implements Scene<Container> {
       quit: () => {
         void this.saveNow('auto').finally(() => this.options.onExit());
       },
+      bindings: this.options.input.bindings,
+      capture: () => this.options.input.anyPressed(),
     };
   }
 
@@ -672,7 +672,7 @@ export class OverworldScene implements Scene<Container> {
 
   private bumpNudge(dir: Dir): void {
     const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[dir];
-    this.nudge = { x: d[0] ?? 0, y: d[1] ?? 0, t: 0.07 };
+    if (gameSettings().shake) this.nudge = { x: d[0] ?? 0, y: d[1] ?? 0, t: 0.07 };
   }
 
   private viewRect(): { x: number; y: number; width: number; height: number } {
@@ -816,7 +816,9 @@ export class OverworldScene implements Scene<Container> {
     done?: () => void,
     hold?: (box: DialogBox) => void,
   ): void {
-    const { theme } = this.options;
+    // Text speed from the settings (C33).
+    const base = this.options.theme;
+    const theme = { ...base, motion: { ...base.motion, textSpeed: textCharsPerSecond() } };
     const dialog: DialogBox = new DialogBox({
       theme,
       pages,
@@ -970,9 +972,9 @@ export class OverworldScene implements Scene<Container> {
       ...(trainer ? { trainer } : {}),
       ...(intro ? { intro } : {}),
       badges: this.party.badges.length,
-      speed: this.options.battleSpeed ?? 1,
+      speed: gameSettings().battleSpeed,
       money: this.party.money,
-      confirmHotbarSwitch: this.options.confirmHotbarSwitch ?? false,
+      confirmHotbarSwitch: gameSettings().confirmSwitch,
       biome: this.map.biome,
       onEnd: (result) => {
         end(result);

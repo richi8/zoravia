@@ -1,12 +1,13 @@
 /**
  * Battle transition: a quick white flash, then pixel bars sweep in from alternating sides
  * and cover the screen; at full cover the battle swaps in and the bars sweep out again.
- * It plays the battle-start whoosh (C24).
+ * It plays the battle-start whoosh (C24). The flash follows the Flashes setting (C33).
  */
 
 import { Graphics, type Container } from 'pixi.js';
 import type { Transition } from '@engine/scenes/scene-manager';
 import { playSfx } from '@game/audio';
+import { gameSettings } from '@game/settings';
 import { ink } from '@game/style/tokens';
 
 export interface BattleTransitionOptions {
@@ -55,8 +56,8 @@ export function battleTransition(
         const fromLeft = i % 2 === 0;
         g.rect(fromLeft ? 0 : width - w, i * bar, w, bar).fill({ color });
       }
-      if (coverIn && amount < 0.25) {
-        // A white flash at the start (as the encounter begins).
+      if (coverIn && amount < 0.25 && gameSettings().flashes) {
+        // A white flash at the start (as the encounter begins); off in the settings (C33).
         const a = amount < 0.12 ? 0.85 : 0.85 * (1 - (amount - 0.12) / 0.13);
         g.rect(0, 0, width, height).fill({ color: 0xffffff, alpha: a });
       }

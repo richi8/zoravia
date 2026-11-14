@@ -73,6 +73,8 @@ export interface PlaythroughSetup {
   readonly catches: readonly string[];
   readonly bag: Readonly<Record<string, number>>;
   readonly money: number;
+  /** Story flags set at the start (C33: the starter's flag, which Rival Mira reads). */
+  readonly flags?: Readonly<Record<string, number>>;
   readonly seed: number;
   readonly policy?: Partial<PlayerPolicy>;
   /** Story fights (ids) to keep a party snapshot for, taken just before the first try. */
@@ -197,11 +199,14 @@ class Run {
     this.rng = new Rng(`playthrough-${setup.seed}`);
     this.battleSeed = setup.seed * 100_000;
     this.policy = { ...DEFAULT_POLICY, ...setup.policy };
-    this.party = newParty({
-      team: [this.zorling(setup.starter, setup.starterLevel)],
-      bag: { ...setup.bag },
-      money: setup.money,
-    });
+    this.party = {
+      ...newParty({
+        team: [this.zorling(setup.starter, setup.starterLevel)],
+        bag: { ...setup.bag },
+        money: setup.money,
+      }),
+      flags: { ...setup.flags },
+    };
   }
 
   play(): PlaythroughResult {

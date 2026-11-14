@@ -36,7 +36,7 @@ All graphics and audio are code-generated. Built from day one for expansion via 
   - Cross-region danger zones (Lv 45–60) for endgame
 - Wild/zone levels fixed. Only campaign story bosses scale lightly (~+4 Lv per badge held).
 - Badge-based soft level cap: XP gain sharply reduced above cap. Values (C13, kept in C31): cap Lv 30 / 45 / 52 / 60 for 0 / 1 / 2 / 3 badges (+5 per further badge); XP at or above the cap ×0.1. In the C31 playthrough simulator Verdale ends at Lv ~40–42, under the one-badge cap.
-- **Pacing** (C31 balance pass, `npm run balance`): a region's campaign takes about 120–145 wild battles and 3–4 hours. Trainers field the stage a wild Zorling has at that level (no final forms below their evolution level), except a rival's ace. A new game is assumed to start with one **Lv 6** starter (the start flow, C33, decides); a region's first zone tops out at that level.
+- **Pacing** (C31 balance pass, `npm run balance`): a region's campaign takes about 120–145 wild battles and 3–4 hours. Trainers field the stage a wild Zorling has at that level (no final forms below their evolution level), except a rival's ace. A new game starts with one **Lv 6** starter, 2 Potions, 5 Zorbs and 500 coins (C33); a region's first zone tops out at that level.
 
 - Region maps settled in C28 (2026-11-13):
   - A region's big shapes (towns, roads, rivers, lakes, zone areas, landmark clearings, exits) are placed by hand in its layout; the world tool adds the organic detail (edges, ponds, trees, grass) once, then the overlay places buildings, signs and NPC spots.
@@ -48,12 +48,21 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 ### Launch regions
 1. **Verdale** (temperate forest & lakes) — Nature / Water / Wind. Gentlest start. Hub town Willowmere, second town Fernhollow (Grove Trial), outpost Galecrest; exits: Ember Pass (east, to region 2) and a ferry dock (south, to region 3).
    - Zorlings (C29): 23 species. Starters **Sprigling** (Nature), **Drizzlet** (Water) and **Emberkit** (Fire): the Fire > Nature > Water > Fire triangle reads best for a first choice, even though Fire is not one of Verdale's three types. Titans: **Mossback** (Hollow Oak, Deepwood; breaks on Wildfire) and **Bogmaw** (Sunken Hollow, Reed Marsh; breaks on Conducted). Legendary: **Verdion** (Nature/Wind, Heartwood Shrine; breaks on Overload since C31, was Shatter: Nature resists Earth, so that plan lost to plain potions in the simulator).
-   - Campaign (C30): every spring the Heartwood breathes out the **Seedwind**, which wakes the forest; this year it has not come. Main quest **The Still Wind** (Elder Rowan): Grove Badge in Fernhollow → face both Titans (each shows a vision of Crown Rock) → beat the region boss **Stormcatcher Vex** on Crown Rock, whose Gale Engine bottles the wind (her Storm Galehawk fights in boss form) → Verdion appears at the Heartwood Shrine → tell Rowan. Rival **Mira** meets the player on Willowmere's north road, at the trial after the badge, and in Galecrest after both Titans. Four side quests, readable signs and lore stones, and hidden items in the secrets and landmarks.
+   - Campaign (C30): every spring the Heartwood breathes out the **Seedwind**, which wakes the forest; this year it has not come. Main quest **The Still Wind** (Elder Rowan): Grove Badge in Fernhollow → face both Titans (each shows a vision of Crown Rock) → beat the region boss **Stormcatcher Vex** on Crown Rock, whose Gale Engine bottles the wind (her Storm Galehawk fights in boss form) → Verdion appears at the Heartwood Shrine → tell Rowan. Rival **Mira** meets the player on Willowmere's north road, at the trial after the badge, and in Galecrest after both Titans. Her starter line is the one that beats the player's (C33): Fire against Sprigling, Nature against Drizzlet, Water against Emberkit. Four side quests, readable signs and lore stones, and hidden items in the secrets and landmarks.
 2. **Volcanic desert** — Fire / Earth / Metal. Ash storms: battles start with Burning.
 3. **Frozen coast islands** — Ice / Water / Electric. Storms: battles start with Wet.
 
 Every region has all 8 types, weighted toward its own three.
 Each region has its own lore, a legendary, a trial/badge, and **its own 3 starters**.
+
+## Starting a game
+Settled in C33 (2026-11-14):
+- The game opens on a **title screen**: the dragon crest over the first start region's map, dimmed and drifting, with its own theme. Its menu: Continue (the slot saved last), New game, Load game, Settings.
+- **New game**: pick a save slot (it asks before overwriting one), then a **start region**, then one of that region's **starters**. Start regions are pack data (`starts`): the map and spot, the starters, their level, the bag and the money. Only Verdale exists so far; regions 2 and 3 add their own entries.
+- Choosing a starter sets its story flag (`core:starter-sprigling`, …), so dialogue and trainers can react to it. A trainer's team member can name another species for a story condition (`instead`), which is how the rival counter-picks.
+- **Load game** shows the slot cards (team portraits, lead and level, region, badges, Zorlings caught, play time, when it was saved); a slot can be continued or deleted there. Quitting from the pause menu goes back to the title.
+- **Settings** (title and pause menu) belong to the device, like the volumes: battle speed (1×, 1.5×, 2×), text speed (slow, normal, fast), the `1 2 3` switch prompt, screen shake, full-screen flashes, Sound (volumes), mute while the tab is hidden, and Controls.
+- **Controls**: every key group (Up is both walking and menu up) has two key slots. Taking a key another control uses swaps the two. `Esc` always stays Back and Menu and can't be taken, a swap that would leave a control with no key is refused, and mouse buttons keep their roles.
 
 ## Team
 - **Hotbar = active team of 3** (keys `1 2 3`).
@@ -201,7 +210,7 @@ Rules settled in C26 (2026-11-13):
   - **Ambience** plays under the music: biome beds (wind, brook, lava rumble, surf) with occasional sounds (birds, crackles, ice creaks, gulls), plus rain in wet weather. It is turned down in battle. It follows the music volume.
 
 ## Controls
-**The whole game must be fully playable with the keyboard alone.** Mouse is optional (click-to-move, click menu items), never required. All keys rebindable; gamepad later.
+**The whole game must be fully playable with the keyboard alone.** Mouse is optional (click-to-move, click menu items), never required. All keys rebindable (Settings → Controls, C33; `Esc` stays Back and Menu); gamepad later.
 
 ### Universal keys (everywhere, including every menu)
 | Action | Keys |
@@ -248,5 +257,4 @@ Detailed, AI-sized chunks live in `IMPLEMENTATION_PLAN.md`; progress in `PROGRES
 9. Polish, then regions 2 & 3 as packs, endgame, release prep
 
 ## Open
-- Logo: current dragon crest is a first version; revisit later.
 - Formal trademark check for "Zoravia" (EUIPO; USPTO Class 9 & 41).

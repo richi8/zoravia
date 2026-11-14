@@ -8,12 +8,14 @@
 
 import type { Container } from 'pixi.js';
 import { Texture } from 'pixi.js';
+import { keyLabel, type Bindings, type KeyCode } from '@engine/input';
 import { pixelTexture } from '@engine/render/pixel-texture';
 import { Menu, type FocusStack, type MenuItem, type UiTheme, type Widget } from '@engine/ui';
 import { bagTabsFor, itemLook } from '@game/battle/scene/view-data';
 import { playJingle, playSfx } from '@game/audio';
-import { VolumeMenu } from '@game/ui/volume-menu';
+import { SettingsMenu, type SizedWidget } from '@game/ui/settings-menu';
 import type { GameContent, NpcRole } from '@game/data';
+import type { Action } from '@game/input/actions';
 import { bagCount } from '@game/inventory';
 import {
   buyItem,
@@ -73,8 +75,12 @@ export interface MenuHost {
   centerUsed(): void;
   /** Saves the game (pause menu → Save); `done` gets an error message if it failed. */
   save?(done: (error?: string) => void): void;
-  /** Leave the overworld (pause menu → quit). */
+  /** Leave the overworld (pause menu → quit to title). */
   quit(): void;
+  /** Key bindings, for the Controls screen (C33). */
+  readonly bindings: Bindings<Action>;
+  /** The first key pressed this step, any key (the Controls screen). */
+  capture(): KeyCode | undefined;
 }
 
 export class OverworldMenus {
@@ -167,17 +173,22 @@ export class OverworldMenus {
   // ------------------------------------------------------------ pause menu
 
   openPause(): void {
+    // Key hints follow the player's bindings (C33).
+    const key = (a: Action): string => {
+      const k = this.host.bindings.keysFor(a).find((c) => !c.startsWith('Mouse'));
+      return k ? keyLabel(k) : '';
+    };
     const entries: [string, string, () => void][] = [
-      ['Party', 'P', () => this.openParty()],
-      ['Bag', 'I', () => this.openBag()],
-      ['Dex', 'B', () => this.openDex()],
-      ['Map', 'M', () => this.openMap()],
-      ['Quests', 'J', () => this.openQuests()],
+      ['Party', key('party'), () => this.openParty()],
+      ['Bag', key('inventory'), () => this.openBag()],
+      ['Dex', key('dex'), () => this.openDex()],
+      ['Map', key('map'), () => this.openMap()],
+      ['Quests', key('quests'), () => this.openQuests()],
       ...(this.host.save
         ? [['Save', '', () => this.saveGame()] as [string, string, () => void]]
         : []),
-      ['Sound', '', () => this.openSound()],
-      ['Quit to launcher', '', () => this.host.quit()],
+      ['Settings', '', () => this.openSettings()],
+      ['Quit to title', '', () => this.host.quit()],
     ];
     this.menu(
       'Menu',
@@ -187,9 +198,18 @@ export class OverworldMenus {
     );
   }
 
-  private openSound(): void {
-    const menu = new VolumeMenu({ theme: this.host.theme, onBack: (m) => this.close(m) });
-    this.open(menu, () => ({ w: menu.width, h: menu.height }));
+  private openSettings(): void {
+    const sized = (w: SizedWidget): void => this.open(w, () => ({ w: w.width, h: w.height }));
+    sized(
+      new SettingsMenu({
+        theme: this.host.theme,
+        bindings: this.host.bindings,
+        capture: () => this.host.capture(),
+        open: sized,
+        close: (w) => this.close(w),
+        onBack: (m) => this.close(m),
+      }),
+    );
   }
 
   private saveGame(): void {

@@ -126,13 +126,15 @@ npm run balance -- --seeds 20 --out report.md
   engine, retrying after a loss. After 3 losses to a boss it follows the boss's hint (catches
   a Zorling of a type the Armor-breaking reaction needs). Pure and deterministic per seed.
 - `verdale.ts`: Verdale's route (zones opened, shops, fights in order), the team plans (each
-  starter plus two catches) and the assumed start.
+  starter plus two catches, with the starter's flag so Rival Mira counter-picks as in the
+  game) and the start, read from the pack's start data (`packs/core/starts.ts`, C33).
 - `report.ts`: the tables. Pacing and money from the playthroughs, every story trainer by
   team level, the bosses by play style, and each starter against the first zone.
 - `playthrough.test.ts` runs the campaign for each team plan in CI and checks the pacing.
 
 A new region adds its own route file and team plans next to `verdale.ts`.
-- `checkpoints.ts` (G2 prep): the debug launcher's **Checkpoint: Verdale** entry. It starts a
+- `checkpoints.ts` (G2 prep): the debug launcher's **Checkpoint: Verdale** entry (the title
+  screen's **Debug launcher** item in dev builds and with `?debug`, C33). It starts a
   save just before a story fight (Grove Trial, Bogmaw, Mossback, Mira in Galecrest, Vex,
   Verdion) with the party the simulator had there for the chosen starter: team, levels, moves,
   bag, money, badge, beaten trainers and bosses, and the main quest moved on to match. Side

@@ -3,6 +3,7 @@
  * the shops on the way and the story fights in the order a player meets them.
  */
 
+import { starts, STARTER_FLAGS } from '../../packs/core/starts';
 import type { RouteStage, PlaythroughSetup } from './playthrough';
 
 const c = (local: string): string => `core:${local}`;
@@ -51,15 +52,27 @@ export const VERDALE_ROUTE: readonly RouteStage[] = [
 ];
 
 /** Team plans: each starter with two wild Zorlings from the first zones. */
-export const VERDALE_TEAMS: readonly Pick<PlaythroughSetup, 'starter' | 'catches'>[] = [
-  { starter: c('sprigling'), catches: [c('pipwing'), c('puddlit')] },
-  { starter: c('drizzlet'), catches: [c('sproutle'), c('pipwing')] },
-  { starter: c('emberkit'), catches: [c('sproutle'), c('mudpaddle')] },
+export const VERDALE_TEAMS: readonly Pick<PlaythroughSetup, 'starter' | 'catches' | 'flags'>[] = [
+  {
+    starter: c('sprigling'),
+    catches: [c('pipwing'), c('puddlit')],
+    flags: { [STARTER_FLAGS.sprigling]: 1 },
+  },
+  {
+    starter: c('drizzlet'),
+    catches: [c('sproutle'), c('hearthog')],
+    flags: { [STARTER_FLAGS.drizzlet]: 1 },
+  },
+  {
+    starter: c('emberkit'),
+    catches: [c('sproutle'), c('mudpaddle')],
+    flags: { [STARTER_FLAGS.emberkit]: 1 },
+  },
 ];
 
-/** The start assumed until the start flow exists (C33): one Lv 6 starter, a few items. */
+/** The real Verdale start (C33, `packs/core/starts.ts`): one Lv 6 starter, a few items. */
 export const VERDALE_START = {
-  starterLevel: 6,
-  bag: { [c('potion')]: 2, [c('zorb')]: 5 },
-  money: 500,
+  starterLevel: starts.verdale.level,
+  bag: starts.verdale.bag,
+  money: starts.verdale.money,
 } as const;

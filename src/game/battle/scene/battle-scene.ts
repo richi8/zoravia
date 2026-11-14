@@ -82,6 +82,7 @@ import {
 } from '../present';
 import { drawBackdrop, platforms } from './backdrop';
 import { bagTabsFor, cardView, conditionTip, moveViewFor, typeTip } from './view-data';
+import { gameSettings } from '@game/settings';
 import {
   ConditionOverlay,
   MoveVfx,
@@ -90,9 +91,6 @@ import {
   type OverlayId,
   type Point,
 } from './vfx';
-
-/** Battle speed options (settings come with C33). */
-export const BATTLE_SPEEDS = [1, 1.5, 2] as const;
 
 export interface BattleSceneOptions {
   readonly content: GameContent;
@@ -775,6 +773,7 @@ export class BattleScene implements Scene<Container> {
   }
 
   private startShake(amp: number, seconds: number): void {
+    if (!gameSettings().shake) return; // Screen shake off (C33).
     this.shake = { t: Math.max(this.shake.t, seconds), amp: Math.max(this.shake.amp, amp) };
   }
 

@@ -153,4 +153,60 @@ describe('game data validation', () => {
     });
     expect(loadGameContent([corePack, pack]).items.require('core:potion').price).toBe(80);
   });
+
+  it('checks start regions (C33)', () => {
+    const start = (extra: Record<string, unknown> = {}): Record<string, unknown> => ({
+      name: 'Testland',
+      map: 'core:verdale',
+      starters: [{ species: 'core:sprigling', flag: 'mod:starter-a' }],
+      level: 5,
+      ...extra,
+    });
+    expect(modIssues({ content: { starts: { a: start() } } })).toEqual([]);
+    expect(
+      modIssues({
+        content: {
+          starts: {
+            a: start({
+              anchor: 'nowhere',
+              starters: [
+                { species: 'core:sprigling', flag: 'mod:f' },
+                { species: 'core:sprigling', flag: 'mod:f' },
+              ],
+              bag: { 'mod:potion': 1 },
+            }),
+          },
+        },
+      }),
+    ).toEqual([
+      'content.starts.a.bag.mod:potion: Unknown items "mod:potion". Did you mean "core:potion"?',
+      'content.starts.a.starters: "core:sprigling" twice',
+      'content.starts.a.starters: Flag "mod:f" twice',
+      'content.starts.a.anchor: No anchor "nowhere" on core:verdale',
+    ]);
+  });
+
+  it('checks trainer members that change species (C33)', () => {
+    const trainer = (member: Record<string, unknown>): PackContent => ({
+      trainers: { t: { name: 'Tester', teams: [{ team: [member] }] } },
+    });
+    expect(
+      modIssues({
+        content: trainer({
+          species: 'core:emberkit',
+          level: 5,
+          instead: [{ if: { flag: 'mod:x' }, species: 'core:drizzlet', level: 6 }],
+        }),
+      }),
+    ).toEqual([]);
+    expect(
+      modIssues({
+        content: trainer({
+          species: 'core:emberkit',
+          level: 5,
+          instead: [{ if: { quest: 'mod:nope', is: 'done' }, species: 'mod:nobody' }],
+        }),
+      }),
+    ).toHaveLength(2);
+  });
 });

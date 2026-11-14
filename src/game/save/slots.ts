@@ -42,7 +42,11 @@ export class MemoryStore implements KeyValueStore {
 /** What the slot list shows. */
 export interface SlotSummary {
   readonly lead: string;
+  /** Species of the team, lead first (portraits on the slot card, C33). */
+  readonly species: readonly string[];
   readonly level: number;
+  /** Badges held. */
+  readonly badges: number;
   readonly team: number;
   readonly caught: number;
   readonly place: string;
@@ -144,7 +148,9 @@ export class SaveSlots {
     const lead = party.team[0];
     return {
       lead: lead ? displayName(content, lead) : '—',
+      species: party.team.map((z) => z.species),
       level: lead?.level ?? 0,
+      badges: party.badges.length,
       team: party.team.length,
       caught: party.dex.caught.length,
       place: content.maps.require(place.map).name,

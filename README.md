@@ -11,7 +11,7 @@ Node.js 22+ (developed on Node 24).
 | Command | What it does |
 |---|---|
 | `npm install` | Install dependencies |
-| `npm run dev` | Start the Vite dev server (game at `/`, style lab at `/lab/`) |
+| `npm run dev` | Start the Vite dev server (game at `/`, style lab at `/lab/`). The title screen has a **Debug launcher** in dev builds and with `?debug`; `?demo` opens the UI demo |
 | `npm run build` | Typecheck, rebuild region maps, then build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run world -- <cmd>` | World tool: `gen`, `build`, `check`, `show` region maps (see `tools/README.md`) |

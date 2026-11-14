@@ -5,11 +5,25 @@
 
 import type { GameContent } from '@game/data';
 import type { BiomeId } from '@game/world/biomes';
-import { battleMusic, biomeAmbience, fieldSong } from './music';
-import { playAmbience, playMusic, setAmbienceLevel, setMusicLevel, stopMusic } from './sound';
+import { battleMusic, biomeAmbience, fieldSong, titleSong } from './music';
+import {
+  playAmbience,
+  playMusic,
+  setAmbienceLevel,
+  setMusicLevel,
+  stopAmbience,
+  stopMusic,
+} from './sound';
 
 /** Ambience level under battle music. */
 export const BATTLE_AMBIENCE_LEVEL = 0.35;
+
+/** The title screen (C33): its own theme, no ambience. */
+export function titleAudio(): void {
+  setMusicLevel(1, 0.1);
+  playMusic(titleSong(), { fade: 1.5 });
+  stopAmbience(1);
+}
 
 /** The overworld of a biome: its field song (resumed where it was left) and ambience. */
 export function fieldAudio(biome: BiomeId): void {

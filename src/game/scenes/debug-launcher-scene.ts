@@ -1,10 +1,12 @@
 /**
- * Debug launcher (C18): starts sample battles with the core pack's test Zorlings until the
- * world (C19+) and the start flow (C33) exist, opens the overworld from a save slot (C23:
- * continue, new game, delete) and the region map viewer (C19). Checkpoints (G2 prep) start
- * Verdale later in the campaign with the party the C31 playthrough simulator had there. Keyboard: W/S choose, E start,
- * Q back, E change a setting. Every battle starts from fresh teams; the last result shows at
- * the bottom. While the overworld is open, hiding the tab autosaves.
+ * Debug launcher (C18; behind the title screen's "Debug" item since C33): sample battles with
+ * the core pack's test Zorlings, the overworld from a save slot with the old test team (C23:
+ * continue, new game, delete), the test region and the region map viewers (C19).
+ * Checkpoints (G2 prep) start Verdale later in the campaign with the party the C31
+ * playthrough simulator had there. Battle speed and the switch prompt come from the settings
+ * (C33). Keyboard: W/S choose, E start, Q back to the title. Every battle starts from fresh
+ * teams; the last result shows at the bottom. While the overworld is open, hiding the tab
+ * autosaves.
  */
 
 import { Container, Graphics } from 'pixi.js';
@@ -13,9 +15,10 @@ import type { Engine } from '@engine/render/engine';
 import type { Scene } from '@engine/scenes/scene-manager';
 import { FocusStack, Menu, UiMotion, type MenuItem, type UiInput, type UiTheme } from '@engine/ui';
 import { bossZorling, type BattleResult, type BattleSetup } from '@game/battle/logic';
-import { BATTLE_SPEEDS, BattleScene } from '@game/battle/scene/battle-scene';
+import { BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
-import { audioSettings, formatVolume, stopAllMusic } from '@game/audio';
+import { stopAllMusic } from '@game/audio';
+import { gameSettings } from '@game/settings';
 import { BIOME_IDS, BIOMES, type BiomeId } from '@game/world/biomes';
 import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
@@ -32,7 +35,6 @@ import {
 import { paper, surface } from '@game/style/tokens';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
-import { VolumeMenu } from '@game/ui/volume-menu';
 import { MapViewerScene } from './map-viewer-scene';
 import { OverworldScene } from './overworld-scene';
 
@@ -52,6 +54,8 @@ export interface LauncherOptions {
   readonly saves: SaveSlots;
   /** False when saves only live in memory (IndexedDB not available). */
   readonly savesPersist: boolean;
+  /** Back to the title screen (Q on the main list). */
+  onExit(): void;
 }
 
 const BAG = { 'core:potion': 3, 'core:super-potion': 2, 'core:zorb': 5 };
@@ -62,23 +66,21 @@ export class DebugLauncherScene implements Scene<Container> {
   readonly ui = new Container({ label: 'ui:launcher' });
   private readonly bg = new Graphics();
   private readonly panel = new Graphics();
-  private readonly title = uiText('name', 'Zoravia · battle test launcher (C18)', paper.title);
+  private readonly title = uiText('name', 'Zoravia · debug launcher', paper.title);
   private readonly note = uiText('body', '', paper.ink, { wordWrap: true, wordWrapWidth: 220 });
   private readonly status = uiText(
     'body',
-    'Pick a battle. W/S choose · E start · Q back',
+    'Pick a battle. W/S choose · E start · Q title',
     paper.inkDim,
   );
   private readonly layer = new Container();
   private readonly stack: FocusStack<Container>;
   private readonly motion: UiMotion;
   private menu!: Menu;
-  private speed = 0;
   /** Map a new game starts on (C28: Verdale, or the C19 test region with the C21–C27 content). */
   private newGameMap = 'core:verdale';
   /** A checkpoint's state waiting for a save slot to be picked. */
   private pending: GameState | undefined;
-  private confirmSwitch = false;
   private biome: BiomeId = 'forest';
   private seed = 1;
   /** The open overworld, saved when the tab is hidden. */
@@ -212,9 +214,6 @@ export class DebugLauncherScene implements Scene<Container> {
       { label: 'Play: test region', hint: 'Saves' },
       { label: 'Map viewer: Verdale', hint: 'C28' },
       { label: 'Map viewer: test region', hint: 'C19' },
-      { label: 'Battle speed', hint: `${BATTLE_SPEEDS[this.speed] ?? 1}×` },
-      { label: 'Confirm 1 2 3 switch', hint: this.confirmSwitch ? 'On' : 'Off' },
-      { label: 'Sound', hint: formatVolume(audioSettings().master) },
       { label: 'Battle place', hint: BIOMES[this.biome].label.split(' ')[0] ?? '' },
     ];
     const old = this.menu as Menu | undefined;
@@ -234,41 +233,18 @@ export class DebugLauncherScene implements Scene<Container> {
         } else if (i === battles.length + 1) void this.openCheckpoints();
         else if (i === battles.length + 3) void this.openMap('core:verdale');
         else if (i === battles.length + 4) void this.openMap('core:test-region');
-        else if (i === battles.length + 5) {
-          this.speed = (this.speed + 1) % BATTLE_SPEEDS.length;
-          this.buildMenu(i);
-        } else if (i === battles.length + 6) {
-          this.confirmSwitch = !this.confirmSwitch;
-          this.buildMenu(i);
-        } else if (i === battles.length + 7) {
-          this.openSound(i);
-        } else {
+        else {
           // Battle music and ambience of another biome (C25).
           this.biome =
             BIOME_IDS[(BIOME_IDS.indexOf(this.biome) + 1) % BIOME_IDS.length] ?? 'forest';
           this.buildMenu(i);
         }
       },
+      onBack: () => this.options.onExit(),
     });
     this.menu.cursor.set(index);
     this.stack.push(this.menu);
     this.layout();
-  }
-
-  private openSound(index: number): void {
-    const menu = new VolumeMenu({
-      theme: this.options.theme,
-      width: 200,
-      onBack: () => {
-        this.stack.remove(menu);
-        this.buildMenu(index);
-      },
-    });
-    this.stack.push(menu);
-    menu.view.position.set(
-      this.menu.view.x + Math.round((this.menu.width - menu.width) / 2),
-      this.menu.view.y + Math.round((this.menu.height - menu.height) / 2),
-    );
   }
 
   private async start(b: SampleBattle): Promise<void> {
@@ -281,9 +257,9 @@ export class DebugLauncherScene implements Scene<Container> {
       theme,
       setup: b.setup(seed),
       ...(b.trainer ? { trainer: b.trainer } : {}),
-      speed: BATTLE_SPEEDS[this.speed] ?? 1,
+      speed: gameSettings().battleSpeed,
       money: 1240,
-      confirmHotbarSwitch: this.confirmSwitch,
+      confirmHotbarSwitch: gameSettings().confirmSwitch,
       biome: this.biome,
       onEnd: (result) => {
         this.report(b, seed, result);
@@ -492,8 +468,6 @@ export class DebugLauncherScene implements Scene<Container> {
       playtime: state.playtime,
       save: (s) => queue.save(s),
       onParty: (p) => this.reportParty(p),
-      battleSpeed: BATTLE_SPEEDS[this.speed] ?? 1,
-      confirmHotbarSwitch: this.confirmSwitch,
       seed: this.seed++,
       onExit: () => {
         this.world = undefined;

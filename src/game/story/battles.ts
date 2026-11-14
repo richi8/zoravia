@@ -22,6 +22,7 @@ import {
   type Party,
 } from '@game/player';
 import { createZorling, LEVEL_LIMIT, type Zorling } from '@game/progression';
+import { holds } from './conditions';
 
 export interface StoryBattle {
   readonly setup: BattleSetup;
@@ -74,7 +75,8 @@ export function trainerBattle(
   let boss: BattleSetup['boss'];
   const opponent = team.team.map((m, i) => {
     if (m.boss) boss = { id: m.boss, slot: i };
-    return member(content, m, `trainer-${id}-${i}`, scaledLevel(m.level, extra));
+    const base = m.instead?.find((x) => holds(content, party, x.if))?.level ?? m.level;
+    return member(content, party, m, `trainer-${id}-${i}`, scaledLevel(base, extra));
   });
   const prize = winPrize(wins, t.prize, t.rematch);
   return {
@@ -101,11 +103,20 @@ export function trainerBattle(
  * A trainer's Zorling. A boss member is not logged in the boss log: beating a story boss's
  * Titan in a trainer battle does not count as beating the wild Titan (one per save).
  */
-function member(content: GameContent, m: TrainerMember, uid: string, level: number): Zorling {
-  const z = m.boss
-    ? bossZorling(content, m.boss, { uid, level })
-    : createZorling(content, { uid, species: m.species, level });
-  return m.moves ? { ...z, moves: [...m.moves] } : z;
+function member(
+  content: GameContent,
+  party: Party,
+  m: TrainerMember,
+  uid: string,
+  level: number,
+): Zorling {
+  if (m.boss) {
+    const z = bossZorling(content, m.boss, { uid, level });
+    return m.moves ? { ...z, moves: [...m.moves] } : z;
+  }
+  const alt = m.instead?.find((x) => holds(content, party, x.if));
+  const z = createZorling(content, { uid, species: alt?.species ?? m.species, level });
+  return m.moves && !alt ? { ...z, moves: [...m.moves] } : z;
 }
 
 export function bossBattle(

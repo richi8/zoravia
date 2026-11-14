@@ -2,14 +2,15 @@ import { AudioEngine } from '@engine/audio';
 import { attachDomInput } from '@engine/input';
 import { Engine } from '@engine/render/engine';
 import { uiInputFrom } from '@engine/ui';
-import { installAudio, loadAudioSettings } from '@game/audio';
+import { installAudio, loadAudioSettings, setMuted } from '@game/audio';
 import { installFavicon } from '@game/brand/logo';
-import { GAME_TITLE } from '@game/index';
+import { GAME_TITLE, GAME_VERSION } from '@game/index';
 import { createInput } from '@game/input/actions';
 import { loadGameContent } from '@game/data';
 import { IndexedDbStore, MemoryStore, SaveSlots, type KeyValueStore } from '@game/save';
-import { DebugLauncherScene } from '@game/scenes/debug-launcher-scene';
+import { TitleScene } from '@game/scenes/title-scene';
 import { UiDemoScene } from '@game/scenes/ui-demo-scene';
+import { gameSettings, installSettings, persistBindings } from '@game/settings';
 import { corePack } from '@packs/core';
 import { installCssVars } from '@game/style/css';
 import { loadFonts } from '@game/style/fonts';
@@ -34,7 +35,11 @@ async function main(): Promise<void> {
     virtual: SCREEN,
   });
 
+  const settingsStore = safeLocalStorage();
+  // Settings and key bindings belong to the device (C33), like the volumes (C24).
+  installSettings(settingsStore);
   const input = createInput();
+  persistBindings(input.bindings, settingsStore);
   attachDomInput(input, {
     pointerTarget: engine.app.canvas,
     mapPoint: (x, y) => engine.toScreen(x, y),
@@ -52,10 +57,14 @@ async function main(): Promise<void> {
   // Sound (C24): the audio context starts on the first key press or click.
   const audio = new AudioEngine();
   audio.attachUnlock(window);
-  const settingsStore = safeLocalStorage();
   installAudio(audio, {
     settings: loadAudioSettings(settingsStore),
     ...(settingsStore ? { storage: settingsStore } : {}),
+  });
+
+  // Mute while the tab is hidden (a setting, C33).
+  document.addEventListener('visibilitychange', () => {
+    setMuted(document.visibilityState === 'hidden' && gameSettings().muteHidden);
   });
 
   engine.addPreUpdate((dt) => {
@@ -63,8 +72,8 @@ async function main(): Promise<void> {
     if (input.pressed('debug_overlay')) engine.debugVisible = !engine.debugVisible;
   });
 
-  // Until the real start flow exists (C33), the app opens the battle test launcher (C18);
-  // `?demo` opens the UI framework demo (C06).
+  // The title screen (C33); `?demo` opens the UI framework demo (C06). The battle test
+  // launcher (C18) is the title's Debug item in dev builds and with `?debug`.
   const content = loadGameContent([corePack]);
   let store: KeyValueStore;
   let savesPersist = true;
@@ -78,7 +87,7 @@ async function main(): Promise<void> {
   const saves = new SaveSlots(store, content);
   const first = params.has('demo')
     ? new UiDemoScene(engine, ui, ZORAVIA_SCREEN_THEME)
-    : new DebugLauncherScene({
+    : new TitleScene({
         engine,
         content,
         input,
@@ -86,6 +95,8 @@ async function main(): Promise<void> {
         theme: ZORAVIA_SCREEN_THEME,
         saves,
         savesPersist,
+        debug: import.meta.env.DEV || params.has('debug'),
+        version: GAME_VERSION,
       });
   await engine.scenes.replace(first);
   engine.start();

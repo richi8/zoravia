@@ -223,7 +223,9 @@ describe('save slots', () => {
       fromBackup: false,
       summary: {
         lead: 'Puddlit',
+        species: state().party.team.map((z) => z.species),
         level: 9,
+        badges: 1,
         team: 3,
         caught: 4,
         place: content.maps.require('core:test-region').name,

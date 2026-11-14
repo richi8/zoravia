@@ -275,6 +275,12 @@ export class InputManager<A extends string> {
     return !!k && k.pressed && !k.suppressed;
   }
 
+  /** The first key or button pressed this step, ignoring contexts and bindings (key capture). */
+  anyPressed(): KeyCode | undefined {
+    for (const [code, k] of this.keys) if (k.pressed && !k.suppressed) return code;
+    return undefined;
+  }
+
   get pointer(): PointerState {
     return this.pointerState;
   }

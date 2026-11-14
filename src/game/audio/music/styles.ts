@@ -160,6 +160,28 @@ export const BIOME_MUSIC: Readonly<Record<BiomeId, BiomeMusic>> = {
   },
 };
 
+/**
+ * The title screen's theme (C33): the forest's instruments, slower and warmer, in G with a
+ * Lydian lift, so it sounds like the start of a journey rather than a place.
+ */
+export const TITLE_MUSIC: Arrangement = {
+  form: 'field',
+  bpm: 80,
+  root: 67, // G4
+  scale: SCALES.lydian,
+  progressions: [
+    [0, 3, 5, 4],
+    [5, 3, 0, 4],
+  ],
+  gain: 0.6,
+  lead: { instrument: 'flute', density: 0.25, range: [-2, 9] },
+  counter: { instrument: 'strings', gain: 0.7 },
+  pad: { instrument: 'glassPad', octave: -12 },
+  bass: { instrument: 'bass', octave: -36, pattern: 'roots' },
+  arp: { instrument: 'harp', octave: -12, rate: 2, pattern: 'up', from: 0, gain: 0.7 },
+  drums: [{ instrument: 'timpani', hits: 'x...............', gain: 0.5, from: 1 }],
+};
+
 /** Boss music derived from a battle arrangement: lower, a little slower, heavier. */
 export function bossArrangement(battle: Arrangement): Arrangement {
   return {

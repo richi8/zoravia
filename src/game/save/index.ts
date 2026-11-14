@@ -4,3 +4,4 @@ export * from './idb';
 export * from './migrate';
 export * from './schema';
 export * from './slots';
+export * from './new-game';

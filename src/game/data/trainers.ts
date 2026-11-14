@@ -20,6 +20,7 @@ import { defineRegistry, type CheckContext, type EntryOf, type EntryProblem } fr
 import { z } from 'zod';
 import { description, duplicates, name, ref, refTo } from './common';
 import { MAX_LEVEL } from './species';
+import { conditionRefs, storyConditionSchema } from './story';
 
 export const badgeSchema = z.strictObject({
   name,
@@ -43,6 +44,22 @@ export const trainerMemberSchema = z.strictObject({
   moves: z.array(ref).min(1).max(3).optional(),
   /** Fights in boss form (a `bosses` id whose species is this one). */
   boss: ref.optional(),
+  /**
+   * Another species when a story condition holds; the first match wins (C33: the rival takes
+   * the starter that beats the player's). `moves` are then the new species' learnset moves.
+   */
+  instead: z
+    .array(
+      z.strictObject({
+        if: storyConditionSchema,
+        species: ref,
+        /** Its own level, when the other species needs one to be as hard (not harder). */
+        level: level.optional(),
+      }),
+    )
+    .min(1)
+    .max(4)
+    .optional(),
 });
 export type TrainerMember = z.output<typeof trainerMemberSchema>;
 
@@ -108,6 +125,10 @@ export const trainers = defineRegistry('trainers', trainerSchema, {
         refTo('species', m.species, 'teams', i, 'team', j, 'species'),
         ...(m.moves ?? []).map((id, k) => refTo('moves', id, 'teams', i, 'team', j, 'moves', k)),
         ...(m.boss ? [refTo('bosses', m.boss, 'teams', i, 'team', j, 'boss')] : []),
+        ...(m.instead ?? []).flatMap((alt, k) => [
+          refTo('species', alt.species, 'teams', i, 'team', j, 'instead', k, 'species'),
+          ...conditionRefs(alt.if, 'teams', i, 'team', j, 'instead', k, 'if'),
+        ]),
       ]),
     ),
   check: (t, ctx) => checkTrainer(t, ctx),
@@ -123,6 +144,9 @@ function checkTrainer(t: TrainerData, ctx: CheckContext): EntryProblem[] {
       const path = ['teams', i, 'team', j];
       for (const d of duplicates(m.moves ?? [])) {
         out.push({ path: [...path, 'moves'], message: `"${d}" twice` });
+      }
+      if (m.boss && m.instead) {
+        out.push({ path: [...path, 'instead'], message: 'A boss member cannot change species' });
       }
       if (!m.boss) return;
       const boss = ctx.get('bosses', m.boss) as { species: string } | undefined;

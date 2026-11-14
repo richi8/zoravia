@@ -38,6 +38,8 @@ let music: MusicPlayer | undefined;
 let ambience: AmbiencePlayer | undefined;
 let storage: SettingsStorage | undefined;
 let settings: AudioSettings = DEFAULT_AUDIO;
+/** Silenced without touching the volume settings (C33: the tab is hidden). */
+let muted = false;
 
 /** UI sounds repeat fast (held keys); a short throttle keeps them from stacking. */
 const UI_THROTTLE: Record<UiSound, number> = {
@@ -77,9 +79,15 @@ export function setVolume(channel: AudioChannel, value: number): void {
   saveAudioSettings(storage, settings);
 }
 
+/** Silences all sound (or brings it back) without changing the volume settings. */
+export function setMuted(on: boolean): void {
+  muted = on;
+  audio?.setVolume('master', muted ? 0 : settings.master);
+}
+
 function applySettings(s: AudioSettings): void {
   settings = s;
-  audio?.setVolume('master', s.master);
+  audio?.setVolume('master', muted ? 0 : s.master);
   audio?.setVolume('sfx', s.sfx);
   audio?.setVolume('music', s.music);
   audio?.setVolume('ambience', s.music);

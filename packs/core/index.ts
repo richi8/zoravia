@@ -1,6 +1,6 @@
 /**
  * The `core` pack: base types, conditions, reactions, moves, traits, species, items, music,
- * bosses, badges, trainers, region maps, NPCs, dialogues and quests.
+ * bosses, badges, trainers, region maps, NPCs, dialogues, quests and start regions.
  */
 
 import { definePack } from '@engine/packs';
@@ -13,6 +13,7 @@ import { music } from './music';
 import { npcs } from './npcs';
 import { reactions } from './reactions';
 import { species } from './species';
+import { starts } from './starts';
 import { dialogues as questDialogues, quests } from './story';
 import { dialogues as trialDialogues, trainers } from './trainers';
 import { traits } from './traits';
@@ -53,6 +54,7 @@ export const corePack = definePack({
       ...verdaleStoryDialogues,
     },
     quests: { ...quests, ...verdaleQuests },
+    starts,
   },
 });
 

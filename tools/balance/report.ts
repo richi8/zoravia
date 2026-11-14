@@ -291,7 +291,7 @@ export function trainerTable(content: GameContent, seeds: number): string {
             const team = [plan.starter, ...plan.catches].map((sp, i) =>
               createZorling(content, { uid: `t${i}`, species: formAt(content, sp, level), level }),
             );
-            const party = { ...newParty({ team }), badges };
+            const party = { ...newParty({ team }), badges, flags: { ...plan.flags } };
             if (aiBattle(content, trainerBattle(content, party, goal.trainer, s).setup)) wins++;
           }
           return pct(wins / seeds);

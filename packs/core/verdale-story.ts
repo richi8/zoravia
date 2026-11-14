@@ -18,7 +18,9 @@
  * Rowan, ends the quest.
  *
  * **Rival Mira** meets the player three times: on Willowmere's north road, at the trial
- * after the badge, and in Galecrest once both Titans are beaten.
+ * after the badge, and in Galecrest once both Titans are beaten. Her starter line is the one
+ * that beats the player's (C33): Fire against Sprigling, Nature against Drizzlet, Water against
+ * Emberkit.
  *
  * **Side quests:** Sandwich Snatcher (Tam, catch a Pipwing), The Lost Orchard (Gardener Mo
  * and Hazel in the Old Orchard secret), Ringing Shells (Tinker Pim, catch an Ironshell),
@@ -28,6 +30,7 @@
  * **Hidden items** lie in the secrets and landmarks; each is taken once (a flag).
  */
 
+import { STARTER_FLAGS } from './starts';
 import type {
   BadgeInput,
   DialogueInput,
@@ -102,7 +105,14 @@ export const verdaleStoryTrainers: Record<string, TrainerInput> = {
     teams: [
       {
         team: [
-          { species: c('emberkit'), level: 7 },
+          {
+            species: c('emberkit'),
+            level: 7,
+            instead: [
+              { if: { flag: STARTER_FLAGS.drizzlet }, species: c('sprigling') },
+              { if: { flag: STARTER_FLAGS.emberkit }, species: c('drizzlet') },
+            ],
+          },
           { species: c('pipwing'), level: 6 },
         ],
       },
@@ -110,7 +120,14 @@ export const verdaleStoryTrainers: Record<string, TrainerInput> = {
         // Met with a badge from another region (sandbox start): a stronger team.
         badges: 1,
         team: [
-          { species: c('blazekit'), level: 17 },
+          {
+            species: c('blazekit'),
+            level: 17,
+            instead: [
+              { if: { flag: STARTER_FLAGS.drizzlet }, species: c('fernwick') },
+              { if: { flag: STARTER_FLAGS.emberkit }, species: c('brooklet') },
+            ],
+          },
           { species: c('galehawk'), level: 18 },
           { species: c('voltbat'), level: 16 },
         ],
@@ -125,7 +142,14 @@ export const verdaleStoryTrainers: Record<string, TrainerInput> = {
     teams: [
       {
         team: [
-          { species: c('emberkit'), level: 11 },
+          {
+            species: c('emberkit'),
+            level: 11,
+            instead: [
+              { if: { flag: STARTER_FLAGS.drizzlet }, species: c('sprigling') },
+              { if: { flag: STARTER_FLAGS.emberkit }, species: c('drizzlet') },
+            ],
+          },
           { species: c('pipwing'), level: 11 },
           { species: c('ironshell'), level: 10 },
         ],
@@ -141,7 +165,14 @@ export const verdaleStoryTrainers: Record<string, TrainerInput> = {
         team: [
           { species: c('galehawk'), level: 26 },
           { species: c('ironshell'), level: 26 },
-          { species: c('infernyx'), level: 27 },
+          {
+            species: c('infernyx'),
+            level: 27,
+            instead: [
+              { if: { flag: STARTER_FLAGS.drizzlet }, species: c('thornmane') },
+              { if: { flag: STARTER_FLAGS.emberkit }, species: c('tidefang') },
+            ],
+          },
         ],
       },
     ],

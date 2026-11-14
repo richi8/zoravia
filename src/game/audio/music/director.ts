@@ -9,7 +9,7 @@ import type { Song } from '@engine/audio';
 import type { GameContent } from '@game/data';
 import type { BiomeId } from '@game/world/biomes';
 import { composeSong } from './compose';
-import { BIOME_MUSIC, bossArrangement } from './styles';
+import { BIOME_MUSIC, bossArrangement, TITLE_MUSIC } from './styles';
 import { themeSong } from './themes';
 
 const composed = new Map<string, Song>();
@@ -26,6 +26,11 @@ function composedSong(id: string, make: () => Song): Song {
 export function fieldSong(biome: BiomeId): Song {
   const id = `field:${biome}`;
   return composedSong(id, () => composeSong(id, BIOME_MUSIC[biome].field));
+}
+
+/** The title screen's theme (C33). */
+export function titleSong(): Song {
+  return composedSong('title', () => composeSong('title', TITLE_MUSIC));
 }
 
 export function battleSong(biome: BiomeId): Song {
