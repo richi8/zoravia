@@ -421,7 +421,7 @@ export class TitleScene implements Scene<Container> {
   }
 
   /** The overworld of `state`'s map; travel to another map replaces it (C34). */
-  private worldScene(state: GameState, queue: SaveQueue): OverworldScene {
+  private worldScene(state: GameState, queue: SaveQueue, arrived = false): OverworldScene {
     const { engine, content, input, ui, theme } = this.options;
     const scene: OverworldScene = new OverworldScene({
       engine,
@@ -435,9 +435,10 @@ export class TitleScene implements Scene<Container> {
       ...(state.respawn ? { respawn: state.respawn } : {}),
       playtime: state.playtime,
       explored: state.explored,
+      arrived,
       save: (s) => queue.save(s),
       onTravel: (next) => {
-        const to = this.worldScene(next, queue);
+        const to = this.worldScene(next, queue, true);
         void engine.scenes.replace(to, { transition: engine.fade({ duration: 0.4 }) });
       },
       onExit: () => {

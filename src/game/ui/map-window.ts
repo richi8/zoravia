@@ -33,8 +33,10 @@ import type {
   AtlasMarkerKind,
   AtlasProgress,
   AtlasRegion,
+  ZoneRun,
   AtlasZone,
 } from '@game/world/atlas';
+import { placeLabels } from './label-layout';
 import { FOG_HATCH_EVERY, FOG_HATCH_RGB, FOG_RGB, TIER_TINTS } from '@game/world/map/minimap';
 import { paper } from '../style/tokens';
 import { KeyHint, row } from './badges';
@@ -98,6 +100,12 @@ function hatchTexture(): Texture {
   hatch.source.scaleMode = 'nearest';
   return hatch;
 }
+
+/**
+ * Where a place name may sit (px from under its place, C36d): under it, above its marker,
+ * or one row further down.
+ */
+const LABEL_OFFSETS = [0, -14, 9] as const;
 
 /** A place name drawn on a map: small caps on a paper strip, centered under (x, y). */
 export function mapLabel(text: string, x: number, y: number): Container {
@@ -613,14 +621,23 @@ export class MapWindow implements Widget<Container> {
   }
 
   /** Where the map centers: the selection when it has a known place, else the player. */
-  private mapFocus(): { x: number; y: number; mark?: 'zone' | 'spot' } {
+  private mapFocus(): {
+    x: number;
+    y: number;
+    mark?: 'zone' | 'spot';
+    /** A zone's edge runs and its region's world place (C36d). */
+    edge?: { readonly x: number; readonly y: number; readonly runs: readonly ZoneRun[] };
+  } {
     const sel = this.selection();
     const you = this.options.player;
     if (!sel) return you;
     const r =
       sel.kind === 'zone' || sel.kind === 'fight' ? this.options.regions[sel.region] : undefined;
     const z = this.zoneOf(sel);
-    if (r && z?.known) return { x: r.x + z.x, y: r.y + z.y, mark: 'zone' };
+    if (r && z?.known) {
+      const edge = { x: r.x, y: r.y, runs: z.edge };
+      return { x: r.x + z.x, y: r.y + z.y, mark: 'zone', edge };
+    }
     const f = this.fightOf(sel);
     if (r && f?.known) return { x: r.x + f.x, y: r.y + f.y, mark: 'spot' };
     return you;
@@ -732,12 +749,17 @@ export class MapWindow implements Widget<Container> {
       y > MAP.y - MAP.h - 10 &&
       x < MAP.x + 2 * MAP.w + 40 &&
       y < MAP.y + 2 * MAP.h + 10;
+    // Names (C36d): towns first, then landmarks, then secrets; one that would overlap a name
+    // placed before it moves above its place or further down, else it hides.
+    const labels: { view: Container; priority: number }[] = [];
     for (const r of this.options.regions) {
       if (s >= NEAR) {
         for (const p of r.atlas.places) {
           if (p.kind === 'zone' || p.kind === 'lair') continue;
           const [x, y] = at(r.x + p.x + 0.5, r.y + p.y);
-          if (inView(x, y)) this.mapLayer.addChild(mapLabel(p.name, x, y + 3));
+          if (!inView(x, y)) continue;
+          const priority = p.kind === 'town' ? 0 : p.kind === 'secret' ? 2 : 1;
+          labels.push({ view: mapLabel(p.name, x, y + 3), priority });
         }
       } else if (r.atlas.places.length) {
         // Zoomed out: the region's name in the middle of what is explored of it.
@@ -751,16 +773,50 @@ export class MapWindow implements Widget<Container> {
         box.addChild(new Graphics().rect(0, 0, w, 14).fill({ color: paper.base, alpha: 0.88 }), t);
         t.position.set(4, 0);
         box.position.set(Math.round(x - w / 2), Math.round(y - 7));
-        this.mapLayer.addChild(box);
+        labels.push({ view: box, priority: 0 });
       }
     }
+    const placed = placeLabels(
+      labels.map(({ view, priority }) => ({
+        x: view.x,
+        y: view.y,
+        w: Math.ceil(view.width),
+        h: Math.ceil(view.height),
+        priority,
+      })),
+      s >= NEAR ? LABEL_OFFSETS : [0, 9, -9],
+    );
+    labels.forEach(({ view }, i) => {
+      const dy = placed[i];
+      if (dy === undefined) {
+        view.destroy({ children: true });
+        return;
+      }
+      view.y += dy;
+      this.mapLayer.addChild(view);
+    });
     this.blink.clear();
-    if (f.mark) {
+    if (f.edge?.runs.length) {
+      // The zone's real edge tiles (C36d), within the built area.
+      const e = f.edge;
+      const x0 = ox - mx;
+      const y0 = oy - my;
+      const x1 = ox + vw + mx;
+      const y1 = oy + vh + my;
+      for (const [rx, ry, n] of e.runs) {
+        const wx = e.x + rx;
+        const wy = e.y + ry;
+        if (wy < y0 || wy > y1 || wx + n < x0 || wx > x1) continue;
+        const [x, y] = at(wx, wy);
+        const [x2, y2] = at(wx + n, wy + 1);
+        this.blink.rect(x, y, Math.max(1, x2 - x), Math.max(1, y2 - y)).fill({
+          color: paper.accent,
+        });
+      }
+      this.mapLayer.addChild(this.blink);
+    } else if (f.mark) {
       const [x, y] = at(f.x, f.y);
-      const [bw, bh] = f.mark === 'zone' ? [Math.round(24 * s), Math.round(18 * s)] : [9, 9];
-      this.blink
-        .rect(x - Math.floor(bw / 2) + 0.5, y - Math.floor(bh / 2) + 0.5, bw, bh)
-        .stroke({ color: paper.accent, width: 1 });
+      this.blink.rect(x - 4 + 0.5, y - 4 + 0.5, 9, 9).stroke({ color: paper.accent, width: 1 });
       this.mapLayer.addChild(this.blink);
     }
     const [px, py] = at(this.options.player.x, this.options.player.y);

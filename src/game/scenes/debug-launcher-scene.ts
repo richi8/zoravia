@@ -462,7 +462,12 @@ export class DebugLauncherScene implements Scene<Container> {
   }
 
   /** The overworld of `state`'s map; travel to another map replaces it (C34). */
-  private worldScene(slot: number, state: GameState, queue: SaveQueue): OverworldScene {
+  private worldScene(
+    slot: number,
+    state: GameState,
+    queue: SaveQueue,
+    arrived = false,
+  ): OverworldScene {
     const { engine, content, input, ui, theme } = this.options;
     const scene: OverworldScene = new OverworldScene({
       engine,
@@ -476,11 +481,12 @@ export class DebugLauncherScene implements Scene<Container> {
       ...(state.respawn ? { respawn: state.respawn } : {}),
       playtime: state.playtime,
       explored: state.explored,
+      arrived,
       save: (s) => queue.save(s),
       onParty: (p) => this.reportParty(p),
       seed: this.seed++,
       onTravel: (next) => {
-        const to = this.worldScene(slot, next, queue);
+        const to = this.worldScene(slot, next, queue, true);
         void engine.scenes.replace(to, { transition: engine.fade({ duration: 0.4 }) });
       },
       onExit: () => {

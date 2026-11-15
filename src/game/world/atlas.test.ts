@@ -3,7 +3,7 @@ import { loadGameContent } from '@game/data';
 import { newParty, type Party } from '@game/player';
 import { createZorling } from '@game/progression';
 import { SHIPPED_PACKS } from '@packs/index';
-import { atlasMaps, atlasProgress, atlasRegion, npcMark } from './atlas';
+import { atlasMaps, atlasProgress, atlasRegion, npcMark, zoneEdges } from './atlas';
 import { ExploredMap, visit } from './explore';
 import { loadRegion } from './map';
 
@@ -116,5 +116,36 @@ describe('Atlas', () => {
     expect(progress.badges).toEqual([1, content.badges.size]);
     expect(progress.hearts).toEqual([1, 3]);
     expect(progress.dex[1]).toBe(content.species.size);
+  });
+});
+
+describe('zone edges (C36d)', () => {
+  it('outlines a small grid: every border tile of a zone, as row runs', () => {
+    // 4×3: zone 1 fills the left 3 columns, zone 2 the last one.
+    const zoneIndex = Uint8Array.from([1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2]);
+    const edges = zoneEdges({ width: 4, height: 3, zoneIndex, zones: [{}, {}] as never });
+    expect(edges[0]).toEqual([
+      [0, 0, 3],
+      [0, 1, 1],
+      [2, 1, 1],
+      [0, 2, 3],
+    ]);
+    expect(edges[1]).toEqual([
+      [3, 0, 1],
+      [3, 1, 1],
+      [3, 2, 1],
+    ]);
+  });
+
+  it('gives every Verdale zone an outline made of its own tiles', () => {
+    const edges = zoneEdges(verdale);
+    verdale.zones.forEach((z, i) => {
+      const runs = edges[i] ?? [];
+      expect(runs.length, z.key).toBeGreaterThan(0);
+      for (const [x, y, n] of runs)
+        for (let k = 0; k < n; k++) expect(verdale.zoneAt(x + k, y)?.key).toBe(z.key);
+    });
+    const region = atlasRegion(content, party(), MAP, verdale, allSeen());
+    expect(region.zones[0]?.edge).toEqual(edges[0]);
   });
 });

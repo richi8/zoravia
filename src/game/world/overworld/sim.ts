@@ -10,6 +10,7 @@
  * - `facing()` is what the player would talk to or touch with `E`.
  * - NPCs with a `when` condition come and go (C27): `present` says which NPCs are there. One
  *   that should appear waits until its tile is free.
+ * - `spotter` (C36d): a trainer that sees the player straight ahead, with nothing between.
  *
  * Deterministic for a seed: every random choice comes from split `Rng` streams.
  */
@@ -50,6 +51,12 @@ export type SimEvent =
 export type Occupant =
   | { readonly kind: 'npc'; readonly npc: NpcActor }
   | { readonly kind: 'wild'; readonly roamer: Roamer };
+
+/** A trainer that spotted the player, and the tile next to the player it walks to. */
+export interface Spot {
+  readonly npc: NpcActor;
+  readonly stop: Tile;
+}
 
 export interface SimOptions {
   readonly content: GameContent;
@@ -175,6 +182,31 @@ export class OverworldSim {
       }
     }
     return best ? { kind: 'npc', npc: best } : undefined;
+  }
+
+  /**
+   * The first NPC that sees the player standing on `at` (C36d): `sight(npc)` tiles straight
+   * ahead of it, where walls, props and other NPCs or Zorlings block the line. NPCs talking,
+   * walking or on a scripted walk do not look.
+   */
+  spotter(at: Tile, sight: (npc: NpcActor) => number): Spot | undefined {
+    for (const npc of this.npcs) {
+      if (npc.talking || npc.walking || npc.mover.moving) continue;
+      const range = sight(npc);
+      if (range <= 0) continue;
+      const [dx, dy] = DIR_STEP[npc.mover.facing];
+      let x = npc.mover.tx;
+      let y = npc.mover.ty;
+      for (let i = 0; i < range; i++) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx === at.x && ny === at.y) return { npc, stop: { x, y } };
+        if (this.map.blocked(nx, ny) || this.occupant(nx, ny)) break;
+        x = nx;
+        y = ny;
+      }
+    }
+    return undefined;
   }
 
   /** A seed for the next battle. */

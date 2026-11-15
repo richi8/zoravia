@@ -25,6 +25,9 @@
  * - Terrain streams in 8×8-tile blocks; props in front hide everyone (walk behind trees),
  *   tall grass covers feet, and actors are drawn back to front. The camera eases after the
  *   player.
+ * - Trainers who spot you (C36d): a route trainer not beaten yet that sees the player standing
+ *   in its line shows "!", walks up and talks (its dialogue starts the battle). The player
+ *   waits meanwhile. Each trainer spots once per visit, and walks back to its spot after.
  */
 
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
@@ -68,7 +71,7 @@ import type { DialogueBattle } from '@game/data';
 import { paper, surface } from '@game/style/tokens';
 import { ITEM_SPRITES } from '@game/ui/icons';
 import { MoneyLabel } from '@game/ui/panels';
-import { discoveryToast, splitNotes, ToastQueue } from '@game/ui/toast';
+import { arrivalToast, discoveryToast, splitNotes, ToastQueue } from '@game/ui/toast';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
 import { BIOMES, TILE } from '@game/world/biomes';
@@ -103,7 +106,8 @@ import {
 } from '@game/world/overworld/mover';
 import { outfitOf } from '@game/world/overworld/outfits';
 import { pathToward } from '@game/world/overworld/path';
-import { OverworldSim, type Occupant } from '@game/world/overworld/sim';
+import { OverworldSim, type Occupant, type Spot } from '@game/world/overworld/sim';
+import { trainerSight } from '@game/world/sight';
 import { TerrainStream } from '@game/world/overworld/stream';
 import { battleLook, speciesLook } from '@game/zorlings/species-look';
 import { pixelTexture } from '@engine/render/pixel-texture';
@@ -132,6 +136,8 @@ export interface OverworldOptions {
   readonly playtime?: number;
   /** Exploration of every map so far (C36b); this map's grows as the player walks. */
   readonly explored?: Readonly<Record<string, ExploredData>>;
+  /** Entered by travel from another region (C36d): shows the region's arrival toast. */
+  readonly arrived?: boolean;
   /** Writes the game state (autosave and the pause menu's "Save"). No saving when unset. */
   save?(state: GameState): Promise<void>;
   /**
@@ -147,6 +153,8 @@ const HUD_H = 26;
 const BASE = TILE - 2;
 /** Beat between touching a wild Zorling ("!") and the battle transition. */
 const ENCOUNTER_BEAT = 0.4;
+/** A trainer that spotted the player (C36d): "!" seconds, walking speed, give-up seconds. */
+const SPOT = { alert: 0.7, speed: 3.2, stuck: 1.5 } as const;
 /** Seconds a wild Zorling the player ran from leaves the player alone. */
 const RAN_COOLDOWN = 4;
 const SHADOW = 0x1e3a14;
@@ -216,6 +224,11 @@ export class OverworldScene implements Scene<Container> {
   /** Talk to / touch what the player faces once the click path ends. */
   private interactAfter = false;
   private encounter: { roamer: Roamer; t: number } | undefined;
+  /** A trainer walking up to the player (C36d); `t` is the "!" time left. */
+  private spot: (Spot & { t: number; stuck: number }) | undefined;
+  /** Trainers that spotted the player on this visit: they don't spot again. */
+  private readonly spotted = new Set<NpcActor>();
+  private sightCache: { log: Party['trainers']; sight: Map<NpcActor, number> } | undefined;
   private context = '';
   /** The NPC whose center or shop is open. */
   private talkingTo: NpcActor | undefined;
@@ -297,6 +310,8 @@ export class OverworldScene implements Scene<Container> {
     this.help.text = HELP;
     this.respawn = this.onMap(options.respawn, false) ?? this.firstRespawn();
     this.menus = new OverworldMenus(this.menuHost());
+    if (options.arrived)
+      this.toasts.push(arrivalToast(this.map.name, !options.explored?.[options.mapId]));
     this.explore();
     this.saved = { party: this.current, key: this.placeKey() };
   }
@@ -600,6 +615,10 @@ export class OverworldScene implements Scene<Container> {
       if (this.encounter.t <= 0) this.startBattle(this.encounter.roamer);
       return;
     }
+    if (this.spot) {
+      this.updateSpot(dt);
+      return;
+    }
     if (this.presenceDirty && !this.inDialogue) this.syncPresence();
     if (this.openMenuKey()) return;
     const key = input.direction(MOVE_DIRECTIONS);
@@ -610,7 +629,12 @@ export class OverworldScene implements Scene<Container> {
       if (this.interact(this.sim.facing())) return;
     }
 
-    const intent = (at: Tile): Intent | undefined => (key ? { dir: key } : this.followPath(at));
+    const intent = (at: Tile): Intent | undefined => {
+      // Standing on a tile (or arriving on one) in a trainer's line stops the player.
+      if (!this.spot) this.startSpot(this.sim.spotter(at, this.sight));
+      if (this.spot) return undefined;
+      return key ? { dir: key } : this.followPath(at);
+    };
     for (const e of this.sim.update(dt, intent, this.viewTiles())) {
       if (e.kind === 'encounter') this.touch(e.roamer);
       else if (e.kind === 'player' && e.event.kind === 'bump') {
@@ -786,6 +810,11 @@ export class OverworldScene implements Scene<Container> {
     this.clearPath();
     const role = npc.npc.role;
     const after = (): void => {
+      // A trainer that walked up to the player goes back to its spot (C36d).
+      const at = npc.mover.destination;
+      if (this.spotted.has(npc) && (at.x !== npc.home.x || at.y !== npc.home.y)) {
+        npc.goHome();
+      }
       if (!role) {
         npc.talking = false;
         return;
@@ -993,6 +1022,52 @@ export class OverworldScene implements Scene<Container> {
     if (result.outcome === 'lose') this.wakeAtCenter();
   }
 
+  /** How far an NPC spots the player now (C36d): 0 once it spotted on this visit. */
+  private readonly sight = (npc: NpcActor): number => {
+    if (this.spotted.has(npc)) return 0;
+    const log = this.party.trainers;
+    if (this.sightCache?.log !== log) this.sightCache = { log, sight: new Map() };
+    let range = this.sightCache.sight.get(npc);
+    if (range === undefined) {
+      range = trainerSight(this.options.content, npc.npc, log);
+      this.sightCache.sight.set(npc, range);
+    }
+    return range;
+  };
+
+  private startSpot(s: Spot | undefined): void {
+    if (!s) return;
+    this.spot = { ...s, t: SPOT.alert, stuck: 0 };
+    this.spotted.add(s.npc);
+    this.clearPath();
+    playSfx('world.encounter');
+  }
+
+  /** "!" for a beat, then the trainer walks up and talks; a blocked walk gives up. */
+  private updateSpot(dt: number): void {
+    const s = this.spot;
+    if (!s) return;
+    if (s.t > 0) {
+      if ((s.t -= dt) <= 0) s.npc.walkTo(s.stop, SPOT.speed);
+      return;
+    }
+    // Wild encounters wait: the player stands still until the trainer arrives.
+    this.sim.update(dt, () => undefined, this.viewTiles());
+    this.roamerFx();
+    if (s.npc.walking) {
+      s.stuck = s.npc.mover.moving ? 0 : s.stuck + dt;
+      if (s.stuck > SPOT.stuck) {
+        s.npc.goHome();
+        this.spot = undefined;
+      }
+      return;
+    }
+    this.spot = undefined;
+    const d = dirBetween(this.player.destination, s.npc.mover.destination);
+    if (d) this.player.facing = d;
+    this.interact({ kind: 'npc', npc: s.npc });
+  }
+
   /** A wild Zorling was touched: "!" over it for a beat, then the battle. */
   private touch(roamer: Roamer): void {
     this.clearPath();
@@ -1174,7 +1249,8 @@ export class OverworldScene implements Scene<Container> {
     list.push(this.characterDrawable(this.player, this.sheet));
     for (const npc of this.sim.npcs) {
       const sheet = this.npcSheets.get(npc);
-      if (sheet) list.push(this.characterDrawable(npc.mover, sheet));
+      const alert = this.spot?.npc === npc && this.spot.t > 0;
+      if (sheet) list.push(this.characterDrawable(npc.mover, sheet, alert));
       else if (npc.npc.zorling) {
         const f = npc.mover.facing;
         if (f === 'left' || f === 'right') this.npcSides.set(npc, f);
@@ -1194,7 +1270,7 @@ export class OverworldScene implements Scene<Container> {
     this.texture.source.update();
   }
 
-  private characterDrawable(m: GridMover, sheet: CharacterSheet): Drawable {
+  private characterDrawable(m: GridMover, sheet: CharacterSheet, alert = false): Drawable {
     return {
       y: m.y,
       draw: (camX, camY) => {
@@ -1207,6 +1283,7 @@ export class OverworldScene implements Scene<Container> {
         this.drawShadow(wx + TILE / 2, wy + TILE - 1, 5.5, wy + BASE, camX, camY);
         this.blit(frame, left, top, wy + BASE, camX, camY);
         this.grassOver(m, left, top, CHARACTER_W, CHARACTER_H, wy + BASE, camX, camY);
+        if (alert) this.drawAlert(wx + TILE / 2, top - 1, camX, camY);
       },
     };
   }

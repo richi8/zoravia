@@ -91,6 +91,7 @@ export const npcs: Record<string, NpcInput> = {
     look: { outfit: 'mustard', hair: 'dark', skin: 'tan' },
     behavior: { kind: 'look' },
     dialogue: 'core:apprentice-fern',
+    mark: 'trial',
   },
   'trial-oak': {
     name: 'Warden Oak',
@@ -100,6 +101,7 @@ export const npcs: Record<string, NpcInput> = {
     facing: 'up',
     look: { outfit: 'maroon', hair: 'dark', skin: 'deep' },
     dialogue: 'core:warden-oak',
+    mark: 'trial',
   },
   'rival-mira': {
     name: 'Rival Mira',
@@ -110,6 +112,7 @@ export const npcs: Record<string, NpcInput> = {
     look: { outfit: 'purple', hair: 'blonde', skin: 'light' },
     when: { not: { beat: 'core:rival-mira' } },
     dialogue: 'core:rival-mira',
+    mark: 'rival',
   },
   'rival-mira-grove': {
     name: 'Rival Mira',
@@ -122,6 +125,7 @@ export const npcs: Record<string, NpcInput> = {
       all: [{ badge: 'core:grove-badge' }, { not: { beat: 'core:rival-mira-grove' } }],
     },
     dialogue: 'core:rival-mira-grove',
+    mark: 'rival',
   },
   ...verdaleNpcs,
   ...verdaleTrainerNpcs,

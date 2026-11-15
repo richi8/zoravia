@@ -50,7 +50,14 @@ export interface AtlasZone {
   /** Middle of the zone (map focus). */
   readonly x: number;
   readonly y: number;
+  /**
+   * Its edge tiles (C36d), as row runs `[x, y, length]` in region tiles: the tiles of the zone
+   * next to a tile of another zone, of no zone, or outside the map. The map window blinks it.
+   */
+  readonly edge: readonly ZoneRun[];
 }
+
+export type ZoneRun = readonly [x: number, y: number, length: number];
 
 export interface AtlasFight {
   readonly npc: string;
@@ -100,6 +107,40 @@ export function npcMark(content: GameContent, n: NpcData): NpcMark | undefined {
   const boss = bosses[0] ? content.bosses.get(bosses[0]) : undefined;
   if (boss) return boss.kind === 'legendary' ? 'legendary' : 'titan';
   return trainers.length ? 'trainer' : undefined;
+}
+
+/** Each zone's edge tiles as row runs, by zone index (see `AtlasZone.edge`). Pure. */
+export function zoneEdges(
+  m: Pick<WorldMap, 'width' | 'height' | 'zoneIndex' | 'zones'>,
+): ZoneRun[][] {
+  const out: ZoneRun[][] = m.zones.map(() => []);
+  const { width: w, height: h, zoneIndex: idx } = m;
+  const slot = (x: number, y: number): number =>
+    x < 0 || y < 0 || x >= w || y >= h ? 0 : (idx[y * w + x] ?? 0);
+  for (let y = 0; y < h; y++) {
+    let run: [number, number, number] | undefined;
+    let runZone = 0;
+    for (let x = 0; x <= w; x++) {
+      const z = x < w ? slot(x, y) : 0;
+      const edge =
+        z > 0 &&
+        (slot(x - 1, y) !== z ||
+          slot(x + 1, y) !== z ||
+          slot(x, y - 1) !== z ||
+          slot(x, y + 1) !== z);
+      if (run && (!edge || z !== runZone)) {
+        out[runZone - 1]?.push(run);
+        run = undefined;
+      }
+      if (!edge) continue;
+      if (run) run[2]++;
+      else {
+        run = [x, y, 1];
+        runZone = z;
+      }
+    }
+  }
+  return out;
 }
 
 export function atlasRegion(
@@ -169,7 +210,8 @@ export function atlasRegion(
 
   const seen = new Set(party.dex.seen);
   const caught = new Set(party.dex.caught);
-  const zones: AtlasZone[] = m.zones.map((z) => {
+  const edges = zoneEdges(m);
+  const zones: AtlasZone[] = m.zones.map((z, i) => {
     const place = places.find((p) => p.key === `zone:${z.key}`);
     const species = [...new Set(z.spawns.map((s) => s.species))];
     return {
@@ -190,6 +232,7 @@ export function atlasRegion(
       }),
       x: place?.x ?? 0,
       y: place?.y ?? 0,
+      edge: edges[i] ?? [],
     };
   });
 

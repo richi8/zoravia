@@ -55,6 +55,16 @@ export function discoveryToast(p: MapPlace): Toast {
   return { title, text: `${p.name}${levels}`, ...(p.kind === 'secret' ? { big: true } : {}) };
 }
 
+/**
+ * Entering another region (C36d): its name. The first arrival is gold-edged, as a
+ * discovery; later ones are plain.
+ */
+export function arrivalToast(region: string, first: boolean): Toast {
+  return first
+    ? { title: 'New region', text: region, big: true }
+    : { title: 'Region', text: region };
+}
+
 export class ToastQueue {
   readonly view = new Container({ label: 'toasts' });
   private readonly queue: Toast[] = [];

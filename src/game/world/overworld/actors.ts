@@ -42,8 +42,13 @@ export const NPC_SPEED = 2.2;
 export class NpcActor {
   readonly mover: GridMover;
   readonly home: Tile;
+  /** The facing it starts with (it turns back to it after walking home, C36d). */
+  readonly homeFacing: Dir;
   /** Talking: stands still, facing the player. */
   talking = false;
+  /** A scripted walk (C36d): it steps toward this tile, ignoring its behavior, until there. */
+  goal: Tile | undefined;
+  private faceAfter: Dir | undefined;
   private timer: number;
 
   constructor(
@@ -53,6 +58,7 @@ export class NpcActor {
     private readonly rng: Rng,
   ) {
     this.home = at;
+    this.homeFacing = facing;
     this.mover = new GridMover(at, facing, NPC_SPEED);
     this.timer = this.nextWait();
   }
@@ -67,7 +73,28 @@ export class NpcActor {
     if (d) this.mover.facing = d;
   }
 
+  /** Walks straight to a tile (a trainer walking up to the player, or back to its spot). */
+  walkTo(goal: Tile, speed = NPC_SPEED, faceAfter?: Dir): void {
+    this.goal = goal;
+    this.faceAfter = faceAfter;
+    this.mover.speed = speed;
+  }
+
+  /** Walks back to its spot and turns the way it started. */
+  goHome(): void {
+    this.walkTo(this.home, NPC_SPEED, this.homeFacing);
+  }
+
+  /** On a scripted walk that has not arrived. */
+  get walking(): boolean {
+    return this.goal !== undefined;
+  }
+
   update(dt: number, blocked: Blocked): void {
+    if (this.goal) {
+      this.walk(dt, blocked);
+      return;
+    }
     let want: Dir | undefined;
     if (!this.talking && !this.mover.moving) {
       this.timer -= dt;
@@ -79,6 +106,26 @@ export class NpcActor {
     const intent = (): Intent | undefined => (want ? { dir: want, noTurnDelay: true } : undefined);
     this.mover.update(dt, intent, blocked);
     want = undefined;
+  }
+
+  private walk(dt: number, blocked: Blocked): void {
+    const goal = this.goal as Tile;
+    const intent = (at: Tile): Intent | undefined => {
+      if (at.x === goal.x && at.y === goal.y) return undefined;
+      const d = dirsToward(at, goal).find((d) => {
+        const to = stepFrom(at, d);
+        return !blocked(to.x, to.y);
+      });
+      return d ? { dir: d, noTurnDelay: true } : undefined;
+    };
+    this.mover.update(dt, intent, blocked);
+    const at = this.mover.destination;
+    if (!this.mover.moving && at.x === goal.x && at.y === goal.y) {
+      this.goal = undefined;
+      this.mover.speed = NPC_SPEED;
+      if (this.faceAfter) this.mover.facing = this.faceAfter;
+      this.faceAfter = undefined;
+    }
   }
 
   private decide(blocked: Blocked): Dir | undefined {

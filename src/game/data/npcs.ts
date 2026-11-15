@@ -20,6 +20,8 @@
  *   lying on the ground (a hidden item: its dialogue gives the item and sets a flag, and a
  *   `when` on that flag makes it vanish). Objects never move or turn, and their pages show
  *   without a name tag.
+ * - `sight` (C36d): a route trainer not beaten yet spots the player in its line of sight,
+ *   walks up and starts its dialogue (see `trainerSight`).
  */
 
 import { defineRegistry, type CheckContext, type EntryOf, type EntryProblem } from '@engine/packs';
@@ -101,6 +103,11 @@ export const npcSchema = z
     object: z.enum(['sign', 'item']).optional(),
     /** Atlas marker (C36b); see `NPC_MARKS`. */
     mark: z.enum(NPC_MARKS).optional(),
+    /**
+     * Tiles a route trainer sees straight ahead (C36d); default `TRAINER_SIGHT`, 0 never
+     * spots. Only NPCs whose mark is `trainer` spot.
+     */
+    sight: z.number().int().min(0).max(8).optional(),
   })
   .superRefine((n, ctx) => {
     if (n.zorling && n.behavior.kind === 'wander') {

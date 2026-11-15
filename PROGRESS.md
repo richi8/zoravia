@@ -50,7 +50,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C36 | Cross-region endgame | ✅ | [log](logs/C36-endgame.md) |
 | C36b | Map exploration | ✅ | [log](logs/C36b-map-exploration.md) |
 | C36c | Unified map window | ✅ | [log](logs/C36c-unified-map-window.md) |
-| C36d | World polish | ⬜ | |
+| C36d | World polish | ✅ | [log](logs/C36d-world-polish.md) |
 | C36e | Presentation & sound polish | ⬜ | |
 | C37 | Seamless world | ⬜ | |
 | C38 | Release prep | ⬜ | |

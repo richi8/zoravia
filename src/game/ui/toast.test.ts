@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BADGE_NOTE, QUEST_NOTE } from '@game/story';
-import { discoveryToast, splitNotes } from './toast';
+import { arrivalToast, discoveryToast, splitNotes } from './toast';
 
 describe('toasts', () => {
   it('turns quest and badge notes into toasts and keeps the rest as pages', () => {
@@ -26,5 +26,14 @@ describe('toasts', () => {
       big: true,
     });
     expect(discoveryToast({ ...base, kind: 'town', name: 'Fernhollow' }).text).toBe('Fernhollow');
+  });
+
+  it('names the region on arrival, gold-edged the first time (C36d)', () => {
+    expect(arrivalToast('Emberwaste', true)).toEqual({
+      title: 'New region',
+      text: 'Emberwaste',
+      big: true,
+    });
+    expect(arrivalToast('Emberwaste', false)).toEqual({ title: 'Region', text: 'Emberwaste' });
   });
 });
