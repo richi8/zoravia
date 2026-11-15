@@ -46,6 +46,22 @@ export const DEFAULT_SETTINGS: GameSettings = {
   muteHidden: true,
 };
 
+/** What the device asks for before the player has chosen anything (C38). */
+export interface DeviceHints {
+  /** The OS "reduce motion" preference (`prefers-reduced-motion: reduce`). */
+  readonly reducedMotion?: boolean;
+}
+
+/**
+ * The defaults for this device: with reduced motion asked for, screen shake and full-screen
+ * flashes start off (C38 accessibility pass). A stored choice always wins.
+ */
+export function defaultSettings(hints: DeviceHints = {}): GameSettings {
+  return hints.reducedMotion
+    ? { ...DEFAULT_SETTINGS, shake: false, flashes: false }
+    : DEFAULT_SETTINGS;
+}
+
 export const SETTINGS_KEY = 'zoravia:settings';
 export const KEYS_KEY = 'zoravia:keys';
 
@@ -62,15 +78,18 @@ const schema = z.object({
 });
 
 /** Reads the settings; a missing or broken value falls back to its default. */
-export function loadSettings(storage: SettingsStorage | undefined): GameSettings {
+export function loadSettings(
+  storage: SettingsStorage | undefined,
+  defaults: GameSettings = DEFAULT_SETTINGS,
+): GameSettings {
   try {
     const raw = storage?.getItem(SETTINGS_KEY);
-    if (!raw) return DEFAULT_SETTINGS;
+    if (!raw) return defaults;
     const data: unknown = JSON.parse(raw);
-    if (typeof data !== 'object' || data === null) return DEFAULT_SETTINGS;
-    return schema.parse({ ...DEFAULT_SETTINGS, ...data }) as GameSettings;
+    if (typeof data !== 'object' || data === null) return defaults;
+    return schema.parse({ ...defaults, ...data }) as GameSettings;
   } catch {
-    return DEFAULT_SETTINGS;
+    return defaults;
   }
 }
 
@@ -89,9 +108,12 @@ let storage: SettingsStorage | undefined;
 const listeners = new Set<(s: GameSettings) => void>();
 
 /** Loads the stored settings and keeps them in `storage` from now on. */
-export function installSettings(target: SettingsStorage | undefined): GameSettings {
+export function installSettings(
+  target: SettingsStorage | undefined,
+  hints: DeviceHints = {},
+): GameSettings {
   storage = target;
-  current = loadSettings(target);
+  current = loadSettings(target, defaultSettings(hints));
   for (const l of listeners) l(current);
   return current;
 }

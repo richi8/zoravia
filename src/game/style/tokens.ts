@@ -113,7 +113,8 @@ export const paper = {
   /** Outer border. */
   edge: 0x4a3426,
   ink: 0x3a281c,
-  inkDim: 0x765640,
+  /** Secondary text; ≥ 4.5:1 on every paper surface, the cursor row included (C38). */
+  inkDim: 0x6d4f3b,
   /** Disabled items (decorative, not required to meet text contrast). */
   inkDisabled: 0xb49c7c,
   cursor: 0xf0c869,

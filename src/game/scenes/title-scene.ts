@@ -7,7 +7,8 @@
  *   starter → the world, with the iris.
  * - **Load game**: the slot cards; a saved slot can be continued or deleted.
  * - **Settings**: the settings menu (also in the pause menu).
- * - **Debug**: the old battle launcher with checkpoints (dev builds and `?debug` only).
+ * - **Debug**: the old battle launcher with checkpoints (dev builds only; C38 leaves it out of
+ *   the release bundle).
  *
  * Keyboard: W/S choose, E pick, Q back. Mouse: hover and click. While the world is open,
  * hiding the tab autosaves; quitting from the pause menu comes back here.
@@ -47,7 +48,6 @@ import { loadRegion } from '@game/world/map';
 import { TerrainStream } from '@game/world/overworld/stream';
 import { speciesLook } from '@game/zorlings/species-look';
 import { renderZorling } from '@game/zorlings/render';
-import { DebugLauncherScene } from './debug-launcher-scene';
 import { OverworldScene } from './overworld-scene';
 import { keyHint, upDownHint } from '@game/input/key-hint';
 
@@ -62,7 +62,7 @@ export interface TitleOptions {
   readonly saves: SaveSlots;
   /** False when saves only live in memory (IndexedDB not available). */
   readonly savesPersist: boolean;
-  /** Shows the Debug item (the old launcher). */
+  /** Shows the Debug item (the old launcher). Only honored in dev builds (C38). */
   readonly debug: boolean;
   /** Game version shown in the corner. */
   readonly version: string;
@@ -103,6 +103,7 @@ export class TitleScene implements Scene<Container> {
   /** The open world, saved when the tab is hidden. */
   private world: OverworldScene | undefined;
   private readonly bgMap: { map: string; x: number; y: number } | undefined;
+  private bgStream: TerrainStream | undefined;
 
   constructor(private readonly options: TitleOptions) {
     const first = options.content.starts.values()[0];
@@ -180,7 +181,8 @@ export class TitleScene implements Scene<Container> {
       [{ label: 'Load game', disabled: !anySaved }, () => this.openLoad()],
       [{ label: 'Settings' }, () => this.openSettings()],
     );
-    if (this.options.debug) entries.push([{ label: 'Debug launcher' }, () => this.openDebug()]);
+    if (import.meta.env.DEV && this.options.debug)
+      entries.push([{ label: 'Debug launcher' }, () => void this.openDebug()]);
     const old = this.menu;
     const index = old?.index ?? 0;
     this.menu = new Menu({
@@ -454,11 +456,13 @@ export class TitleScene implements Scene<Container> {
     return scene;
   }
 
-  private openDebug(): void {
-    if (this.busy) return;
+  private async openDebug(): Promise<void> {
+    // Dead code in release builds, so the launcher and its checkpoints stay out of the bundle.
+    if (!import.meta.env.DEV || this.busy) return;
     this.busy = true;
     const { engine, content, input, ui, theme, saves, savesPersist } = this.options;
-    const launcher: DebugLauncherScene = new DebugLauncherScene({
+    const { DebugLauncherScene } = await import('./debug-launcher-scene');
+    const launcher = new DebugLauncherScene({
       engine,
       content,
       input,
@@ -502,9 +506,15 @@ export class TitleScene implements Scene<Container> {
     const buf = new PixelBuffer(w, h);
     buf.fill(surface.background);
     if (this.bgMap) {
-      const map = loadRegion(this.options.content, this.bgMap.map);
-      const stream = new TerrainStream(map, BIOMES[map.biome]);
-      stream.draw(buf, this.bgMap.x * TILE - w / 2, this.bgMap.y * TILE - h / 2, 0.5);
+      // Kept across resizes (C38): a resize only draws again, it does not bake again.
+      if (!this.bgStream) {
+        const map = loadRegion(this.options.content, this.bgMap.map);
+        this.bgStream = new TerrainStream(map, BIOMES[map.biome]);
+      }
+      const stream = this.bgStream;
+      const camX = Math.floor(this.bgMap.x * TILE - w / 2);
+      const camY = Math.floor(this.bgMap.y * TILE - h / 2);
+      stream.draw(buf, camX, camY, 0.5);
     }
     const cx = w / 2;
     const cy = h / 2;

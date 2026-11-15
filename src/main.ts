@@ -9,7 +9,6 @@ import { createInput } from '@game/input/actions';
 import { loadGameContent } from '@game/data';
 import { IndexedDbStore, MemoryStore, SaveSlots, type KeyValueStore } from '@game/save';
 import { TitleScene } from '@game/scenes/title-scene';
-import { UiDemoScene } from '@game/scenes/ui-demo-scene';
 import { gameSettings, installSettings, persistBindings } from '@game/settings';
 import { SHIPPED_PACKS } from '@packs/index';
 import { installCssVars } from '@game/style/css';
@@ -36,9 +35,16 @@ async function main(): Promise<void> {
     virtual: SCREEN,
   });
 
+  // Screen readers get a name for the game canvas (C38).
+  engine.app.canvas.setAttribute('role', 'application');
+  engine.app.canvas.setAttribute('aria-label', 'Zoravia game. Play with the keyboard.');
+
   const settingsStore = safeLocalStorage();
   // Settings and key bindings belong to the device (C33), like the volumes (C24).
-  installSettings(settingsStore);
+  // With the OS asking for reduced motion, shake and flashes start off (C38).
+  installSettings(settingsStore, {
+    reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  });
   const input = createInput();
   persistBindings(input.bindings, settingsStore);
   installKeyHints(input.bindings);
@@ -74,8 +80,9 @@ async function main(): Promise<void> {
     if (input.pressed('debug_overlay')) engine.debugVisible = !engine.debugVisible;
   });
 
-  // The title screen (C33); `?demo` opens the UI framework demo (C06). The battle test
-  // launcher (C18) is the title's Debug item in dev builds and with `?debug`.
+  // The title screen (C33). In dev builds only (C38), `?demo` opens the UI framework demo
+  // (C06) and the title has the battle test launcher (C18) as its Debug item. Both are dead
+  // code in a release build, so neither ships.
   const content = loadGameContent([...SHIPPED_PACKS]);
   let store: KeyValueStore;
   let savesPersist = true;
@@ -87,21 +94,27 @@ async function main(): Promise<void> {
     savesPersist = false;
   }
   const saves = new SaveSlots(store, content);
-  const first = params.has('demo')
-    ? new UiDemoScene(engine, ui, ZORAVIA_SCREEN_THEME)
-    : new TitleScene({
-        engine,
-        content,
-        input,
-        ui,
-        theme: ZORAVIA_SCREEN_THEME,
-        saves,
-        savesPersist,
-        debug: import.meta.env.DEV || params.has('debug'),
-        version: GAME_VERSION,
-      });
+  const first =
+    import.meta.env.DEV && params.has('demo')
+      ? new (await import('@game/scenes/ui-demo-scene')).UiDemoScene(
+          engine,
+          ui,
+          ZORAVIA_SCREEN_THEME,
+        )
+      : new TitleScene({
+          engine,
+          content,
+          input,
+          ui,
+          theme: ZORAVIA_SCREEN_THEME,
+          saves,
+          savesPersist,
+          debug: import.meta.env.DEV,
+          version: GAME_VERSION,
+        });
   await engine.scenes.replace(first);
   engine.start();
+  document.getElementById('boot')?.remove();
 
   if (import.meta.env.DEV) {
     (window as unknown as { __zoravia?: unknown }).__zoravia = {
@@ -126,4 +139,9 @@ function safeLocalStorage(): Storage | undefined {
 
 main().catch((err: unknown) => {
   console.error(err);
+  const boot = document.getElementById('boot');
+  if (boot) {
+    boot.textContent =
+      'Zoravia could not start in this browser. Try an up-to-date Chrome, Firefox, Edge or Safari.';
+  }
 });

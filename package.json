@@ -1,6 +1,6 @@
 {
   "name": "zoravia",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Browser monster-collecting RPG with code-generated Zorlings.",
   "scripts": {
     "dev": "vite",

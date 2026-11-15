@@ -53,4 +53,4 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C36d | World polish | ✅ | [log](logs/C36d-world-polish.md) |
 | C36e | Presentation & sound polish | ✅ | [log](logs/C36e-presentation-sound.md) |
 | C37 | Seamless world | ✅ | [log](logs/C37-seamless-world.md) |
-| C38 | Release prep | ⬜ | |
+| C38 | Release prep | ✅ | [log](logs/C38-release-prep.md) |

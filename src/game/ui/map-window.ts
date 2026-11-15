@@ -77,6 +77,18 @@ const SEA = 0x9cc4cf;
 const SEA_WAVE = 0x86b2c0;
 const TIER_LABEL = { t1: 'T1', t2: 'T2', t3: 'T3', danger: '!!' } as const;
 
+/**
+ * The tier chip in a zone row: its fill (the tier's map tint) and label ink, at least 4.5:1
+ * (C38 accessibility pass). The T3 chip is a touch lighter than its map tint so dark ink reads.
+ */
+export const TIER_CHIPS: Readonly<Record<keyof typeof TIER_LABEL, { fill: number; ink: number }>> =
+  {
+    t1: { fill: TIER_TINTS.t1, ink: paper.ink },
+    t2: { fill: TIER_TINTS.t2, ink: paper.ink },
+    t3: { fill: 0xde7848, ink: paper.ink },
+    danger: { fill: TIER_TINTS.danger, ink: 0xffffff },
+  };
+
 let hatch: Texture | undefined;
 
 /**
@@ -951,12 +963,14 @@ export class MapWindow implements Widget<Container> {
     if (l.kind === 'zone') {
       const z = regions[l.region]?.atlas.zones[l.index];
       if (!z) return;
-      g.rect(x + 8, y + 2, 14, 8).fill({ color: z.known ? TIER_TINTS[z.tier] : paper.inkDisabled });
+      g.rect(x + 8, y + 2, 14, 8).fill({
+        color: z.known ? TIER_CHIPS[z.tier].fill : paper.inkDisabled,
+      });
       if (!z.known) {
         this.text('???', paper.inkDisabled, x + 25, y - 1);
         return;
       }
-      const t = uiText('label', TIER_LABEL[z.tier], 0xffffff);
+      const t = uiText('label', TIER_LABEL[z.tier], TIER_CHIPS[z.tier].ink);
       t.position.set(x + 10, y + 2);
       this.right.addChild(t);
       this.text(z.name, paper.ink, x + 25, y - 1);

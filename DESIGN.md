@@ -93,7 +93,7 @@ Settled in C33 (2026-11-14):
 - Choosing a starter sets its story flag (`core:starter-sprigling`, …), so dialogue and trainers can react to it. A trainer's team member can name another species for a story condition (`instead`), which is how the rival counter-picks.
 - **Rival Mira travels** (C34, C35): in every region her starter line beats the player's. Against a starter of the region she is in, or of a region whose pack that one depends on (Verdale's, from core), she brings that region's winning line. A pack never names another pack's species unless it depends on it, but a starter flag is only a name, so against a starter from a region it does not depend on she brings her own region's line that wins, or her default (Verdale's Fire line) when none does. Emberwaste and Rimeholm count each other's starters this way.
 - **Load game** shows the slot cards (team portraits, lead and level, region, badges, Zorlings caught, play time, when it was saved); a slot can be continued or deleted there. Quitting from the pause menu goes back to the title.
-- **Settings** (title and pause menu) belong to the device, like the volumes: battle speed (1×, 1.5×, 2×), text speed (slow, normal, fast), the `1 2 3` switch prompt, screen shake, full-screen flashes, Sound (volumes), mute while the tab is hidden, and Controls.
+- **Settings** (title and pause menu) belong to the device, like the volumes: battle speed (1×, 1.5×, 2×), text speed (slow, normal, fast), the `1 2 3` switch prompt, screen shake, full-screen flashes, Sound (volumes), mute while the tab is hidden, and Controls. When the OS asks for reduced motion, screen shake and flashes start off (C38); a choice the player made always wins.
 - **Controls**: every key group (Up is both walking and menu up) has two key slots. Taking a key another control uses swaps the two. `Esc` always stays Back and Menu and can't be taken, a swap that would leave a control with no key is refused, and mouse buttons keep their roles.
 
 ## Team
@@ -305,5 +305,12 @@ Detailed, AI-sized chunks live in `IMPLEMENTATION_PLAN.md`; progress in `PROGRES
 8. **One full region** (T1–T3, campaign, Titans, legendary) — the fun gate
 9. Polish, then regions 2 & 3 as packs, endgame, release prep
 
+## Release
+Settled in C38 (2026-11-15):
+- The release is a static site on **GitHub Pages**, built and deployed by a GitHub Actions workflow on every push to `main`, after `npm run check` passes. Asset paths are relative.
+- It ships only the game: no style lab, no debug launcher, no UI demo, no source maps. Those stay in dev builds.
+- Version 1.0.0 is shown on the title screen.
+- Accessibility: every key can be rebound (C33), text speed has three steps (C33), shake and flashes can be turned off and start off with OS reduced motion, all UI text reaches WCAG AA contrast (4.5:1) on its panel except disabled items, and the canvas has an accessible name.
+
 ## Open
-- Formal trademark check for "Zoravia" (EUIPO; USPTO Class 9 & 41).
+- **Before a public launch:** formal trademark check for "Zoravia" (EUIPO; USPTO Class 9 & 41).

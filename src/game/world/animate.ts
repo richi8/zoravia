@@ -18,7 +18,11 @@ export interface GlowSink {
   glow(i: number, px: number, code: number): void;
 }
 
-/** Draws terrain with screen pixel (0, 0) at world pixel (`camX`, `camY`); `t` in seconds. */
+/**
+ * Draws terrain with screen pixel (0, 0) at world pixel (`camX`, `camY`); `t` in seconds.
+ * The layer methods take whole-pixel cameras: `draw` floors its camera, and so do the
+ * terrain stream's entry points (C38: a half-pixel camera wrote past the buffer).
+ */
 export class TerrainRenderer {
   readonly painter: Painter;
   private readonly foam: number;
@@ -38,7 +42,9 @@ export class TerrainRenderer {
     this.tall = this.painter.ramp('tall');
   }
 
-  draw(buf: PixelBuffer, camX: number, camY: number, t: number, sink?: GlowSink): void {
+  draw(buf: PixelBuffer, cx: number, cy: number, t: number, sink?: GlowSink): void {
+    const camX = Math.floor(cx);
+    const camY = Math.floor(cy);
     this.drawBase(buf, camX, camY);
     this.drawLiquid(buf, camX, camY, t);
     this.drawTufts(buf, camX, camY, t);

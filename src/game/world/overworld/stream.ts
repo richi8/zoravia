@@ -121,8 +121,10 @@ export class TerrainStream {
     return out;
   }
 
-  /** Draws terrain for the view (camera top-left at `camX`, `camY`). */
-  draw(buf: PixelBuffer, camX: number, camY: number, t: number, sink?: GlowSink): void {
+  /** Draws terrain for the view (camera top-left at `cx`, `cy`, floored to whole pixels). */
+  draw(buf: PixelBuffer, cx: number, cy: number, t: number, sink?: GlowSink): void {
+    const camX = Math.floor(cx);
+    const camY = Math.floor(cy);
     for (const r of this.visible({ x: camX, y: camY, width: buf.width, height: buf.height }))
       r.draw(buf, camX, camY, t, sink);
   }
@@ -153,12 +155,14 @@ export class TerrainStream {
   /** Redraws tall grass in front of an entity's feet (`box` world px, base line `baseY`). */
   drawGrassOver(
     buf: PixelBuffer,
-    camX: number,
-    camY: number,
+    cx: number,
+    cy: number,
     t: number,
     box: PixelBox,
     baseY: number,
   ): void {
+    const camX = Math.floor(cx);
+    const camY = Math.floor(cy);
     const front = { ...box, baseY };
     for (const i of this.blocksIn({ ...box, height: box.height + TILE }, 0))
       this.blocks.get(i)?.drawTufts(buf, camX, camY, t, front);

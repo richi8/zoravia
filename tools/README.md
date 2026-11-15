@@ -168,7 +168,7 @@ team plans, start) and an entry in `regions.ts`. A story fight in an ash storm s
 
 A new region adds its own route file and team plans next to `verdale.ts`.
 - `checkpoints.ts` (G2 prep): the debug launcher's **Checkpoint: Verdale** entry (the title
-  screen's **Debug launcher** item in dev builds and with `?debug`, C33). It starts a
+  screen's **Debug launcher** item in dev builds only since C38, C33). It starts a
   save just before a story fight (Grove Trial, Bogmaw, Mossback, Mira in Galecrest, Vex,
   Verdion) with the party the simulator had there for the chosen starter: team, levels, moves,
   bag, money, badge, beaten trainers and bosses, and the main quest moved on to match. Side
