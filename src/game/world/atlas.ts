@@ -1,6 +1,6 @@
 /**
  * The Atlas (C36b): what the player knows about each region, built from pack data, the
- * party and the region's exploration. Pure; the Atlas screen (`ui/atlas-panel.ts`) draws it.
+ * party and the region's exploration. Pure; the map window (`ui/map-window.ts`, C36c) draws it.
  *
  * Nothing undiscovered is given away: a zone not yet entered, a fight whose spot is still
  * dark and a wild Zorling never seen are marked unknown, and the screen shows them as "?".

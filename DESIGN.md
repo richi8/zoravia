@@ -45,8 +45,12 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 - **Pacing** (C31 balance pass, `npm run balance`): a region's campaign takes about 120–145 wild battles and 3–4 hours. Trainers field the stage a wild Zorling has at that level (no final forms below their evolution level), except a rival's ace. A new game starts with one **Lv 6** starter, 2 Potions, 5 Zorbs and 500 coins (C33); a region's first zone tops out at that level.
 
 - **Exploration** (C36b, user idea 2026-11-15): every map starts dark. Walking reveals it in 4×4-tile cells within 9 tiles of the player. Entering a zone, or coming near a town, landmark, secret, lair, shrine, arena or heart, **discovers** it: a toast shows its name and level range ("Discovered", "Town", gold-edged "Secret place").
-  - The `M` map shows unexplored land as blank parchment (preview pick), labels discovered places, and centers on the player at 1 px per tile when the region is bigger than the screen. `E` on it opens the Atlas.
-  - The **Atlas** (pause menu, layout "Ledger" from the preview round) shows every start region: its map tinted by tier with markers for towns, trainers, trial, rival, Titans, region boss, legendary, gate, Elder Titans and Keepers; a zone list (levels, storms, wild Zorlings seen and caught); a fight list (level, result, and the weak spot once beaten or caught); the quest log; and badges, hearts and the Dex. Nothing undiscovered shows: unknown zones, fights and Zorlings read "?". `A/D` region, `W/S` select, `Tab` next list, `F` a details card. With the mouse: click a region or list tab, a row (again for the card), the scroll arrows, a key hint, or the map (picks the nearest known entry); right click is Back. The `M` map's key hints are clickable too.
+  - **One world map** (C36c, user idea 2026-11-15): every region sits at a fixed place in one world (`world` on the region's start entry, in tiles; regions may not overlap). Emberwaste lies east of Verdale at Ember Pass, Rimeholm south across 24 tiles of sea at the ferry. Unexplored land is blank parchment with faint hatching (preview pick), the same between regions, so no region's edge shows; a ferry's sea and route show once one end is explored. Exploration and saves stay per map.
+  - The **map window** (layout A "Ledger" from the C36c preview round) is the one window for the map, the Atlas and the quest log. `M` opens it centered on the player, `J` with Quests open; the pause menu has one entry, "Map".
+    - Left: the world map at 1 px per tile, tinted by tier, with markers for towns, centers and shops, trainers, trial, rival, Titans, region boss, legendary, gate, Elder Titans and Keepers, and discovered place names. `Z` (or `Tab`) zooms out to ½ px per tile, with region names instead of place names and no trainer dots; it still follows the selection, since the world is taller than the box.
+    - Right: expandable groups, **Zones**, **Bosses** and **Quests**, each with a count. Zones and Bosses are sorted by region under small region subheadings; a region not explored at all shows "Not explored yet". Quests are split into active and done, with a "New" tag on quests started or moved on since the group was last opened. A summary of the selection sits underneath.
+    - Zones show levels, storms and wild Zorlings seen and caught; fights their level, result and the weak spot once beaten or caught; quests their giver, steps reached so far and reward. Nothing undiscovered shows: unknown zones, fights and Zorlings read "?".
+    - `W/S` moves through headers and rows (the map pans to the selection, which blinks), `E` opens or closes a group (on a row: the details card), `F` the details card, `Z` zoom, `Q` closes. With the mouse: click a header to open or close it, a row (again for the card), the scroll arrows, a key hint, or the map (picks the nearest known fight or zone); right click is Back.
   - Packs mark special NPCs for the Atlas (`mark`: trial, rival, boss, gate, elder, keeper); trainers, Titans and legendaries are recognized from the battles their dialogue starts.
 
 - Region maps settled in C28 (2026-11-13):
@@ -196,7 +200,7 @@ Rules settled in C26 (2026-11-13):
 - A dialogue is a graph of nodes. A node shows some pages, runs its actions, then offers up to 4 **choices**, branches on conditions, goes on, or ends. Choices whose condition fails are hidden. Choices appear in a small menu above the last page; `Q` picks the last choice (by convention the "no / leave" one).
 - What actions do is told to the player right after the node's pages, without a speaker ("You received Super Potion.", "New quest: …", "Quest updated: …", "Quest complete: …!"), with a short chime (a fanfare on completion).
 - A **quest** is a list of steps. A step is done as soon as its condition holds, and quests are checked after every dialogue, battle and menu. So dialogue moves a quest on by setting a flag, and a step like "catch a Voltbat" can already be done when it is reached (the quest moves straight past it). The last step completes the quest and pays its reward once.
-- The quest log (`J`) lists active quests first, then finished ones. It shows only the steps reached so far, never the ones ahead.
+- The quest log (`J`, the Quests group of the map window since C36c) lists active quests first, then finished ones. It shows only the steps reached so far, never the ones ahead.
 - Signs, lore stones and hidden items are NPC **objects** (C30): a `sign` is not drawn and makes a sign or standing-stone prop readable; an `item` lies on the ground as a small Zorb, gives its item once (a flag) and stays while the bag has no room for it. Neither shows a name tag.
 
 ### Endgame: Beyond the Map (C36)
@@ -252,14 +256,14 @@ Rules settled in C26 (2026-11-13):
 | Confirm / interact | `E` (also `Enter`, `Space`) |
 | Back / cancel | `Q` (also `Esc`, `Backspace`) |
 | Inspect (tooltips for icons/badges on screen; directions move between them) | `F` |
-| Next list or tab (screens with several, e.g. the Atlas) | `Tab` |
+| Map zoom (the map window, C36c) | `Z` (also `Tab`) |
 
 Input is context-sensitive: `WASD`/arrows move the player in the overworld; while any menu is open (including the battle action menu) they navigate that menu instead. Every menu is a focusable list/grid with a clearly highlighted cursor. Cursor wraps around at the ends.
 
 The player has **one movement speed** (no running / running shoes), **3.75 tiles/second** (one tile per 16 frames at 60 fps). Tunable in playtesting, but there is never a slower walk.
 
 ### Overworld
-`I` inventory, `M` map (`E` there opens the Atlas), `P` party, `B` dex, `J` quests, `Esc` pause menu (with the Atlas).
+`I` inventory, `M` map window, `P` party, `B` dex, `J` the map window with quests open, `Esc` pause menu.
 
 ### Battle flow (keyboard)
 Settled at the G2 review (2026-11-13, option B of a preview round; replaces the Fight / Switch / Items / Run menu):

@@ -88,17 +88,26 @@ function townColors(m: WorldMap, biome: Biome): Map<number, number> {
   return out;
 }
 
-/** Unexplored paper (C36b): blank parchment with faint diagonal hatching. */
-const FOG = packColor(0xefe0c0);
-const FOG_HATCH = packColor(0xe2cfa8);
+/** Unexplored paper (C36b): blank parchment with faint diagonal hatching every 5 tiles. */
+export const FOG_RGB = 0xefe0c0;
+export const FOG_HATCH_RGB = 0xe2cfa8;
+export const FOG_HATCH_EVERY = 5;
+const FOG = packColor(FOG_RGB);
+const FOG_HATCH = packColor(FOG_HATCH_RGB);
 
-/** Tints unexplored tiles as blank parchment (`seen` false), on top of `base`. */
+/**
+ * Tints unexplored tiles as blank parchment (`seen` false), on top of `base`. `phase` shifts
+ * the hatching, so maps drawn side by side in the world (C36c) share one pattern: pass the
+ * map's world `x + y`.
+ */
 export function fogTint(
   seen: (tx: number, ty: number) => boolean,
   base?: MinimapTint,
+  phase = 0,
 ): MinimapTint {
+  const shift = ((phase % FOG_HATCH_EVERY) + FOG_HATCH_EVERY) % FOG_HATCH_EVERY;
   return (c, tx, ty) => {
-    if (!seen(tx, ty)) return (tx + ty) % 5 === 0 ? FOG_HATCH : FOG;
+    if (!seen(tx, ty)) return (tx + ty + shift) % FOG_HATCH_EVERY === 0 ? FOG_HATCH : FOG;
     return base ? base(c, tx, ty) : c;
   };
 }

@@ -24,8 +24,8 @@ export const ACTIONS = [
   'hotbar3',
   /** Keyboard tooltips: put a cursor on icons and badges to read what they mean. */
   'inspect',
-  /** Next list or tab in a screen with several (C36b: the Atlas). */
-  'next_tab',
+  /** Zoom the map window in or out (C36c; `next_tab` in C36b, for the Atlas lists). */
+  'zoom',
   'inventory',
   /** Battle log (C31 G2 tweak): every line of the current battle. */
   'log',
@@ -60,7 +60,7 @@ export const DEFAULT_BINDINGS: BindingTable<Action> = {
   hotbar2: ['Digit2', 'Numpad2'],
   hotbar3: ['Digit3', 'Numpad3'],
   inspect: ['KeyF'],
-  next_tab: ['Tab'],
+  zoom: ['KeyZ', 'Tab'],
   inventory: ['KeyI'],
   log: ['KeyL'],
   map: ['KeyM'],
@@ -90,7 +90,7 @@ export const CONTEXTS = [
       'pause',
     ],
   },
-  { id: 'menu', actions: [...NAV, 'inspect', 'next_tab'] },
+  { id: 'menu', actions: [...NAV, 'inspect', 'zoom'] },
   /**
    * Battle: the move bar and menus (navigation), `1 2 3` direct switching, `I` items, `L` the
    * battle log and `F` inspect. `Q` (back) on the move bar runs.

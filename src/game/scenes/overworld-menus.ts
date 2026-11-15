@@ -1,6 +1,6 @@
 /**
  * Overworld menus (C22): the pause menu (`Esc`) and the screens it opens: party (`P`), bag
- * (`I`), Dex (`B`), map (`M`) and quests (`J`); plus the Zorling center (heal, storage, move
+ * (`I`), Dex (`B`) and the map window (`M`, `J` with quests open, C36c); plus the Zorling center (heal, storage, move
  * relearner) and shops opened by NPCs with a role. Every screen is a widget on the
  * overworld's focus stack, so the world stays paused while one is open. All changes go
  * through the pure rules in `@game/player` and are handed back with `host.setParty`.
@@ -42,18 +42,17 @@ import {
 import { styleTypes, typeIdOf } from '@game/style/ids';
 import { BagPanel, type BagItem, type BagTab } from '@game/ui/bag';
 import { DexPanel, type DexRow } from '@game/ui/dex-panel';
-import { MapPanel, NoticePanel, type MapMarker } from '@game/ui/map-panel';
+import { MapWindow, type GroupId, type MapWindowMarker } from '@game/ui/map-window';
 import { formatMoney } from '@game/ui/panels';
 import { PartyPanel } from '@game/ui/party-panel';
-import { QuestPanel } from '@game/ui/quest-panel';
 import { ShopPanel, type ShopItem } from '@game/ui/shop';
 import { StoragePanel } from '@game/ui/storage-panel';
 import type { MoveLine, ZorlingView } from '@game/ui/zorling-view';
 import { BIOMES } from '@game/world/biomes';
 import { buildMinimap, fogTint, loadRegion, tierTint, type WorldMap } from '@game/world/map';
-import { atlasMaps, atlasProgress, atlasRegion } from '@game/world/atlas';
-import { mapPlaces, type ExploredMap } from '@game/world/explore';
-import { AtlasPanel } from '@game/ui/atlas-panel';
+import { atlasProgress, atlasRegion } from '@game/world/atlas';
+import { worldBounds, worldLayout, worldLinks } from '@game/world/world-layout';
+import type { ExploredMap } from '@game/world/explore';
 import type { PixelBuffer } from '@engine/render/pixel-buffer';
 import { questLog } from '@game/story';
 import { speciesLook } from '@game/zorlings/species-look';
@@ -70,8 +69,8 @@ export interface MenuHost {
   readonly mapId: string;
   /** A map's exploration (this map's live one, others as saved) (C36b). */
   explored(mapId: string): ExploredMap;
-  /** Menu keys the UI input has no method for: `F` inspect, `Tab` next list. */
-  pressed(action: 'inspect' | 'next_tab'): boolean;
+  /** Menu keys the UI input has no method for: `F` inspect, `Z` map zoom. */
+  pressed(action: 'inspect' | 'zoom'): boolean;
   party: Party;
   /** Screen size in game pixels. */
   size(): { width: number; height: number };
@@ -198,8 +197,6 @@ export class OverworldMenus {
       ['Bag', key('inventory'), () => this.openBag()],
       ['Dex', key('dex'), () => this.openDex()],
       ['Map', key('map'), () => this.openMap()],
-      ['Atlas', '', () => this.openAtlas()],
-      ['Quests', key('quests'), () => this.openQuests()],
       ...(this.host.save
         ? [['Save', '', () => this.saveGame()] as [string, string, () => void]]
         : []),
@@ -376,108 +373,76 @@ export class OverworldMenus {
   }
 
   /**
-   * `M`: the region map at 1 px per tile around the player, unexplored land as blank
-   * parchment, discovered places labelled (C36b). `E` opens the Atlas.
+   * The map window (C36c): one world map with every region at its world place, and the Zones,
+   * Bosses and Quests groups. `M` opens it on the player, `J` with Quests open.
    */
-  openMap(): void {
-    const { map, mapId } = this.host;
-    const { width, height } = this.host.size();
-    const explored = this.host.explored(mapId);
-    const texture = this.texture(`${mapId}:map`, String(explored.explored), () =>
-      buildMinimap(
-        map,
-        BIOMES[map.biome],
-        1,
-        fogTint((x, y) => explored.seen(x, y)),
-      ),
-    );
+  openMap(open?: GroupId): void {
+    const { content, party, mapId } = this.host;
+    const layout = worldLayout(content, [mapId]);
+    const maps = layout.map((r) => (r.map === mapId ? this.host.map : loadRegion(content, r.map)));
+    const explored = layout.map((r) => this.host.explored(r.map));
+    const here = layout.find((r) => r.map === mapId) ?? { x: 0, y: 0 };
     const where = this.host.where();
-    const markers: MapMarker[] = [];
+    const markers: MapWindowMarker[] = [];
+    const ownExplored = this.host.explored(mapId);
     for (const s of this.host.services()) {
-      if (!explored.seen(s.x, s.y)) continue;
-      const center = s.role === 'center';
+      if (!ownExplored.seen(s.x, s.y)) continue;
       markers.push({
-        x: s.x,
-        y: s.y,
-        color: center ? 0xff5c6c : 0x5ab0ff,
-        label: center ? 'Zorling center' : 'Shop',
+        x: here.x + s.x,
+        y: here.y + s.y,
+        color: s.role === 'center' ? 0xff5c6c : 0x5ab0ff,
       });
     }
-    const labels = mapPlaces(map)
-      .filter((p) => p.kind !== 'zone' && p.kind !== 'lair' && explored.places.has(p.key))
-      .map((p) => ({ x: p.x, y: p.y, text: p.name }));
-    const panel = new MapPanel({
-      title: map.name,
-      place: where.place,
-      image: texture,
-      scale: 1,
-      view: { width: Math.max(160, width - 40), height: Math.max(120, height - 70) },
-      player: where,
-      markers,
-      labels,
-      onAtlas: (p) => {
-        this.close(p);
-        this.openAtlas();
-      },
-      onBack: (p) => this.close(p),
+    // A ferry's sea and route show once either end of it is explored.
+    const seenAt = (map: string, x: number, y: number): boolean => {
+      const i = layout.findIndex((r) => r.map === map);
+      const r = layout[i];
+      return !!r && !!explored[i]?.seen(x - r.x, y - r.y);
+    };
+    const links = worldLinks(content, layout).filter(
+      (l) => seenAt(l.a.map, l.a.x, l.a.y) || seenAt(l.b.map, l.b.x, l.b.y),
+    );
+    const rows = questLog(content, party);
+    const quests = rows.map((r) => {
+      const q = party.quests[r.id];
+      return { ...r, fresh: !!q && this.questsSeen.get(r.id) !== OverworldMenus.questKey(q) };
     });
-    this.open(panel, () => ({ w: panel.width, h: panel.height }));
-  }
-
-  /** The Atlas (C36b): every region's map, zones, fights and the quest log. */
-  openAtlas(): void {
-    const { content, party } = this.host;
-    const ids = atlasMaps(content);
-    if (!ids.includes(this.host.mapId)) ids.push(this.host.mapId);
-    const maps = ids.map((id) =>
-      id === this.host.mapId ? this.host.map : loadRegion(content, id),
-    );
-    const explored = ids.map((id) => this.host.explored(id));
-    const regions = ids.map((id, i) =>
-      atlasRegion(content, party, id, maps[i] as WorldMap, explored[i] as ExploredMap),
-    );
-    const panel = new AtlasPanel({
-      regions,
-      start: ids.indexOf(this.host.mapId),
-      progress: atlasProgress(content, party),
-      quests: questLog(content, party),
+    const panel = new MapWindow({
+      regions: layout.map((r, i) => ({
+        atlas: atlasRegion(content, party, r.map, maps[i] as WorldMap, explored[i] as ExploredMap),
+        x: r.x,
+        y: r.y,
+      })),
+      bounds: worldBounds(layout),
       image: (i) => {
         const m = maps[i] as WorldMap;
         const e = explored[i] as ExploredMap;
-        return this.texture(`${ids[i] ?? ''}:atlas`, String(e.explored), () =>
+        return this.texture(`${layout[i]?.map ?? ''}:atlas`, String(e.explored), () =>
           buildMinimap(
             m,
             BIOMES[m.biome],
             1,
-            fogTint((x, y) => e.seen(x, y), tierTint(m)),
+            fogTint((x, y) => e.seen(x, y), tierTint(m), (layout[i]?.x ?? 0) + (layout[i]?.y ?? 0)),
           ),
         );
       },
+      player: { x: here.x + where.x, y: here.y + where.y },
+      place: where.place,
+      markers,
+      links,
+      progress: atlasProgress(content, party),
+      quests,
+      ...(open ? { open } : {}),
       pressed: (a) => this.host.pressed(a),
+      onQuestsShown: () => this.markQuestsSeen(),
       onBack: (p) => this.close(p),
     });
-    this.open(panel, () => ({ w: AtlasPanel.WIDTH, h: AtlasPanel.HEIGHT }));
+    this.open(panel, () => ({ w: MapWindow.WIDTH, h: MapWindow.HEIGHT }));
   }
 
+  /** `J`: the map window with Quests open. */
   openQuests(): void {
-    const rows = questLog(this.host.content, this.host.party);
-    if (!rows.length) {
-      const panel = new NoticePanel(
-        'Quests',
-        'Your quest log is empty. Talk to people around Zoravia: some of them need a hand.',
-        (p) => this.close(p),
-      );
-      this.open(panel, () => ({ w: panel.width, h: panel.height }));
-      return;
-    }
-    const quests = this.host.party.quests;
-    const fresh = rows.map((r) => {
-      const q = quests[r.id];
-      return { ...r, fresh: !!q && this.questsSeen.get(r.id) !== OverworldMenus.questKey(q) };
-    });
-    this.markQuestsSeen();
-    const panel = new QuestPanel({ rows: fresh, onBack: (p) => this.close(p) });
-    this.open(panel, () => ({ w: QuestPanel.WIDTH, h: QuestPanel.HEIGHT }));
+    this.openMap('Quests');
   }
 
   // ------------------------------------------------------------ Zorling center

@@ -39,5 +39,7 @@ export const starts = {
     level: 6,
     bag: { 'core:potion': 2, 'core:zorb': 5 },
     money: 500,
+    // The world's origin (C36c): Emberwaste lies east at Ember Pass, Rimeholm south over the sea.
+    world: { x: 0, y: 0 },
   },
 } satisfies Record<string, StartInput>;

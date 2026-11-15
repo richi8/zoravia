@@ -39,5 +39,8 @@ export const starts = {
     level: 6,
     bag: { 'core:potion': 2, 'core:zorb': 5 },
     money: 500,
+    // South of Verdale across 24 tiles of sea (C36c): the ferry (100, 0) sits under Verdale's
+    // (88, 279).
+    world: { x: -12, y: 304 },
   },
 } satisfies Record<string, StartInput>;

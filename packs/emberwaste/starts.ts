@@ -38,5 +38,7 @@ export const starts = {
     level: 6,
     bag: { 'core:potion': 2, 'core:zorb': 5 },
     money: 500,
+    // East of Verdale (C36c): Ember Pass (0, 104) meets Verdale's (199, 184).
+    world: { x: 200, y: 80 },
   },
 } satisfies Record<string, StartInput>;

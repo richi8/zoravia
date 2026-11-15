@@ -75,9 +75,9 @@ describe('game settings', () => {
 describe('key rebinding', () => {
   it('moves both halves of a direction together', () => {
     const b = createBindings();
-    expect(rebindGroup(b, group('up'), 0, 'KeyZ')).toEqual({ ok: true });
-    expect(b.keysFor('move_up')).toEqual(['KeyZ', 'ArrowUp']);
-    expect(b.keysFor('nav_up')).toEqual(['KeyZ', 'ArrowUp']);
+    expect(rebindGroup(b, group('up'), 0, 'KeyK')).toEqual({ ok: true });
+    expect(b.keysFor('move_up')).toEqual(['KeyK', 'ArrowUp']);
+    expect(b.keysFor('nav_up')).toEqual(['KeyK', 'ArrowUp']);
     expect(b.conflicts()).toEqual([]);
   });
 

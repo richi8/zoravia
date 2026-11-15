@@ -413,7 +413,7 @@ export class OverworldScene implements Scene<Container> {
         id === this.options.mapId
           ? this.explored
           : exploredMap(loadRegion(this.options.content, id), this.options.explored?.[id]),
-      pressed: (a: 'inspect' | 'next_tab') => this.options.input.pressed(a),
+      pressed: (a: 'inspect' | 'zoom') => this.options.input.pressed(a),
       size: () => ({ width: this.width, height: this.height }),
       where: () => {
         const z = this.map.zoneAt(this.player.tx, this.player.ty);

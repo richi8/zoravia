@@ -30,7 +30,7 @@ export const KEY_GROUPS: readonly KeyGroup[] = [
   { id: 'confirm', label: 'Confirm · talk', actions: ['confirm'] },
   { id: 'back', label: 'Back', actions: ['back'] },
   { id: 'inspect', label: 'Inspect', actions: ['inspect'] },
-  { id: 'next-tab', label: 'Next list', actions: ['next_tab'] },
+  { id: 'zoom', label: 'Map zoom', actions: ['zoom'] },
   { id: 'pause', label: 'Menu', actions: ['pause'] },
   { id: 'party', label: 'Party', actions: ['party'] },
   { id: 'bag', label: 'Bag · battle items', actions: ['inventory'] },
