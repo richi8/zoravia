@@ -1,5 +1,6 @@
 # Deploys the game to GitHub Pages (C38). Runs on every push to main, or by hand from the
-# Actions tab. The checks must pass before anything is built or published.
+# Actions tab. The checks and the browser smoke test (C39) must pass before anything is
+# published.
 name: Deploy to GitHub Pages
 
 on:
@@ -29,6 +30,8 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run build
+      # Plays the build in the runner's own Chrome: boot, new game, save, load, battle, crash screen.
+      - run: npm run smoke:run
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

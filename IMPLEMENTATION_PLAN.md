@@ -418,6 +418,39 @@ User plays Region 1. Decide what to change before building more.
 
 ---
 
+## Phase 10 — Post-release polish
+
+Design stance (user, 2026-11-15): keep old-game friction. No tutorial, no objective tracker, no fast travel, no nicknames. Save export/import, touch and gamepad are future features.
+
+### C39 · Browser smoke test & crash screen
+- **Goal:** A release can't ship if the game doesn't boot, start, fight and save in a real browser; a crash shows a message instead of a frozen frame.
+- **Deliverables:**
+  - `npm run smoke`: builds, serves `dist/` and drives headless Chrome (system Chrome, `playwright-core`, no browser download). Flow: boot → new game → walk → Save → reload → Continue → a trainer battle to its end. State is read from the save in IndexedDB (the release has no debug hook); the battle is made deterministic by moving the saved place to the tile in front of a route trainer. Any console error or page error fails it.
+  - The Pages workflow runs it after the build and before the deploy.
+  - Frame loop guard: an error thrown in update or render stops the loop, tries one autosave through the overworld scene, and shows a DOM message with the error, the version and a Reload button. The smoke test forces one and checks the message.
+  - `navigator.storage.persist()` asked after the first successful save write (Safari can evict saves after a week without a visit; Firefox asks the player once).
+- **Done when:** `npm run smoke` passes locally and in the workflow; breaking the boot or the save makes it fail; `npm run check` passes.
+- **Depends:** C38
+
+### C40 · Campfires (rest spots)
+- **Goal:** A way to heal without potions that removes no walking and no risk.
+- **Deliverables:**
+  - A campfire prop (and a tent for camps). **Preview round first.**
+  - `E` at a fire asks "Rest?": every Zorling still standing is healed to full HP. Fainted ones stay fainted. It is not a respawn point, storage or move relearner.
+  - Cost: the day clock moves on a few hours and the wild Zorlings nearby respawn.
+  - Placed by hand: the three danger-zone camps and one or two long T2/T3 routes per region. Shown on the map window once discovered.
+  - `DESIGN.md` updated (Team rules, World).
+- **Done when:** the user picked the prop from previews; resting works by keyboard; saves, the balance sim and all tests pass.
+- **Depends:** C39
+
+### C41 · Sprigling's early game
+- **Goal:** No starter is quietly worse than the others. Grind before late fights stays as it is.
+- **Deliverables:** tune Rival Mira in Fernhollow against a Sprigling team (25% at +2 levels in the trainer sweep) and Sprigling's first zone (10 wild losses per run against 3 for Drizzlet); balance report in the log.
+- **Done when:** the three Verdale plans are within about 15 wild battles and 5 wild losses of each other in `npm run balance`; the playthrough tests pass.
+- **Depends:** C39
+
+---
+
 ## Later / future (not scheduled)
 
 See "Feature plan" in `DESIGN.md`: day/night, fishing, following Zorling, league, held items, safari zone, condition flasks, item evolution; and future/server items (trading, PvP, breeding, mod loader, etc.).

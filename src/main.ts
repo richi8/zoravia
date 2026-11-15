@@ -16,6 +16,7 @@ import { loadFonts } from '@game/style/fonts';
 import { ZORAVIA_SCREEN_THEME } from '@game/style/theme';
 import { SCREEN, surface } from '@game/style/tokens';
 import { installKeyHints } from '@game/input/key-hint';
+import { showCrashScreen } from '@game/release/crash';
 
 document.title = GAME_TITLE;
 
@@ -113,6 +114,14 @@ async function main(): Promise<void> {
           version: GAME_VERSION,
         });
   await engine.scenes.replace(first);
+
+  // A frame that throws stops the loop (C39): save through the overworld if it is there, and
+  // show the crash screen instead of a frozen picture.
+  engine.onCrash = (error) => {
+    console.error(error);
+    setMuted(true);
+    showCrashScreen(document, { error, version: GAME_VERSION, saved: emergencySave(engine) });
+  };
   engine.start();
   document.getElementById('boot')?.remove();
 
@@ -126,6 +135,20 @@ async function main(): Promise<void> {
       audio,
     };
   }
+}
+
+/** Saves through the scene that can (the overworld, also under a battle). True when written. */
+async function emergencySave(engine: Engine): Promise<boolean> {
+  for (const scene of engine.scenes.stack) {
+    const saver = scene as { saveNow?: (mode: 'manual') => Promise<string | undefined> };
+    if (typeof saver.saveNow !== 'function') continue;
+    try {
+      return (await saver.saveNow('manual')) === undefined;
+    } catch {
+      return false;
+    }
+  }
+  return false;
 }
 
 /** `localStorage`, or undefined where it is blocked (private modes, sandboxed frames). */

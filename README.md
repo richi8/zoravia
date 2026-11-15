@@ -20,12 +20,13 @@ Node.js 22+ (developed on Node 24).
 | `npm run typecheck` | TypeScript, browser code + Node-side config/tools |
 | `npm run lint` | ESLint |
 | `npm run format` / `format:check` | Prettier write / check |
+| `npm run smoke` | Build, then play the release in headless Chrome (needs Chrome installed; `SMOKE_CHROME=<path>` picks a binary): boot, new game, save, load, a trainer battle, the crash screen. `npm run smoke:run` skips the build |
 | `npm run check` | typecheck + lint + format check + tests — run before every commit |
 
 ## Release & deployment
 The game is a static site. `.github/workflows/pages.yml` deploys it to **GitHub Pages** on every
 push to `main` (or by hand from the Actions tab): `npm ci`, `npm run check`, `npm run build`,
-then it publishes `dist/`. Asset paths are relative, so it works at `https://<user>.github.io/<repo>/`.
+`npm run smoke:run`, then it publishes `dist/`. Asset paths are relative, so it works at `https://<user>.github.io/<repo>/`.
 
 One-time setup:
 1. Create a GitHub repository and push this one to it (`git remote add origin <url>`, `git push -u origin main`).

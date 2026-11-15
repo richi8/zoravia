@@ -78,6 +78,11 @@ export class Engine {
   private readonly overlay: FpsOverlay;
   private readonly disposers: (() => void)[] = [];
   private readonly preUpdate: ((dt: number) => void)[] = [];
+  /**
+   * Called once when an update or a render throws (C39). The loop has already stopped. Unset,
+   * the error is rethrown from the frame.
+   */
+  onCrash: ((error: unknown) => void) | undefined;
   /** Event root of the game screen: the pixel world + the UI layer, both in game pixels. */
   private readonly screenRoot = new Container({ label: 'screen' });
   /** Pixel layer (rendered into `screenTexture` in virtual mode). */
@@ -151,14 +156,20 @@ export class Engine {
       },
     });
 
-    this.driver = createRafDriver((elapsed) => {
-      this.fps.record(elapsed);
-      const { steps } = this.loop.advance(elapsed);
-      this.overlay.refresh(elapsed, {
-        steps,
-        scenes: this.scenes.stack.map((s) => s.id).join(' > ') || '—',
-      });
-    });
+    this.driver = createRafDriver(
+      (elapsed) => {
+        this.fps.record(elapsed);
+        const { steps } = this.loop.advance(elapsed);
+        this.overlay.refresh(elapsed, {
+          steps,
+          scenes: this.scenes.stack.map((s) => s.id).join(' > ') || '—',
+        });
+      },
+      (error) => {
+        if (!this.onCrash) throw error;
+        this.onCrash(error);
+      },
+    );
 
     this.watchResize();
   }

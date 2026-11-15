@@ -7,6 +7,8 @@ const DB_VERSION = 1;
 const STORE = 'saves';
 
 export class IndexedDbStore implements KeyValueStore {
+  private askedToPersist = false;
+
   private constructor(private readonly db: IDBDatabase) {}
 
   /** Opens (or creates) the save database. Rejects when IndexedDB is not available. */
@@ -46,11 +48,25 @@ export class IndexedDbStore implements KeyValueStore {
     });
   }
 
+  /**
+   * Asks the browser to keep the saves (C39), once, after the first write that worked. Safari
+   * can clear a site's storage after a week without a visit; Firefox asks the player.
+   */
+  private askToPersist(): void {
+    if (this.askedToPersist) return;
+    this.askedToPersist = true;
+    if (typeof navigator === 'undefined' || !navigator.storage?.persist) return;
+    void navigator.storage.persist().catch(() => undefined);
+  }
+
   /** One read-write transaction; resolves when it commits. */
   private run(body: (store: IDBObjectStore) => void): Promise<void> {
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction(STORE, 'readwrite');
-      tx.oncomplete = () => resolve();
+      tx.oncomplete = () => {
+        this.askToPersist();
+        resolve();
+      };
       tx.onerror = () => reject(tx.error ?? new Error('Save failed'));
       tx.onabort = () => reject(tx.error ?? new Error('Save was aborted'));
       body(tx.objectStore(STORE));

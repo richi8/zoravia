@@ -287,7 +287,7 @@ Settled at the G2 review (2026-11-13, option B of a preview round; replaces the 
 **Primary switching:** `1 2 3` switch directly to that hotbar creature whenever it's the player's turn (costs the turn). Optional confirm prompt, toggleable in settings. Moves have no letter hotkeys because `W` is used for navigation.
 
 ## Feature plan
-**V1 (core):** evolution, trials/badges, rival across regions, regional legendaries, team-wide shared XP, hidden items/secrets, autosave, fast travel, nicknames, traits, move relearner.
+**V1 (core):** evolution, trials/badges, rival across regions, regional legendaries, team-wide shared XP, hidden items/secrets, autosave, traits, move relearner. Fast travel and nickname entry were dropped (user, 2026-11-15: the game keeps the friction old creature games had; no tutorial or objective tracker either).
 
 **Later:** day/night spawns, fishing, following creature, league endgame, held items, safari-style zone, condition flasks (shop items applying conditions), item-based evolution.
 
@@ -309,6 +309,9 @@ Detailed, AI-sized chunks live in `IMPLEMENTATION_PLAN.md`; progress in `PROGRES
 Settled in C38 (2026-11-15):
 - The release is a static site on **GitHub Pages**, built and deployed by a GitHub Actions workflow on every push to `main`, after `npm run check` passes. Asset paths are relative.
 - It ships only the game: no style lab, no debug launcher, no UI demo, no source maps. Those stay in dev builds.
+- **Smoke test** (C39): before a deploy, the workflow plays the built game in headless Chrome by keyboard (boot, new game, walk and save, reload and continue, a trainer battle to its end, the crash screen). Any console error fails it. `npm run smoke` runs the same locally.
+- **Crash screen** (C39): if a frame throws, the game stops, saves through the overworld when it can, and shows a plain message with the error, the version and a Reload button, instead of a frozen picture.
+- **Saves are asked to persist** (C39): after the first save that worked, the game asks the browser to keep its storage (Safari can clear a site's data after a week without a visit; Firefox asks the player once).
 - Version 1.0.0 is shown on the title screen.
 - Accessibility: every key can be rebound (C33), text speed has three steps (C33), shake and flashes can be turned off and start off with OS reduced motion, all UI text reaches WCAG AA contrast (4.5:1) on its panel except disabled items, and the canvas has an accessible name.
 
