@@ -1,7 +1,7 @@
 # Zoravia — Design Notes
 
 *Zoravia* is both the game title and the name of the world; launch regions are regions of Zoravia.
-Name status (checked 2026-11-12): no game or trademark with this exact name found (nearest: ZORA, a tech trademark — different word). zoravia.com is registered by someone else; **zoravia.game** was available. Still to do: formal USPTO/EUIPO check (Class 9 & 41). Search on 2026-11-15: the only US ZORAVIA mark (Reg. 5165625, Class 9 eyewear) was cancelled on 2023-10-06; a live US mark ZORVIA (filed 2025-07-14, Class 9 phones and electronics, not games) is the closest; Scottish PEN sells a 2014-era board game "Zoravia: The Freedom Game" (UK, no registered mark found). The EU registers (EUIPO/TMview) could not be searched automatically and are still to check.
+Name status (checked 2026-11-12): no game or trademark with this exact name found (nearest: ZORA, a tech trademark — different word). zoravia.com is registered by someone else; **zoravia.game** was available. Still to do: formal USPTO/EUIPO check (Class 9 & 41). Search on 2026-11-15: the only US ZORAVIA mark (Reg. 5165625, Class 9 eyewear) was cancelled on 2023-10-06; a live US mark ZORVIA (filed 2025-07-14, Class 9 phones and electronics, not games) is the closest; Scottish PEN sells a 2014-era board game "Zoravia: The Freedom Game" (UK, no registered mark found). TMview (user search, 2026-11-15) found only the same eyewear company's marks: EUTM 015732571 "ZoRAVIA" (Class 9, filed 2016-08-08, shown Registered; its 10 years ended 2026-08-08, so it lapses unless renewed by the end of the grace period, about 2027-02-28), China Class 9 and 35 (registered), UK (expired), US (cancelled).
 
 The creatures are called **Zorlings** (same word for singular and plural: "a Zorling", "three Zorlings").
 
@@ -313,4 +313,4 @@ Settled in C38 (2026-11-15):
 - Accessibility: every key can be rebound (C33), text speed has three steps (C33), shake and flashes can be turned off and start off with OS reduced motion, all UI text reaches WCAG AA contrast (4.5:1) on its panel except disabled items, and the canvas has an accessible name.
 
 ## Open
-- **Before a public launch:** trademark check for "Zoravia". USPTO searched 2026-11-15 (no live ZORAVIA; ZORVIA live in Class 9 for electronics). Still to do: EUIPO/TMview and WIPO Global Brand Database, Classes 9 & 41, and ideally a trademark attorney's clearance opinion.
+- **Before a public launch:** trademark check for "Zoravia". USPTO searched 2026-11-15 (no live ZORAVIA; ZORVIA live in Class 9 for electronics). TMview searched 2026-11-15: the only EU conflict is EUTM 015732571 (eyewear, Class 9), possibly lapsing (see the name status at the top). Still to do: check its renewal in EUIPO eSearch, search the WIPO Global Brand Database, and ideally get a trademark attorney's clearance opinion before registering "Zoravia" in Classes 9 & 41.
