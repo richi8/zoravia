@@ -845,7 +845,7 @@ export class OverworldScene implements Scene<Container> {
     if (!fire) return false;
     this.clearPath();
     if (!fireLit(this.camp, fire.key, this.playtime)) {
-      this.say(['Only embers are left. The fire will catch again by this time tomorrow.']);
+      this.say(['Only embers are left. The fire will catch again before long.']);
       return true;
     }
     this.say(['The campfire crackles. Rest here for a while?'], undefined, undefined, (box) =>

@@ -5,7 +5,7 @@
 - **Depends on:** C39
 
 ## Summary
-Campfires are a way to heal without potions that keeps the walking and the risk. Facing a burning fire, `E` asks "Rest here for a while?". Yes heals the standing team, moves the day clock on 6 hours, respawns the wild Zorlings around and burns the fire down to embers for one in-game day. Fires sit in the three danger-zone camps (each with a tent) and on two long T2/T3 routes per region. The map window marks them once explored, and saves (v7) keep the clock and each fire's timer.
+Campfires are a way to heal without potions that keeps the walking and the risk. Facing a burning fire, `E` asks "Rest here for a while?". Yes heals the standing team, moves the day clock on 6 hours, respawns the wild Zorlings around and burns the fire down to embers for 10 minutes of play. Fires sit in the three danger-zone camps (each with a tent) and on two long T2/T3 routes per region. The map window marks them once explored, and saves (v7) keep the clock and each fire's timer.
 
 ## What was built
 - Props `campfire` (one solid tile) and `tent` (3×2 footprint), style A from the preview round: `src/game/world/campfire.ts`, registered in `props.ts`. The map bakes the fire burnt down (ash, logs, a few glowing embers). While a fire burns, the scene draws one of 4 full fire frames over it (`campfireLit`), so the flames sit between the back and front stones and flicker.
@@ -23,9 +23,9 @@ Campfires are a way to heal without potions that keeps the walking and the risk.
 - **Decision:** preview pick **A**: stone ring with crossed logs + cream canvas A-frame tent with a teal hem.
   - **Why:** user picked it ("go with A") from the preview page (https://claude.ai/artifact/CnEzD5ReiXa6aMmWEE4yoR).
   - **Alternatives considered:** B log teepee + patched dome, C cookfire with pot + lean-to.
-- **Decision:** a per-fire cooldown of one in-game day, shown in the world as embers.
-  - **Why:** the user asked for a cooldown. Embers need no UI, and "by this time tomorrow" keeps the old-game feel (no timer shown).
-  - **Alternatives considered:** a global cooldown (would make the camp fire useless after a route rest); a cooldown in wild battles or steps (less readable in the world).
+- **Decision:** a per-fire cooldown of 10 minutes of play, shown in the world as embers.
+  - **Why:** the user asked for a cooldown; first built as one in-game day (20 min), then cut to 10 min at the user's request after comparing it with a portable, buildable camp (kept fixed fires). Embers need no UI and no timer is shown.
+  - **Alternatives considered:** one portable camp built anywhere (with a build cooldown or Firewood item), rejected by the user in favor of fixed fires; a global cooldown (would make the camp fire useless after a route rest); a cooldown in wild battles or steps (less readable in the world).
 - **Decision:** the day clock is play time + an offset kept in the save; the play time itself is not changed.
   - **Why:** the save slots show play time; resting should not inflate it.
 - **Decision:** 6 hours per rest (300 s of day clock).
@@ -51,7 +51,7 @@ Campfires are a way to heal without potions that keeps the walking and the risk.
 - `npm run check`: typecheck, lint, format and 928 tests pass.
 - `npm run balance`: runs, report unchanged in kind (no rests modeled).
 - `npm run smoke`: passed (boot, new game, save, load, battle, crash screen).
-- Manual (scratch Playwright driver on the release build): a save moved next to Thornveil Camp's fire at night with the starter at 3 HP. `E` → "The campfire crackles. Rest here for a while?" → Yes → "Hours pass by the fire…", HP back to full, the save has `camp.clock = 300` and the fire's key. `E` again → the embers line. Screenshots showed the lit fire, its orange light pool, the tent and the map window.
+- Manual (scratch Playwright driver on the release build): a save moved next to Thornveil Camp's fire at night with the starter at 3 HP. `E` → "The campfire crackles. Rest here for a while?" → Yes → "Hours pass by the fire…", HP back to full, the save has `camp.clock = 300` and the fire's key. `E` again → the embers line (then "by this time tomorrow"; now "before long"). Screenshots showed the lit fire, its orange light pool, the tent and the map window.
 - Done when:
   - the user picked the prop from previews ✅ (A)
   - resting works by keyboard ✅

@@ -2,7 +2,7 @@
  * Resting at a campfire (C40, DESIGN.md → Team): every team Zorling still standing heals to
  * full HP; fainted ones stay fainted. Resting costs time: the day clock moves on
  * `REST.hours` and the nearby wild Zorlings respawn (the scene clears them). The fire then
- * burns down to embers and catches again one full day later. A fire is not a respawn point,
+ * burns down to embers and catches again `REST.cooldown` seconds later. A fire is not a respawn point,
  * storage or move relearner. Pure.
  */
 
@@ -13,8 +13,8 @@ import { DAY_LENGTH } from './lighting';
 export const REST = {
   /** In-game hours the clock moves on while resting. */
   hours: 6,
-  /** Day-clock seconds before a fire burns again after a rest: one full day. */
-  cooldown: DAY_LENGTH,
+  /** Seconds of play before a fire burns again after a rest (C40: 10 min, user pick). */
+  cooldown: 10 * 60,
 } as const;
 
 /** Day-clock seconds one rest takes. */
@@ -24,7 +24,7 @@ export const REST_SECONDS = (DAY_LENGTH * REST.hours) / 24;
 export interface CampState {
   /** Seconds the day clock runs ahead of the play time (rests move it on). */
   readonly clock: number;
-  /** Fire key → day clock when the player last rested there (`fireKey`). */
+  /** Fire key → play time when the player last rested there (`fireKey`). */
   readonly fires: Readonly<Record<string, number>>;
 }
 
@@ -49,7 +49,7 @@ export const dayClock = (camp: CampState, playtime: number): number => playtime 
 /** Whether the fire `key` burns at `playtime` (else it is embers). */
 export function fireLit(camp: CampState, key: string, playtime: number): boolean {
   const at = camp.fires[key];
-  return at === undefined || dayClock(camp, playtime) - at >= REST.cooldown;
+  return at === undefined || playtime - at >= REST.cooldown;
 }
 
 /** Heals every team Zorling that is still standing to full HP. */
@@ -63,10 +63,9 @@ export function restParty(content: GameContent, party: Party): Party {
  */
 export function restAt(camp: CampState, key: string, playtime: number): CampState {
   if (!fireLit(camp, key, playtime)) throw new Error(`fire ${key} is burnt down`);
-  const clock = camp.clock + REST_SECONDS;
-  const now = playtime + clock;
   const fires: Record<string, number> = {};
-  for (const [k, at] of Object.entries(camp.fires)) if (now - at < REST.cooldown) fires[k] = at;
-  fires[key] = now;
-  return { clock, fires };
+  for (const [k, at] of Object.entries(camp.fires))
+    if (playtime - at < REST.cooldown) fires[k] = at;
+  fires[key] = playtime;
+  return { clock: camp.clock + REST_SECONDS, fires };
 }
