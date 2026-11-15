@@ -277,6 +277,33 @@ User plays Region 1. Decide what to change before building more.
 
 ### C36 · Cross-region endgame
 - **Deliverables:** danger zones (Lv 45–60), rival finale, meta-quest after X badges, Titan rematches.
+- Settled with the user (2026-11-15):
+  - **One danger zone per region**, inside its own main map. The map grows by a strip that the world tool glues on (`world extend`), and existing tiles stay unchanged:
+    - Verdale grows north (Thornveil);
+    - Emberwaste grows east (Ashen Rift);
+    - Rimeholm grows south (Polar Drift).
+  - A ranger blocks the way in until the player holds 3 badges. No center inside.
+  - **Wild Zorlings:** the region's own species and core species, plus two new single-stage rares per zone from the region's model kit (preview approved).
+  - **Elder Titans:** the region's two Titans again, at endgame level, in its zone. They can't be caught. The +8 lair rematches stay.
+  - **Meta-quest "Beyond the Map"** (core): it opens with 3 badges. Beat the Warden at three zone hearts, then Rival Mira's finale.
+- **Done when:**
+  - The user has approved the map and rare previews.
+  - Each region map is extended with existing tiles unchanged.
+  - The meta-quest runs start to finish through the engine.
+  - The zones' fights are checked in simulation.
+- **Depends:** C35
+
+### C36b · Map exploration
+- **Goal:** the map screen starts dark and is revealed by exploring (user idea, 2026-11-15).
+- **Deliverables:**
+  - The save keeps the explored cells of each map.
+  - The `M` map shows only explored areas.
+  - Entering a zone, town or landmark for the first time shows a toast with its name and level range. Discovered places are labelled on the map.
+- **Done when:**
+  - Exploring reveals the map.
+  - Old saves load with a sensible reveal (e.g. around visited towns).
+  - The map stays fully usable by keyboard.
+- **Depends:** C36
 
 ### C37 · Release prep
 - **Deliverables:** performance pass, accessibility pass (contrast, remapping, text speed), production build, deployment, final trademark check reminder.
@@ -284,4 +311,6 @@ User plays Region 1. Decide what to change before building more.
 ---
 
 ## Later / future (not scheduled)
+- **Seamless world** (user vision, 2026-11-15): regions joined without loading. The overworld would stream neighbouring maps at fixed world offsets, and the ferry to Rimeholm would become a boat ride. It is an engine chunk; C36 keeps the existing links.
+
 See "Feature plan" in `DESIGN.md`: day/night, fishing, following Zorling, league, held items, safari zone, condition flasks, item evolution; and future/server items (trading, PvP, breeding, mod loader, etc.).

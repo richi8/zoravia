@@ -20,11 +20,11 @@ const reach = map.reachableFrom(spawn.x, spawn.y);
 const at = (x: number, y: number): number => y * map.width + x;
 
 describe('Emberwaste map', () => {
-  it('is a 200×200 desert region named Emberwaste', () => {
+  it('is a 280×200 desert region named Emberwaste (200×200 plus the Ashen Rift, C36)', () => {
     expect([map.name, map.biome, map.width, map.height]).toEqual([
       'Emberwaste',
       'desert',
-      200,
+      280,
       200,
     ]);
   });
@@ -60,7 +60,7 @@ describe('Emberwaste map', () => {
   });
 
   it('gives every zone levels inside its tier and a spawn table', () => {
-    expect(map.zones).toHaveLength(11);
+    expect(map.zones).toHaveLength(13);
     for (const z of map.zones) {
       const [lo, hi] = TIER_LEVELS[z.tier];
       expect(z.levels[0], z.name).toBeGreaterThanOrEqual(lo);
@@ -71,7 +71,7 @@ describe('Emberwaste map', () => {
       n[z.tier] = (n[z.tier] ?? 0) + 1;
       return n;
     }, {});
-    expect(tiers).toEqual({ t1: 3, t2: 5, t3: 3 });
+    expect(tiers).toEqual({ t1: 3, t2: 5, t3: 3, danger: 2 });
   });
 
   it('rings the tiers around the hub town', () => {
@@ -90,9 +90,14 @@ describe('Emberwaste map', () => {
     expect(mean('t2')).toBeLessThan(mean('t3'));
   });
 
-  it('has ash storms that set battles Burning in three zones, with ash in the air', () => {
+  it('has ash storms that set battles Burning in four zones, with ash in the air', () => {
     const stormy = map.zones.filter((z) => z.battleWeather?.length);
-    expect(stormy.map((z) => z.key).sort()).toEqual(['ashfall', 'caldera', 'cinder-dunes']);
+    expect(stormy.map((z) => z.key).sort()).toEqual([
+      'ashfall',
+      'caldera',
+      'cinder-dunes',
+      'cinder-rift',
+    ]);
     for (const z of stormy) {
       expect(z.battleWeather).toEqual(['core:burning']);
       expect(z.weather).toBe('ash');
@@ -100,6 +105,9 @@ describe('Emberwaste map', () => {
     // The Dunewyrm Titan's lair is in a storm, so its Armor-breaking Steam Burst is set up.
     const lair = map.anchors['titan-sunken-sands'] ?? { x: 0, y: 0 };
     expect(map.zoneAt(lair.x, lair.y)?.battleWeather).toEqual(['core:burning']);
+    // So is the Elder Dunewyrm's (C36).
+    const sink = map.anchors['glass-sink'] ?? { x: 0, y: 0 };
+    expect(map.zoneAt(sink.x, sink.y)?.battleWeather).toEqual(['core:burning']);
   });
 
   it('puts towns outside zones and the big sites in the right tiers', () => {
@@ -117,8 +125,10 @@ describe('Emberwaste map', () => {
     expect(tierAt('boss-cap-works')).toBe('t3');
     const kinds = (k: string): number =>
       Object.values(map.anchors).filter((a) => a.kind === k).length;
-    expect(kinds('secret')).toBe(3);
-    expect(kinds('landmark')).toBe(3);
+    // The Ashen Rift (C36) adds a secret, a landmark, two lairs and its heart.
+    expect(kinds('secret')).toBe(4);
+    expect(kinds('landmark')).toBe(4);
+    expect(kinds('heart')).toBe(1);
   });
 
   it('has a Zorling center in every town, with its healer next to the door', () => {

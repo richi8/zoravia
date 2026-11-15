@@ -13,9 +13,11 @@ The base content pack. The engine loads it like any other pack (`loadGameContent
 | `items.ts` | `items` | 3 potion tiers (bag cap 5) and the Zorb capture item |
 | `music.ts` | `music` | hand-written boss themes (format in `src/game/data/music.ts`) |
 | `bosses.ts` | `bosses` | Verdale's Titans (Mossback, Bogmaw), legendary (Verdion) and region boss's Storm Galehawk (C30), plus the test region's Thornwing Titan |
-| `maps.ts` | `maps` | region maps built by the world tool (`maps/<region>/map.json`): `verdale` (Region 1, C28) and the C19 `test-region`. See `tools/README.md` |
+| `maps.ts` | `maps` | region maps built by the world tool (`maps/<region>/map.json`): `verdale` (Region 1, C28; 200×280 since C36, with the Thornveil strip on the north) and the C19 `test-region`. See `tools/README.md` |
 | `npcs.ts` | `npcs` | test NPCs in the test region (anchor or x/y, look, behavior, lines or a dialogue, role), plus `verdale-npcs.ts`: Verdale's healers and clerks, and `verdale-trainers.ts`: its 11 route trainers and the Titan / legendary lairs (trainers, dialogues and NPCs) |
 | `story.ts` | `dialogues`, `quests` | the test region's sample quest "Nothing Biting" (3 steps) and the dialogues of Fisher Lou and Ranger Ode. Format in `src/game/data/story.ts` |
+| `endgame.ts` | `trainers`, `dialogues`, `quests`, `npcs` | the cross-region endgame (C36): the quest "Beyond the Map", the Guild Surveyor, Rival Mira's finale, and `dangerZone()`, which builds a region's danger zone from a spec |
+| `thornveil.ts` | `species`, `bosses`, `trainers`, `dialogues`, `npcs` | Verdale's danger zone: the rares Elderhorn and Stormoth, the Elder Titans, aces, Keeper Ysolde, ranger, scout, Surveyor, hidden items |
 | `verdale-story.ts` | `badges`, `trainers`, `dialogues`, `quests`, `npcs` | Verdale's campaign and lore (C30): the Grove Badge and trial, Rival Mira, the region boss Stormcatcher Vex, the main quest "The Still Wind", four side quests, townsfolk, readable signs and stones, hidden items |
 
 Schemas live in `src/game/data/`. References are full ids (`"core:fire"`) and are checked after

@@ -43,8 +43,8 @@ export function toSave(content: GameContent, state: GameState, now = new Date())
     savedAt: now.toISOString(),
     packs,
     playtime: Math.round(state.playtime * 10) / 10,
-    place: state.place,
-    ...(state.respawn ? { respawn: state.respawn } : {}),
+    place: placeOut(content, state.place),
+    ...(state.respawn ? { respawn: placeOut(content, state.respawn) } : {}),
     party: state.party,
   } as SaveData;
   // A deep, plain copy: nothing shared with the live state, nothing that is not JSON.
@@ -89,10 +89,31 @@ export function fromSave(content: GameContent, data: SaveData): GameState {
   };
   return {
     party,
-    place: data.place,
-    ...(data.respawn ? { respawn: data.respawn } : {}),
+    place: placeIn(content, data.place),
+    ...(data.respawn ? { respawn: placeIn(content, data.respawn) } : {}),
     playtime: data.playtime,
   };
+}
+
+/** The map's origin now: where its first shipped tile sits (C36). */
+const originOf = (content: GameContent, map: string): readonly [number, number] =>
+  content.maps.get(map)?.origin ?? [0, 0];
+
+function placeOut(content: GameContent, p: Place): SaveData['place'] {
+  const [ox, oy] = originOf(content, p.map);
+  return {
+    map: p.map as SaveData['place']['map'],
+    x: p.x,
+    y: p.y,
+    facing: p.facing,
+    origin: [ox, oy],
+  };
+}
+
+/** A saved place on today's map: moved by however far the map's origin moved since (C36). */
+function placeIn(content: GameContent, p: SaveData['place']): Place {
+  const [ox, oy] = originOf(content, p.map);
+  return { map: p.map, x: p.x + ox - p.origin[0], y: p.y + oy - p.origin[1], facing: p.facing };
 }
 
 /** Ids the save names that the loaded content does not have, sorted. */

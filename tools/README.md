@@ -13,13 +13,15 @@ game ships the merged result.
 packs/<pack>/maps/<region>/
   region.json     generator input (name, biome, seed, size, zones by tier, exits)   hand-written
   generated.json  the frozen generated base                                         tool output
+  generated-<id>.json  a frozen extension strip (C36)                                tool output
   overlay.json    hand edits: zone spawns, anchors, connections, terrain fixes       hand-written
   map.json        generated + overlay, imported by the pack                          tool output
 ```
 
 ```sh
 npm run world -- gen core/test-region            # region.json → generated.json (once; --force to redo)
-npm run world -- build                           # generated + overlay → map.json (all regions)
+npm run world -- extend core/verdale thornveil   # one strip of region.json → generated-<id>.json
+npm run world -- build                           # generated + strips + overlay → map.json (all regions)
 npm run world -- check                           # fails if a map.json is stale
 npm run world -- show core/test-region           # text view; add --zones, --generated, or "x y w h"
 ```
@@ -59,6 +61,26 @@ rings: the generator only adds the organic detail. See `layoutSchema` in
 
 Last, walkable pockets the spawn cannot reach are opened by removing the props in the way,
 and whatever is still cut off is marked blocked, so every walkable tile is reachable.
+
+### Extensions (C36)
+
+A region that already shipped grows by **strips** glued onto its sides, so its existing tiles
+(and everything the overlay placed against them) stay as they are. Each strip is an entry of
+`region.json`'s `extensions` (by id, glued on in that order):
+
+- `side` (`north`, `east`, `south`, `west`) and `size` (depth in tiles; its length is the
+  map's side), its own `seed` and `zones`, and a `layout` in **strip coordinates** (the
+  strip's top-left is (0, 0)), written like an authored layout. Its first town is where the
+  generator checks reachability from.
+- Exits on the glued side are **joins**: the map's border trees in front of a join are
+  removed (5 tiles wide, 2 deep) and the strip's path is carried in. Connect the join to a
+  road with overlay edits. Other exits stay connections.
+- `world extend <region> <id>` generates the strip into `generated-<id>.json` and refuses to
+  replace one without `--force`, like `gen`.
+- A strip on the **north or west** moves the existing map by its depth: the map's `origin`
+  (where its first shipped tile now sits) moves with it, and saves move old positions by
+  the difference. Shift the overlay and every hand-written position in pack code by the same
+  amount (Verdale grew north by 80 in C36).
 
 ### Overlay (`overlay.json`)
 

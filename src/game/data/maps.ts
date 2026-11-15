@@ -141,6 +141,12 @@ export const regionMapSchema = z
     width: z.number().int().min(1).max(MAX_MAP_TILES),
     height: z.number().int().min(1).max(MAX_MAP_TILES),
     chunkSize: z.number().int().min(4).max(256).default(DEFAULT_CHUNK_TILES),
+    /**
+     * Where the region's first shipped tile (0, 0) sits now (C36): a strip added on the north
+     * or west side moves it. Saves keep the origin they were written with, so an old position
+     * is moved by the difference. Omitted = (0, 0).
+     */
+    origin: z.tuple([coord, coord]).optional(),
     zones: z.record(key, zoneSchema),
     anchors: z.record(key, anchorSchema).default({}),
     connections: z.record(key, connectionSchema).default({}),

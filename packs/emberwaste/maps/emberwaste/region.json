@@ -398,5 +398,143 @@
         "kind": "pass"
       }
     }
+  },
+  "extensions": {
+    "ashen-rift": {
+      "side": "east",
+      "size": 80,
+      "seed": 3637,
+      "zones": {
+        "cinder-rift": {
+          "name": "Cinder Rift",
+          "tier": "danger"
+        },
+        "molten-deep": {
+          "name": "Molten Deep",
+          "tier": "danger"
+        }
+      },
+      "layout": {
+        "towns": {
+          "rift-camp": {
+            "name": "Rift Camp",
+            "at": [12, 134],
+            "radius": 5,
+            "plaza": 2.5
+          }
+        },
+        "routes": [
+          {
+            "points": [
+              [0, 134],
+              [12, 134]
+            ]
+          },
+          {
+            "points": [
+              [12, 134],
+              [30, 120],
+              [40, 100],
+              [54, 80],
+              [66, 64]
+            ]
+          },
+          {
+            "points": [
+              [30, 120],
+              [36, 150],
+              [40, 172]
+            ]
+          },
+          {
+            "points": [
+              [40, 100],
+              [30, 76],
+              [24, 52]
+            ]
+          }
+        ],
+        "rivers": [
+          {
+            "points": [
+              [56, 199],
+              [52, 150],
+              [60, 110],
+              [48, 70],
+              [56, 30],
+              [52, 0]
+            ],
+            "width": 3
+          }
+        ],
+        "ponds": 0.1,
+        "clearings": [
+          {
+            "id": "rift-forge",
+            "kind": "heart",
+            "at": [66, 62],
+            "radius": 6,
+            "ring": true,
+            "gap": "south"
+          },
+          {
+            "id": "glass-sink",
+            "kind": "lair",
+            "at": [40, 174],
+            "radius": 4
+          },
+          {
+            "id": "sunken-forge",
+            "kind": "lair",
+            "at": [24, 50],
+            "radius": 4
+          },
+          {
+            "id": "ember-geode",
+            "kind": "secret",
+            "at": [68, 180],
+            "radius": 3,
+            "ring": true,
+            "gap": "north"
+          },
+          {
+            "id": "bone-arch",
+            "kind": "landmark",
+            "at": [62, 28],
+            "radius": 3
+          }
+        ],
+        "zones": {
+          "cinder-rift": {
+            "seeds": [
+              [20, 134],
+              [20, 104],
+              [24, 170],
+              [14, 192],
+              [16, 84]
+            ],
+            "trees": -0.2,
+            "grass": 0.2
+          },
+          "molten-deep": {
+            "seeds": [
+              [62, 62],
+              [62, 112],
+              [66, 150],
+              [36, 40],
+              [66, 18],
+              [24, 14]
+            ],
+            "trees": -0.1
+          }
+        },
+        "exits": {
+          "join": {
+            "at": [0, 134],
+            "kind": "edge"
+          }
+        }
+      }
+    }
   }
 }

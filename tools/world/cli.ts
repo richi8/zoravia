@@ -4,6 +4,8 @@
  * - `gen <pack/region> [--force]`: generates the base from `region.json` into
  *   `generated.json`. Refuses to replace an existing base without `--force`: hand edits in
  *   the overlay are placed against it.
+ * - `extend <pack/region> <id> [--force]`: generates extension `id` of `region.json` into
+ *   `generated-<id>.json` (C36). Refuses to replace an existing strip without `--force`.
  * - `build [pack/region …]`: merges base + overlay into `map.json` (all regions by default).
  * - `check`: fails if any `map.json` is out of date (also covered by `npm run check`).
  * - `show <pack/region> [--zones] [--generated] [x y w h]`: prints a text view.
@@ -17,13 +19,14 @@ import {
   buildRegion,
   file,
   readConfig,
-  readGenerated,
+  readBase,
   regionDir,
   regionDirs,
   ROOT,
   stringifyMap,
   writeMap,
 } from './files';
+import { generateExtension } from './extend';
 import { generateRegion } from './generate';
 
 const rel = (p: string): string => relative(ROOT, p);
@@ -49,6 +52,24 @@ export function main(argv: readonly string[]): number {
       console.info(`Generated ${rel(out)} (${map.width}×${map.height}, ${map.props.length} props)`);
       return 0;
     }
+    case 'extend': {
+      const [ref, id] = args;
+      if (!ref || !id) return usage('extend needs a region and an extension id');
+      const r = regionDir(ref);
+      const out = file(r, `generated-${id}`);
+      if (existsSync(out) && !flags.has('--force')) {
+        console.error(
+          `${rel(out)} exists. The overlay is placed against it, so regenerating can break hand edits.\nUse --force to replace it.`,
+        );
+        return 1;
+      }
+      const strip = generateExtension(readConfig(r), id, readBase(r, id));
+      writeMap(out, encodeRegion(strip));
+      console.info(
+        `Generated ${rel(out)} (${strip.width}×${strip.height}, ${strip.props.length} props)`,
+      );
+      return 0;
+    }
     case 'build': {
       const list = args.length ? args.map(regionDir) : regionDirs();
       for (const r of list) {
@@ -72,7 +93,7 @@ export function main(argv: readonly string[]): number {
       const ref = args[0];
       if (!ref) return usage('show needs a region');
       const r = regionDir(ref);
-      const data = flags.has('--generated') ? readGenerated(r) : buildRegion(r);
+      const data = flags.has('--generated') ? encodeRegion(readBase(r)) : buildRegion(r);
       const nums = args.slice(1).map(Number);
       const [x = 0, y = 0, w = data.width, h = data.height] = nums;
       console.info(
@@ -91,7 +112,7 @@ export function main(argv: readonly string[]): number {
 
 function usage(problem: string): number {
   console.error(
-    `${problem}\nUsage: npm run world -- gen <pack/region> [--force] | build [pack/region …] | check | show <pack/region> [--zones] [--generated] [x y w h]`,
+    `${problem}\nUsage: npm run world -- gen <pack/region> [--force] | extend <pack/region> <id> [--force] | build [pack/region …] | check | show <pack/region> [--zones] [--generated] [x y w h]`,
   );
   return 1;
 }

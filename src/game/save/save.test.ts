@@ -14,6 +14,7 @@ import { corePack } from '@packs/core';
 import v1 from '../../../tests/fixtures/saves/v1.json';
 import v2 from '../../../tests/fixtures/saves/v2.json';
 import v3 from '../../../tests/fixtures/saves/v3.json';
+import v4 from '../../../tests/fixtures/saves/v4.json';
 import {
   formatPlaytime,
   MemoryStore,
@@ -87,7 +88,13 @@ describe('save format', () => {
     expect(data.version).toBe(SAVE_VERSION);
     expect(data.party.flags).toEqual({});
     expect(data.party.quests).toEqual({});
-    expect(data.place).toEqual({ map: 'core:test-region', x: 61, y: 55, facing: 'left' });
+    expect(data.place).toEqual({
+      map: 'core:test-region',
+      x: 61,
+      y: 55,
+      facing: 'left',
+      origin: [0, 0],
+    });
     expect(data.respawn).toBeUndefined();
     expect(data.playtime).toBe(0);
     expect(data.party.bosses).toEqual({});
@@ -113,7 +120,13 @@ describe('save format', () => {
     expect(data.party.quests).toEqual({});
     // Everything v2 had is kept.
     expect(data.playtime).toBe(734.5);
-    expect(data.respawn).toEqual({ map: 'core:test-region', x: 48, y: 47, facing: 'up' });
+    expect(data.respawn).toEqual({
+      map: 'core:test-region',
+      x: 48,
+      y: 47,
+      facing: 'up',
+      origin: [0, 0],
+    });
     expect(data.party.bosses).toEqual({ 'core:thornwing-titan': { result: 'defeated' } });
     expect(data.party.dex.seen).toContain('core:voltbat');
     const s = readSave(content, v2);
@@ -136,6 +149,50 @@ describe('save format', () => {
     const s = readSave(content, v3);
     expect(s.party.money).toBe(580);
     expect(s.party.badges).toEqual([]);
+  });
+
+  it('migrates the v4 fixture: places were written at origin (0, 0)', () => {
+    expect(v4.version).toBe(4);
+    const data = migrate(v4);
+    expect(data.version).toBe(SAVE_VERSION);
+    expect(data.place).toEqual({
+      map: 'core:test-region',
+      x: 61,
+      y: 55,
+      facing: 'left',
+      origin: [0, 0],
+    });
+    expect(data.respawn?.origin).toEqual([0, 0]);
+    expect(data.party.badges).toEqual(['core:grove-badge']);
+    const s = readSave(content, v4);
+    expect(s.place).toEqual({ map: 'core:test-region', x: 61, y: 55, facing: 'left' });
+  });
+
+  it('moves a place by however far its map origin moved since it was saved', () => {
+    const r = raw() as Raw & { place: { origin: [number, number]; x: number; y: number } };
+    r.place.origin = [0, 0];
+    const maps = {
+      has: (id: string) => content.maps.has(id),
+      get: (id: string) => ({ ...content.maps.get(id), origin: [3, 10] }),
+    };
+    const moved = { ...content, maps };
+    const s = readSave(moved as unknown as typeof content, r);
+    expect(s.place.x).toBe(r.place.x + 3);
+    expect(s.place.y).toBe(r.place.y + 10);
+    const back = toSave(moved as unknown as typeof content, s);
+    expect(back.place.origin).toEqual([3, 10]);
+  });
+
+  it('moves a Willowmere place saved before Verdale grew north (C36)', () => {
+    const r = raw() as Raw & { place: Record<string, unknown> };
+    r.place = { map: 'core:verdale', x: 100, y: 119, facing: 'down', origin: [0, 0] };
+    expect(content.maps.require('core:verdale').origin).toEqual([0, 80]);
+    expect(readSave(content, r).place).toEqual({
+      map: 'core:verdale',
+      x: 100,
+      y: 199,
+      facing: 'down',
+    });
   });
 
   it('keeps boss rematches and refuses unknown badges or trainers', () => {

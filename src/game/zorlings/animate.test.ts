@@ -88,7 +88,8 @@ describe('animateZorling', () => {
     expect(last?.dx).toBe(0);
   });
 
-  it('padding keeps the figure inside the sprite during motion', () => {
+  // Every clip of every plan: about 5 s alone, so it gets more than the default timeout (C36).
+  it('padding keeps the figure inside the sprite during motion', { timeout: 20_000 }, () => {
     for (const plan of BODY_PLANS) {
       const a = animateZorling(generateGenome(`pad:${plan}`, { plan }), { size: 64 });
       for (const clip of Object.values(a.clips)) {

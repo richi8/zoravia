@@ -33,7 +33,7 @@ describe('Verdale start', () => {
     expect(state.party.bag).toEqual({ 'core:potion': 2, 'core:zorb': 5 });
     expect(state.party.money).toBe(500);
     expect(state.party.dex.caught).toEqual(['core:drizzlet']);
-    expect(state.place).toMatchObject({ map: 'core:verdale', x: 100, y: 119 });
+    expect(state.place).toMatchObject({ map: 'core:verdale', x: 100, y: 199 });
     expect(readSave(content, toSave(content, state))).toEqual(state);
     expect(() => newGameState(content, 'core:verdale', 'core:pipwing')).toThrow(/not a starter/);
   });

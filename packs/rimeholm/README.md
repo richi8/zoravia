@@ -12,9 +12,10 @@ Region 3 (C35): the **Rimeholm Isles**, a frozen archipelago joined by piers. De
 | `traits.ts` | `traits` | Live Wire (Electric +20%), Rimebound (Ice +20%) |
 | `bosses.ts` | `bosses` | Floemaw Titan (Frozen), Squallwing Titan (Overload), Glacivar (Slam), Odessa's Lodestar Lumenaw (Rooted) |
 | `music.ts` | `music` | Glacivar's theme, "The White Crown" |
-| `maps.ts` | `maps` | `rimeholm`, 200×200 frozen islands, built by the world tool from `maps/rimeholm/` (`ferry` links to Verdale) |
+| `maps.ts` | `maps` | `rimeholm`, 200×280 frozen islands (200×200 plus the Polar Drift strip, C36), built by the world tool from `maps/rimeholm/` (`ferry` links to Verdale) |
 | `npcs.ts` | `npcs` | healers, clerks and Ferryman Ola |
 | `trainers.ts` | `trainers`, `dialogues`, `npcs` | 11 route trainers (one table) and the Titan / legendary lairs |
+| `polar-drift.ts` | `species`, `bosses`, `trainers`, `dialogues`, `npcs` | the danger zone (C36): the rares Starhorn and Deepjaw, the Elder Titans, aces, Keeper Aurelle, ranger, scout, Surveyor, hidden items (built by core's `dangerZone`) |
 | `story.ts` | `badges`, `trainers`, `quests`, `dialogues`, `npcs` | the Tide Badge and Tide Trial, Rival Mira, Lampwright Odessa, "The Fading Lights", four side quests, signs, stones, hidden items |
 | `starts.ts` | `starts` | the Rimeholm start (Lv 6 starter, 2 Potions, 5 Zorbs, 500 coins) |
 

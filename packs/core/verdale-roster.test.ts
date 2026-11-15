@@ -88,7 +88,7 @@ describe('Verdale roster', () => {
     expect([...lengths].sort()).toEqual([1, 2, 3]);
     for (const s of verdale) {
       const line = content.evolutionLine(s.id);
-      const band = statBand(line.stage, line.members.length, s.legendary);
+      const band = statBand(line.stage, line.members.length, s.legendary, s.rare);
       expect(Math.abs(statTotal(s.baseStats) - band) / band, s.name).toBeLessThan(0.05);
     }
     expect(verdale.filter((s) => s.legendary).map((s) => s.name)).toEqual(['Verdion']);

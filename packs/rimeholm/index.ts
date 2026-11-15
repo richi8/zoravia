@@ -5,6 +5,7 @@
  */
 
 import { definePack } from '@engine/packs';
+import { POLAR_DRIFT, polarDriftSpecies } from './polar-drift';
 import { bosses } from './bosses';
 import { modelKits } from './kits';
 import { maps } from './maps';
@@ -27,16 +28,16 @@ export const rimeholmPack = definePack({
   },
   content: {
     modelKits,
-    species,
+    species: { ...species, ...polarDriftSpecies },
     moves,
     traits,
-    bosses,
+    bosses: { ...bosses, ...POLAR_DRIFT.bosses },
     music,
     maps,
     badges,
-    trainers: { ...trainers, ...storyTrainers },
-    npcs: { ...serviceNpcs, ...trainerNpcs, ...storyNpcsAll },
-    dialogues: { ...trainerDialogues, ...storyDialogues },
+    trainers: { ...trainers, ...storyTrainers, ...POLAR_DRIFT.trainers },
+    npcs: { ...serviceNpcs, ...trainerNpcs, ...storyNpcsAll, ...POLAR_DRIFT.npcs },
+    dialogues: { ...trainerDialogues, ...storyDialogues, ...POLAR_DRIFT.dialogues },
     quests,
     starts,
   },

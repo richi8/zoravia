@@ -8,7 +8,9 @@
  * - v2: `place` and `respawn` (the last center used) as map + tile + facing, the boss log
  *   (one per save), play time, and the packs the save was made with.
  * - v3 (C26): story flags and quest progress in the party.
- * - v4 (current, C27): badges held, trainers beaten, and rematches won in the boss log.
+ * - v4 (C27): badges held, trainers beaten, and rematches won in the boss log.
+ * - v5 (current, C36): each place keeps its map's `origin` when it was written, so a map
+ *   that grew on its north or west side moves old positions along with it.
  */
 
 import { z } from 'zod';
@@ -17,7 +19,7 @@ import { TEAM_SIZE } from '@game/player';
 import { zorlingSchema } from '@game/progression';
 
 export const SAVE_FORMAT = 'zoravia-save';
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 const count = z.number().int().min(0);
 
@@ -26,6 +28,8 @@ export const placeSchema = z.strictObject({
   x: count,
   y: count,
   facing: z.enum(FACINGS),
+  /** The map's `origin` when the place was written (C36). */
+  origin: z.tuple([count, count]),
 });
 
 export const partySchema = z.strictObject({

@@ -430,5 +430,173 @@
         "kind": "ferry"
       }
     }
+  },
+  "extensions": {
+    "polar-drift": {
+      "side": "south",
+      "size": 80,
+      "seed": 3638,
+      "zones": {
+        "driftice": {
+          "name": "Driftice Floes",
+          "tier": "danger"
+        },
+        "aurora-shelf": {
+          "name": "Aurora Shelf",
+          "tier": "danger"
+        }
+      },
+      "layout": {
+        "towns": {
+          "driftwatch-camp": {
+            "name": "Driftwatch Camp",
+            "at": [90, 26],
+            "radius": 5,
+            "plaza": 2.5
+          }
+        },
+        "routes": [
+          {
+            "points": [
+              [90, 0],
+              [90, 26]
+            ],
+            "wobble": 0
+          },
+          {
+            "points": [
+              [90, 26],
+              [96, 38],
+              [100, 54],
+              [100, 66]
+            ]
+          },
+          {
+            "points": [
+              [96, 38],
+              [66, 40],
+              [40, 46]
+            ]
+          },
+          {
+            "points": [
+              [100, 54],
+              [130, 50],
+              [156, 40]
+            ]
+          }
+        ],
+        "lakes": [
+          {
+            "at": [30, 4],
+            "radius": [44, 16],
+            "wobble": 0.3
+          },
+          {
+            "at": [100, 2],
+            "radius": [40, 12],
+            "wobble": 0.25
+          },
+          {
+            "at": [170, 6],
+            "radius": [44, 18],
+            "wobble": 0.3
+          },
+          {
+            "at": [60, 64],
+            "radius": [14, 8]
+          },
+          {
+            "at": [150, 64],
+            "radius": [14, 8]
+          },
+          {
+            "at": [24, 28],
+            "radius": [10, 5]
+          },
+          {
+            "at": [176, 24],
+            "radius": [12, 6]
+          }
+        ],
+        "islands": [
+          {
+            "at": [60, 64],
+            "radius": [4, 3]
+          }
+        ],
+        "fords": [
+          {
+            "points": [
+              [60, 52],
+              [60, 61]
+            ]
+          }
+        ],
+        "ponds": 0.12,
+        "clearings": [
+          {
+            "id": "starfall-cairn",
+            "kind": "heart",
+            "at": [100, 68],
+            "radius": 6,
+            "ring": true,
+            "gap": "north"
+          },
+          {
+            "id": "walrus-floe",
+            "kind": "lair",
+            "at": [38, 47],
+            "radius": 4
+          },
+          {
+            "id": "storm-roost",
+            "kind": "lair",
+            "at": [158, 39],
+            "radius": 4
+          },
+          {
+            "id": "aurora-pool",
+            "kind": "secret",
+            "at": [60, 64],
+            "radius": 2
+          },
+          {
+            "id": "frozen-mast",
+            "kind": "landmark",
+            "at": [184, 70],
+            "radius": 3
+          }
+        ],
+        "zones": {
+          "driftice": {
+            "seeds": [
+              [90, 30],
+              [50, 32],
+              [130, 30],
+              [20, 40],
+              [180, 40]
+            ],
+            "grass": 0.1
+          },
+          "aurora-shelf": {
+            "seeds": [
+              [100, 62],
+              [40, 70],
+              [150, 74],
+              [10, 70],
+              [190, 66],
+              [124, 72]
+            ]
+          }
+        },
+        "exits": {
+          "join": {
+            "at": [90, 0],
+            "kind": "sea"
+          }
+        }
+      }
+    }
   }
 }

@@ -15,7 +15,9 @@ import { npcs } from './npcs';
 import { reactions } from './reactions';
 import { species } from './species';
 import { starts } from './starts';
+import { endgameDialogues, endgameNpcs, endgameQuests, endgameTrainers } from './endgame';
 import { dialogues as questDialogues, quests } from './story';
+import { THORNVEIL, thornveilSpecies } from './thornveil';
 import { dialogues as trialDialogues, trainers } from './trainers';
 import { traits } from './traits';
 import { types } from './types';
@@ -41,21 +43,29 @@ export const corePack = definePack({
     moves,
     traits,
     modelKits,
-    species,
+    species: { ...species, ...thornveilSpecies },
     items,
     music,
-    bosses,
+    bosses: { ...bosses, ...THORNVEIL.bosses },
     badges: verdaleBadges,
-    trainers: { ...trainers, ...verdaleTrainers, ...verdaleStoryTrainers },
+    trainers: {
+      ...trainers,
+      ...verdaleTrainers,
+      ...verdaleStoryTrainers,
+      ...endgameTrainers,
+      ...THORNVEIL.trainers,
+    },
     maps,
-    npcs,
+    npcs: { ...npcs, ...endgameNpcs, ...THORNVEIL.npcs },
     dialogues: {
       ...questDialogues,
       ...trialDialogues,
       ...verdaleDialogues,
       ...verdaleStoryDialogues,
+      ...endgameDialogues,
+      ...THORNVEIL.dialogues,
     },
-    quests: { ...quests, ...verdaleQuests },
+    quests: { ...quests, ...verdaleQuests, ...endgameQuests },
     starts,
   },
 });

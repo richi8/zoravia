@@ -137,7 +137,7 @@ describe('species', () => {
   it('stat totals sit within 5% of the DESIGN.md bands', () => {
     for (const s of content.species) {
       const line = content.evolutionLine(s.id);
-      const band = statBand(line.stage, line.members.length, s.legendary);
+      const band = statBand(line.stage, line.members.length, s.legendary, s.rare);
       const total = statTotal(s.baseStats);
       expect(Math.abs(total - band) / band, `${s.name} ${total} vs ~${band}`).toBeLessThan(0.05);
     }

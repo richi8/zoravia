@@ -54,6 +54,16 @@ const STEPS: Readonly<Record<number, Step>> = {
     const party = isObject(v3['party']) ? v3['party'] : {};
     return { ...v3, version: 4, party: { ...party, badges: [], trainers: {} } };
   },
+  // C36: places written before maps could grow were at origin (0, 0).
+  4: (v4) => {
+    const at = (p: unknown): unknown => (isObject(p) ? { ...p, origin: [0, 0] } : p);
+    return {
+      ...v4,
+      version: 5,
+      place: at(v4['place']),
+      ...(v4['respawn'] === undefined ? {} : { respawn: at(v4['respawn']) }),
+    };
+  },
 };
 
 /** The version a raw save says it has. */

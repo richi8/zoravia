@@ -273,6 +273,66 @@
           "weight": 1
         }
       ]
+    },
+    "cinder-rift": {
+      "levels": [45, 52],
+      "weather": "ash",
+      "battleWeather": ["core:burning"],
+      "spawns": [
+        {
+          "species": "emberwaste:pyrebeetle",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:dunewyrm",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:dustwhirl",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:mirageel",
+          "weight": 1
+        },
+        {
+          "species": "emberwaste:voltsting",
+          "weight": 1
+        },
+        {
+          "species": "emberwaste:brimscorp",
+          "weight": 1
+        }
+      ]
+    },
+    "molten-deep": {
+      "levels": [52, 60],
+      "spawns": [
+        {
+          "species": "emberwaste:ironjaw",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:shimmerfox",
+          "weight": 2
+        },
+        {
+          "species": "emberwaste:forgeback",
+          "weight": 1
+        },
+        {
+          "species": "emberwaste:brambleroll",
+          "weight": 1
+        },
+        {
+          "species": "core:hearthog",
+          "weight": 1
+        },
+        {
+          "species": "emberwaste:shardwing",
+          "weight": 1
+        }
+      ]
     }
   },
   "anchors": {
@@ -1206,6 +1266,96 @@
       "kind": "rock",
       "at": [150, 163],
       "note": "Old Foundry ruins"
+    },
+    {
+      "op": "clearProps",
+      "note": "C36: road from the Lookout east to the Ashen Rift",
+      "rect": {
+        "x": 187,
+        "y": 133,
+        "w": 13,
+        "h": 3
+      }
+    },
+    {
+      "op": "terrain",
+      "note": "C36: Ashen Rift road",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 187,
+        "y": 133,
+        "w": 13,
+        "h": 2
+      }
+    },
+    {
+      "op": "tall",
+      "note": "C36: Ashen Rift road",
+      "set": false,
+      "rect": {
+        "x": 187,
+        "y": 133,
+        "w": 13,
+        "h": 3
+      }
+    },
+    {
+      "op": "prop",
+      "note": "C36: Ashen Rift gate (the ranger stands at 199,134)",
+      "kind": "rock",
+      "at": [199, 132]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Ashen Rift gate",
+      "kind": "rock",
+      "at": [199, 133]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Ashen Rift gate",
+      "kind": "rock",
+      "at": [199, 135]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Ashen Rift gate",
+      "kind": "rock",
+      "at": [199, 136]
+    },
+    {
+      "op": "clearProps",
+      "note": "C36: Rift Camp, a wider clearing",
+      "rect": {
+        "x": 206,
+        "y": 129,
+        "w": 13,
+        "h": 11
+      }
+    },
+    {
+      "op": "tall",
+      "note": "C36: Rift Camp",
+      "set": false,
+      "rect": {
+        "x": 207,
+        "y": 130,
+        "w": 11,
+        "h": 9
+      }
+    },
+    {
+      "op": "prop",
+      "note": "C36: Rift Camp lamp",
+      "kind": "lamp",
+      "at": [208, 131]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Rift Camp lamp",
+      "kind": "lamp",
+      "at": [216, 137]
     }
   ]
 }

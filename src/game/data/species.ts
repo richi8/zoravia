@@ -34,6 +34,8 @@ export const speciesSchema = z.strictObject({
   evolution: z.strictObject({ into: ref, level: level.min(2) }).optional(),
   /** Regional legendary: ~575 stat total, never evolves. */
   legendary: z.boolean().default(false),
+  /** Endgame rare (C36): single-stage, ~520 stat total (a final form's), danger zones only. */
+  rare: z.boolean().default(false),
   /** XP base for defeating it. Defaults to stat total / 5 (see `@game/progression`). */
   xpYield: z.number().int().min(1).max(1000).optional(),
   /** Multiplies the capture chance: below 1 is harder to catch, above 1 easier. */
@@ -102,6 +104,9 @@ function checkSpecies(s: SpeciesLike, ctx: CheckContext): EntryProblem[] {
   }
   if (s.legendary && (s.evolution || parents.length)) {
     out.push({ path: ['legendary'], message: 'Legendaries never evolve' });
+  }
+  if (s.rare && (s.legendary || s.evolution || parents.length)) {
+    out.push({ path: ['rare'], message: 'A rare is a single-stage species, not a legendary' });
   }
 
   if (s.look && s.evolution) {
@@ -182,8 +187,9 @@ export function statTotal(stats: BaseStats): number {
  * Target stat total for a stage of a line (DESIGN.md "Stat-total bands"). `stage` is 1-based,
  * `stages` is the line length. Bands are guides ("~"), checked with a tolerance by tests.
  */
-export function statBand(stage: number, stages: number, legendary = false): number {
+export function statBand(stage: number, stages: number, legendary = false, rare = false): number {
   if (legendary) return 575;
+  if (rare) return 520;
   const bands: Record<number, readonly number[]> = { 1: [470], 2: [330, 490], 3: [300, 410, 520] };
   const band = bands[stages]?.[stage - 1];
   if (band === undefined) throw new Error(`No stat band for stage ${stage} of ${stages}`);

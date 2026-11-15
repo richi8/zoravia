@@ -21,6 +21,7 @@ export function decodeRegion(data: RegionMapData): WorldMap {
   const byGlyph = new Map(m.zones.map((z, i) => [z.glyph, i + 1]));
   m.anchors = structuredClone(data.anchors);
   m.connections = structuredClone(data.connections);
+  if (data.origin) m.origin = data.origin;
   const cw = m.chunksWide;
   const ch = m.chunksHigh;
   for (const c of data.chunks) {
@@ -134,6 +135,9 @@ export function encodeRegion(m: WorldMap): RegionMapData {
     width: m.width,
     height: m.height,
     chunkSize: m.chunkSize,
+    ...(m.origin[0] || m.origin[1]
+      ? { origin: [m.origin[0], m.origin[1]] as [number, number] }
+      : {}),
     zones,
     anchors: structuredClone(m.anchors),
     connections: structuredClone(m.connections),

@@ -37,7 +37,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'picnicker-nell': {
     name: 'Picnicker Nell',
     x: 96,
-    y: 148,
+    y: 228,
     facing: 'right',
     look: { outfit: 'red', hair: 'blonde', skin: 'light' },
     team: [
@@ -52,7 +52,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'fisher-dot': {
     name: 'Fisher Dot',
     x: 71,
-    y: 110,
+    y: 190,
     facing: 'down',
     look: { outfit: 'navy', hair: 'grey', skin: 'tan' },
     team: [
@@ -67,7 +67,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'hiker-brann': {
     name: 'Hiker Brann',
     x: 99,
-    y: 78,
+    y: 158,
     facing: 'right',
     look: { outfit: 'orange', hair: 'brown', skin: 'deep' },
     team: [
@@ -84,7 +84,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'marsh-guide-tess': {
     name: 'Marsh Guide Tess',
     x: 49,
-    y: 122,
+    y: 202,
     facing: 'right',
     look: { outfit: 'forest', hair: 'red', skin: 'warm' },
     team: [
@@ -100,7 +100,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'forager-juno': {
     name: 'Forager Juno',
     x: 100,
-    y: 37,
+    y: 117,
     facing: 'right',
     look: { outfit: 'mustard', hair: 'dark', skin: 'tan' },
     team: [
@@ -116,7 +116,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'scout-fen': {
     name: 'Scout Fen',
     x: 90,
-    y: 178,
+    y: 258,
     facing: 'right',
     look: { outfit: 'sky', hair: 'brown', skin: 'light' },
     team: [
@@ -132,7 +132,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'ranger-holt': {
     name: 'Ranger Holt',
     x: 63,
-    y: 42,
+    y: 122,
     facing: 'right',
     look: { outfit: 'forest', hair: 'grey', skin: 'deep' },
     team: [
@@ -149,7 +149,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'birder-wren': {
     name: 'Birder Wren',
     x: 137,
-    y: 72,
+    y: 152,
     facing: 'left',
     look: { outfit: 'white', hair: 'blonde', skin: 'warm' },
     team: [
@@ -166,7 +166,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'mystic-sora': {
     name: 'Mystic Sora',
     x: 32,
-    y: 69,
+    y: 149,
     facing: 'right',
     look: { outfit: 'purple', hair: 'dark', skin: 'light' },
     team: [
@@ -182,7 +182,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'druid-ash': {
     name: 'Druid Ash',
     x: 102,
-    y: 22,
+    y: 102,
     facing: 'left',
     look: { outfit: 'maroon', hair: 'grey', skin: 'tan' },
     team: [
@@ -199,7 +199,7 @@ const ROUTE_TRAINERS: Record<string, RouteTrainer> = {
   'ace-lyra': {
     name: 'Ace Lyra',
     x: 169,
-    y: 55,
+    y: 135,
     facing: 'down',
     look: { outfit: 'black', hair: 'red', skin: 'warm' },
     team: [

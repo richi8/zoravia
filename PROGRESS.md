@@ -47,5 +47,6 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C34 | Region 2: Emberwaste (volcanic desert) | ✅ | [log](logs/C34-emberwaste.md) |
 | C35a | Regional body models | ✅ | [log](logs/C35a-regional-models.md) |
 | C35 | Region 3: Rimeholm Isles (frozen coast islands) | ✅ | [log](logs/C35-rimeholm.md) |
-| C36 | Cross-region endgame | ⬜ | |
+| C36 | Cross-region endgame | ✅ | [log](logs/C36-endgame.md) |
+| C36b | Map exploration | ⬜ | |
 | C37 | Release prep | ⬜ | |

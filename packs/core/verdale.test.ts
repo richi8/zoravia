@@ -17,8 +17,8 @@ const reach = map.reachableFrom(spawn.x, spawn.y);
 const at = (x: number, y: number): number => y * map.width + x;
 
 describe('Verdale map', () => {
-  it('is a 200×200 forest region named Verdale', () => {
-    expect([map.name, map.biome, map.width, map.height]).toEqual(['Verdale', 'forest', 200, 200]);
+  it('is a 200×280 forest region named Verdale (200×200 plus Thornveil, C36)', () => {
+    expect([map.name, map.biome, map.width, map.height]).toEqual(['Verdale', 'forest', 200, 280]);
   });
 
   it('is walkable as a whole: every walkable tile is reachable from the spawn', () => {
@@ -52,7 +52,7 @@ describe('Verdale map', () => {
   });
 
   it('gives every zone levels inside its tier and a spawn table', () => {
-    expect(map.zones).toHaveLength(11);
+    expect(map.zones).toHaveLength(13);
     for (const z of map.zones) {
       const [lo, hi] = TIER_LEVELS[z.tier];
       expect(z.levels[0], z.name).toBeGreaterThanOrEqual(lo);
@@ -63,7 +63,7 @@ describe('Verdale map', () => {
       n[z.tier] = (n[z.tier] ?? 0) + 1;
       return n;
     }, {});
-    expect(tiers).toEqual({ t1: 3, t2: 5, t3: 3 });
+    expect(tiers).toEqual({ t1: 3, t2: 5, t3: 3, danger: 2 });
   });
 
   it('rings the tiers around the hub town', () => {
@@ -80,6 +80,7 @@ describe('Verdale map', () => {
     };
     expect(mean('t1')).toBeLessThan(mean('t2'));
     expect(mean('t2')).toBeLessThan(mean('t3'));
+    expect(mean('t3')).toBeLessThan(mean('danger'));
   });
 
   it('puts towns outside zones and the big sites in the right tiers', () => {
@@ -97,8 +98,10 @@ describe('Verdale map', () => {
     expect(tierAt('boss-crown-rock')).toBe('t3');
     const kinds = (k: string): number =>
       Object.values(map.anchors).filter((a) => a.kind === k).length;
-    expect(kinds('secret')).toBe(3);
-    expect(kinds('landmark')).toBe(3);
+    // Thornveil (C36) adds a secret, a landmark, two lairs and its heart.
+    expect(kinds('secret')).toBe(4);
+    expect(kinds('landmark')).toBe(4);
+    expect(kinds('heart')).toBe(1);
     expect(
       Object.values(map.connections)
         .map((c) => c.kind)

@@ -56,6 +56,8 @@ export class WorldMap {
   props: PropPlacement[] = [];
   anchors: Record<string, AnchorData> = {};
   connections: Record<string, ConnectionData> = {};
+  /** Where the region's first shipped tile (0, 0) sits now (C36; see `regionMapSchema`). */
+  origin: readonly [number, number] = [0, 0];
   private readonly solid: Uint8Array;
   private doors: Map<number, 'center' | 'shop'> | undefined;
 
@@ -87,6 +89,7 @@ export class WorldMap {
     m.props = this.props.map((p) => ({ ...p }));
     m.anchors = structuredClone(this.anchors);
     m.connections = structuredClone(this.connections);
+    m.origin = this.origin;
     m.refreshCollision();
     return m;
   }

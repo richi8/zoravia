@@ -9,9 +9,10 @@ reactions, shared moves and items). Loaded with the rest in `packs/index.ts` (`S
 | `moves.ts` | `moves` | Iron Crash (Metal's strong hit) and the bosses' signature moves |
 | `traits.ts` | `traits` | Landslide (Earth +20%), Forged (Metal +20%) |
 | `bosses.ts` | `bosses` | Dunewyrm Titan (Steam Burst), Forgeback Titan (Shred), Calderon (Frozen), Gorran's Kiln Ironjaw (Shatter) |
-| `maps.ts` | `maps` | `emberwaste`, 200×200 desert, built by the world tool from `maps/emberwaste/` (`ember-pass` links to Verdale) |
+| `maps.ts` | `maps` | `emberwaste`, 280×200 desert (200×200 plus the Ashen Rift strip, C36), built by the world tool from `maps/emberwaste/` (`ember-pass` links to Verdale) |
 | `npcs.ts` | `npcs` | healers and clerks |
 | `trainers.ts` | `trainers`, `dialogues`, `npcs` | 11 route trainers (one table) and the Titan / legendary lairs |
+| `ashen-rift.ts` | `species`, `bosses`, `trainers`, `dialogues`, `npcs` | the danger zone (C36): the rares Brimscorp and Shardwing, the Elder Titans, aces, Keeper Ashka, ranger, scout, Surveyor, hidden items (built by core's `dangerZone`) |
 | `story.ts` | `badges`, `trainers`, `quests`, `dialogues`, `npcs` | the Kiln Badge and Forge Trial, Rival Mira, Glassmaker Gorran, "The Cold Forge", four side quests, signs, stones, hidden items |
 | `starts.ts` | `starts` | the Emberwaste start (Lv 6 starter, 2 Potions, 5 Zorbs, 500 coins) |
 

@@ -277,6 +277,66 @@
           "weight": 1
         }
       ]
+    },
+    "driftice": {
+      "levels": [45, 52],
+      "weather": "snow",
+      "battleWeather": ["core:wet"],
+      "spawns": [
+        {
+          "species": "rimeholm:rimestoat",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:floemaw",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:jellivolt",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:lumenaw",
+          "weight": 1
+        },
+        {
+          "species": "rimeholm:urchivolt",
+          "weight": 1
+        },
+        {
+          "species": "rimeholm:starhorn",
+          "weight": 1
+        }
+      ]
+    },
+    "aurora-shelf": {
+      "levels": [52, 60],
+      "spawns": [
+        {
+          "species": "rimeholm:frostcairn",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:brineclaw",
+          "weight": 2
+        },
+        {
+          "species": "rimeholm:squallwing",
+          "weight": 1
+        },
+        {
+          "species": "rimeholm:tanglekelp",
+          "weight": 1
+        },
+        {
+          "species": "core:rimewisp",
+          "weight": 1
+        },
+        {
+          "species": "rimeholm:deepjaw",
+          "weight": 1
+        }
+      ]
     }
   },
   "anchors": {
@@ -1197,6 +1257,104 @@
       "kind": "snowrock",
       "at": [92, 108],
       "note": "Tusk Rookery rocks"
+    },
+    {
+      "op": "collision",
+      "note": "C36: pier south to the Polar Drift",
+      "mode": "auto",
+      "rect": {
+        "x": 89,
+        "y": 195,
+        "w": 2,
+        "h": 5
+      }
+    },
+    {
+      "op": "terrain",
+      "note": "C36: Polar Drift pier",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 89,
+        "y": 193,
+        "w": 2,
+        "h": 3
+      }
+    },
+    {
+      "op": "prop",
+      "note": "C36: Polar Drift pier (the ranger stands at 90,197)",
+      "kind": "bridge-v",
+      "at": [89, 196]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Polar Drift pier (the ranger stands at 90,197)",
+      "kind": "bridge-v",
+      "at": [90, 196]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Polar Drift pier (the ranger stands at 90,197)",
+      "kind": "bridge-v",
+      "at": [90, 197]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Polar Drift pier (the ranger stands at 90,197)",
+      "kind": "bridge-v",
+      "at": [89, 198]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Polar Drift pier (the ranger stands at 90,197)",
+      "kind": "bridge-v",
+      "at": [90, 198]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Polar Drift pier (the ranger stands at 90,197)",
+      "kind": "bridge-v",
+      "at": [89, 199]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Polar Drift pier (the ranger stands at 90,197)",
+      "kind": "bridge-v",
+      "at": [90, 199]
+    },
+    {
+      "op": "clearProps",
+      "note": "C36: Driftwatch Camp, a wider clearing",
+      "rect": {
+        "x": 84,
+        "y": 221,
+        "w": 13,
+        "h": 11
+      }
+    },
+    {
+      "op": "tall",
+      "note": "C36: Driftwatch Camp",
+      "set": false,
+      "rect": {
+        "x": 85,
+        "y": 222,
+        "w": 11,
+        "h": 9
+      }
+    },
+    {
+      "op": "prop",
+      "note": "C36: Driftwatch Camp lamp",
+      "kind": "lamp",
+      "at": [86, 223]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Driftwatch Camp lamp",
+      "kind": "lamp",
+      "at": [94, 229]
     }
   ]
 }

@@ -24,12 +24,12 @@ const reach = map.reachableFrom(spawn.x, spawn.y);
 const at = (x: number, y: number): number => y * map.width + x;
 
 describe('Rimeholm map', () => {
-  it('is a 200×200 frozen region named Rimeholm Isles', () => {
+  it('is a 200×280 frozen region named Rimeholm Isles (200×200 plus the Polar Drift, C36)', () => {
     expect([map.name, map.biome, map.width, map.height]).toEqual([
       'Rimeholm Isles',
       'frozen',
       200,
-      200,
+      280,
     ]);
   });
 
@@ -64,7 +64,7 @@ describe('Rimeholm map', () => {
   });
 
   it('gives every zone levels inside its tier and a spawn table', () => {
-    expect(map.zones).toHaveLength(11);
+    expect(map.zones).toHaveLength(13);
     for (const z of map.zones) {
       const [lo, hi] = TIER_LEVELS[z.tier];
       expect(z.levels[0], z.name).toBeGreaterThanOrEqual(lo);
@@ -75,7 +75,7 @@ describe('Rimeholm map', () => {
       n[z.tier] = (n[z.tier] ?? 0) + 1;
       return n;
     }, {});
-    expect(tiers).toEqual({ t1: 3, t2: 5, t3: 3 });
+    expect(tiers).toEqual({ t1: 3, t2: 5, t3: 3, danger: 2 });
   });
 
   it('rings the tiers around the hub town', () => {
@@ -94,9 +94,14 @@ describe('Rimeholm map', () => {
     expect(mean('t2')).toBeLessThan(mean('t3'));
   });
 
-  it('has sleet storms that soak battles in three zones, with snow in the air', () => {
+  it('has sleet storms that soak battles in four zones, with snow in the air', () => {
     const stormy = map.zones.filter((z) => z.battleWeather?.length);
-    expect(stormy.map((z) => z.key).sort()).toEqual(['crown', 'sleet-fells', 'squall-reach']);
+    expect(stormy.map((z) => z.key).sort()).toEqual([
+      'crown',
+      'driftice',
+      'sleet-fells',
+      'squall-reach',
+    ]);
     for (const z of stormy) {
       expect(z.battleWeather).toEqual(['core:wet']);
       expect(z.weather).toBe('snow');
@@ -104,6 +109,9 @@ describe('Rimeholm map', () => {
     // The Floemaw Titan's lair is in a storm, so its Armor-breaking Frozen is set up.
     const lair = map.anchors['titan-tusk-rookery'] ?? { x: 0, y: 0 };
     expect(map.zoneAt(lair.x, lair.y)?.battleWeather).toEqual(['core:wet']);
+    // So is the Elder Floemaw's (C36).
+    const floe = map.anchors['walrus-floe'] ?? { x: 0, y: 0 };
+    expect(map.zoneAt(floe.x, floe.y)?.battleWeather).toEqual(['core:wet']);
   });
 
   it('puts towns outside zones and the big sites in the right tiers', () => {
@@ -121,8 +129,10 @@ describe('Rimeholm map', () => {
     expect(tierAt('boss-stormspire')).toBe('t3');
     const kinds = (k: string): number =>
       Object.values(map.anchors).filter((a) => a.kind === k).length;
-    expect(kinds('secret')).toBe(3);
-    expect(kinds('landmark')).toBe(3);
+    // The Polar Drift (C36) adds a secret, a landmark, two lairs and its heart.
+    expect(kinds('secret')).toBe(4);
+    expect(kinds('landmark')).toBe(4);
+    expect(kinds('heart')).toBe(1);
   });
 
   it('has a Zorling center in every town, with its healer next to the door', () => {

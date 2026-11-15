@@ -5,6 +5,7 @@
  * the full report.
  */
 
+import { ASHEN_RIFT } from '@packs/emberwaste/ashen-rift';
 import { describe, expect, it } from 'vitest';
 import { loadGameContent } from '@game/data';
 import { levelCap } from '@game/progression';
@@ -62,14 +63,18 @@ describe('Emberwaste playthrough', () => {
   });
 
   it('every route zone exists and every story trainer of the region is on the route', () => {
-    const keys = new Set(map.zones.map((z) => z.key));
+    // The campaign route covers every zone but the endgame's danger zones (C36).
+    const keys = new Set(map.zones.filter((z) => z.tier !== 'danger').map((z) => z.key));
     const zones = EMBERWASTE_ROUTE.flatMap((s) => s.zones);
     for (const k of zones) expect(keys.has(k), k).toBe(true);
     expect(new Set(zones).size).toBe(keys.size);
     const onRoute = new Set(
       EMBERWASTE_ROUTE.flatMap((s) => s.goals).map((g) => ('trainer' in g ? g.trainer : g.boss)),
     );
+    // The danger zone's trainers (C36) are endgame, not on the campaign route.
+    const endgame = new Set(Object.keys(ASHEN_RIFT.trainers).map((k) => `emberwaste:${k}`));
     for (const t of content.trainers.inNamespace('emberwaste')) {
+      if (endgame.has(t.id)) continue;
       expect(onRoute.has(t.id), t.id).toBe(true);
     }
   });

@@ -90,6 +90,25 @@ export const layoutSchema = z.strictObject({
 
 export type Layout = z.output<typeof layoutSchema>;
 
+/**
+ * A strip added to one side of a region after it shipped (C36). It is generated on its own
+ * (`world extend`, frozen in `generated-<id>.json`) from a layout in strip coordinates, then
+ * glued on at build time: the region's existing tiles stay as they are. Its exits on the
+ * glued side are joins: the region's border is opened there instead of making connections.
+ */
+export const extensionSchema = z.strictObject({
+  side: z.enum(EXITS),
+  /** Depth of the strip in tiles; its length is the region's side. */
+  size: z.number().int().min(8).max(MAX_MAP_TILES),
+  seed: z.number().int(),
+  zones: z
+    .record(key, z.strictObject({ name, tier: z.enum(TIERS) }))
+    .refine((zs) => Object.keys(zs).length > 0, 'At least one zone'),
+  layout: layoutSchema,
+});
+
+export type Extension = z.output<typeof extensionSchema>;
+
 export const regionConfigSchema = z.strictObject({
   name,
   biome: z.enum(BIOME_IDS),
@@ -108,6 +127,8 @@ export const regionConfigSchema = z.strictObject({
   exits: z.array(z.enum(EXITS)).min(1).default(['north', 'east', 'south', 'west']),
   /** Authored layout (C28); when set, `exits` is ignored and zones follow `layout.zones`. */
   layout: layoutSchema.optional(),
+  /** Strips added later, glued on in this order (C36). */
+  extensions: z.record(key, extensionSchema).default({}),
 });
 
 export type RegionConfig = z.output<typeof regionConfigSchema>;

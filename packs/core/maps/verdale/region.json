@@ -422,5 +422,159 @@
         "kind": "ferry"
       }
     }
+  },
+  "extensions": {
+    "thornveil": {
+      "side": "north",
+      "size": 80,
+      "seed": 3636,
+      "zones": {
+        "tanglewild": {
+          "name": "Tanglewild",
+          "tier": "danger"
+        },
+        "elderroot": {
+          "name": "Elderroot Deep",
+          "tier": "danger"
+        }
+      },
+      "layout": {
+        "towns": {
+          "thornveil-camp": {
+            "name": "Thornveil Camp",
+            "at": [100, 66],
+            "radius": 5,
+            "plaza": 2.5
+          }
+        },
+        "routes": [
+          {
+            "points": [
+              [100, 66],
+              [100, 79]
+            ]
+          },
+          {
+            "points": [
+              [100, 66],
+              [92, 50],
+              [100, 34],
+              [100, 20],
+              [100, 10]
+            ]
+          },
+          {
+            "points": [
+              [92, 50],
+              [70, 46],
+              [50, 40],
+              [36, 34]
+            ]
+          },
+          {
+            "points": [
+              [100, 34],
+              [126, 30],
+              [148, 24],
+              [160, 20]
+            ]
+          },
+          {
+            "points": [
+              [92, 50],
+              [70, 58],
+              [58, 64]
+            ]
+          }
+        ],
+        "rivers": [
+          {
+            "points": [
+              [122, 79],
+              [126, 56],
+              [138, 34],
+              [148, 12],
+              [150, 0]
+            ],
+            "width": 3
+          }
+        ],
+        "lakes": [
+          {
+            "at": [30, 22],
+            "radius": [12, 8]
+          }
+        ],
+        "ponds": 0.16,
+        "clearings": [
+          {
+            "id": "elder-tree",
+            "kind": "heart",
+            "at": [100, 9],
+            "radius": 6,
+            "ring": true,
+            "gap": "south"
+          },
+          {
+            "id": "ancient-hollow",
+            "kind": "lair",
+            "at": [162, 19],
+            "radius": 4
+          },
+          {
+            "id": "drowned-bog",
+            "kind": "lair",
+            "at": [36, 34],
+            "radius": 4
+          },
+          {
+            "id": "moonlit-glade",
+            "kind": "secret",
+            "at": [176, 62],
+            "radius": 3,
+            "ring": true,
+            "gap": "west"
+          },
+          {
+            "id": "thorn-arch",
+            "kind": "landmark",
+            "at": [58, 64],
+            "radius": 3
+          }
+        ],
+        "zones": {
+          "tanglewild": {
+            "seeds": [
+              [100, 58],
+              [60, 60],
+              [140, 60],
+              [172, 68],
+              [28, 64],
+              [188, 48]
+            ],
+            "trees": 0.3,
+            "grass": 0.3
+          },
+          "elderroot": {
+            "seeds": [
+              [100, 24],
+              [60, 22],
+              [150, 18],
+              [24, 36],
+              [184, 24],
+              [100, 6]
+            ],
+            "trees": 0.5,
+            "grass": 0.2
+          }
+        },
+        "exits": {
+          "join": {
+            "at": [100, 79],
+            "kind": "edge"
+          }
+        }
+      }
+    }
   }
 }

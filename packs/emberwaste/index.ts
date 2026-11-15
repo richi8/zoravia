@@ -5,6 +5,7 @@
  */
 
 import { definePack } from '@engine/packs';
+import { ASHEN_RIFT, ashenRiftSpecies } from './ashen-rift';
 import { bosses } from './bosses';
 import { modelKits } from './kits';
 import { maps } from './maps';
@@ -26,15 +27,15 @@ export const emberwastePack = definePack({
   },
   content: {
     modelKits,
-    species,
+    species: { ...species, ...ashenRiftSpecies },
     moves,
     traits,
-    bosses,
+    bosses: { ...bosses, ...ASHEN_RIFT.bosses },
     maps,
     badges,
-    trainers: { ...trainers, ...storyTrainers },
-    npcs: { ...serviceNpcs, ...trainerNpcs, ...storyNpcsAll },
-    dialogues: { ...trainerDialogues, ...storyDialogues },
+    trainers: { ...trainers, ...storyTrainers, ...ASHEN_RIFT.trainers },
+    npcs: { ...serviceNpcs, ...trainerNpcs, ...storyNpcsAll, ...ASHEN_RIFT.npcs },
+    dialogues: { ...trainerDialogues, ...storyDialogues, ...ASHEN_RIFT.dialogues },
     quests,
     starts,
   },

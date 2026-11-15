@@ -210,122 +210,181 @@
           "weight": 1
         }
       ]
+    },
+    "tanglewild": {
+      "levels": [45, 52],
+      "spawns": [
+        {
+          "species": "core:galehawk",
+          "weight": 2
+        },
+        {
+          "species": "core:thornwing",
+          "weight": 2
+        },
+        {
+          "species": "core:torrentoad",
+          "weight": 2
+        },
+        {
+          "species": "core:bogmaw",
+          "weight": 1
+        },
+        {
+          "species": "core:voltbat",
+          "weight": 1
+        },
+        {
+          "species": "core:stormoth",
+          "weight": 1
+        }
+      ]
+    },
+    "elderroot": {
+      "levels": [52, 60],
+      "mood": "canopy",
+      "spawns": [
+        {
+          "species": "core:mossback",
+          "weight": 2
+        },
+        {
+          "species": "core:thornwing",
+          "weight": 2
+        },
+        {
+          "species": "core:ironshell",
+          "weight": 1
+        },
+        {
+          "species": "core:rimewisp",
+          "weight": 1
+        },
+        {
+          "species": "core:galehawk",
+          "weight": 1
+        },
+        {
+          "species": "core:elderhorn",
+          "weight": 1
+        }
+      ]
     }
   },
   "anchors": {
     "spawn": {
       "x": 100,
-      "y": 119,
+      "y": 199,
       "kind": "spawn",
       "facing": "down"
     },
     "center": {
       "x": 94,
-      "y": 115,
+      "y": 195,
       "kind": "center",
       "facing": "down"
     },
     "shop": {
       "x": 103,
-      "y": 115,
+      "y": 195,
       "kind": "shop",
       "facing": "down"
     },
     "elder": {
       "x": 88,
-      "y": 109,
+      "y": 189,
       "kind": "npc",
       "facing": "right"
     },
     "town-fernhollow": {
       "x": 104,
-      "y": 62,
+      "y": 142,
       "kind": "town"
     },
     "center-fernhollow": {
       "x": 101,
-      "y": 61,
+      "y": 141,
       "kind": "center",
       "facing": "down"
     },
     "shop-fernhollow": {
       "x": 110,
-      "y": 61,
+      "y": 141,
       "kind": "shop",
       "facing": "down"
     },
     "trial": {
       "x": 97,
-      "y": 70,
+      "y": 150,
       "kind": "npc",
       "facing": "down"
     },
     "center-galecrest": {
       "x": 154,
-      "y": 109,
+      "y": 189,
       "kind": "center",
       "facing": "down"
     },
     "ranger": {
       "x": 167,
-      "y": 108,
+      "y": 188,
       "kind": "npc",
       "facing": "left"
     },
     "ferryman": {
       "x": 90,
-      "y": 197,
+      "y": 277,
       "kind": "npc",
       "facing": "left"
     },
     "legendary": {
       "x": 100,
-      "y": 13,
+      "y": 93,
       "kind": "legendary",
       "facing": "down"
     },
     "titan-hollow-oak": {
       "x": 48,
-      "y": 44,
+      "y": 124,
       "kind": "titan",
       "facing": "down"
     },
     "titan-sunken-hollow": {
       "x": 44,
-      "y": 158,
+      "y": 238,
       "kind": "titan",
       "facing": "down"
     },
     "boss-crown-rock": {
       "x": 168,
-      "y": 42,
+      "y": 122,
       "kind": "boss",
       "facing": "down"
     },
     "heartwood-shrine": {
       "x": 100,
-      "y": 13,
+      "y": 93,
       "kind": "shrine",
       "mood": "shrine",
       "radius": 8
     },
     "stone-circle": {
       "x": 132,
-      "y": 28,
+      "y": 108,
       "kind": "landmark",
       "mood": "shrine",
       "radius": 6
     },
     "hollow-oak": {
       "x": 48,
-      "y": 44,
+      "y": 124,
       "kind": "lair",
       "mood": "canopy",
       "radius": 7
     },
     "sunken-hollow": {
       "x": 44,
-      "y": 158,
+      "y": 238,
       "kind": "lair",
       "mood": "mist",
       "radius": 7
@@ -337,7 +396,7 @@
       "note": "Willowmere: cleared town ground",
       "rect": {
         "x": 86,
-        "y": 104,
+        "y": 184,
         "w": 28,
         "h": 28
       }
@@ -347,7 +406,7 @@
       "note": "No wild Zorlings in town",
       "rect": {
         "x": 86,
-        "y": 104,
+        "y": 184,
         "w": 28,
         "h": 28
       },
@@ -358,7 +417,7 @@
       "set": false,
       "rect": {
         "x": 86,
-        "y": 104,
+        "y": 184,
         "w": 28,
         "h": 28
       }
@@ -369,7 +428,7 @@
       "set": false,
       "rect": {
         "x": 86,
-        "y": 104,
+        "y": 184,
         "w": 28,
         "h": 28
       },
@@ -381,7 +440,7 @@
       "set": true,
       "rect": {
         "x": 86,
-        "y": 116,
+        "y": 196,
         "w": 28,
         "h": 2
       },
@@ -393,7 +452,7 @@
       "set": true,
       "rect": {
         "x": 86,
-        "y": 114,
+        "y": 194,
         "w": 3,
         "h": 4
       },
@@ -405,7 +464,7 @@
       "set": true,
       "rect": {
         "x": 97,
-        "y": 104,
+        "y": 184,
         "w": 3,
         "h": 2
       },
@@ -417,7 +476,7 @@
       "set": true,
       "rect": {
         "x": 98,
-        "y": 104,
+        "y": 184,
         "w": 2,
         "h": 28
       },
@@ -429,7 +488,7 @@
       "set": true,
       "rect": {
         "x": 98,
-        "y": 130,
+        "y": 210,
         "w": 3,
         "h": 2
       },
@@ -441,7 +500,7 @@
       "set": true,
       "rect": {
         "x": 95,
-        "y": 114,
+        "y": 194,
         "w": 9,
         "h": 7
       },
@@ -453,7 +512,7 @@
       "set": true,
       "rect": {
         "x": 90,
-        "y": 109,
+        "y": 189,
         "w": 8,
         "h": 1
       },
@@ -465,7 +524,7 @@
       "set": true,
       "rect": {
         "x": 100,
-        "y": 109,
+        "y": 189,
         "w": 6,
         "h": 1
       },
@@ -477,7 +536,7 @@
       "set": true,
       "rect": {
         "x": 90,
-        "y": 125,
+        "y": 205,
         "w": 8,
         "h": 1
       },
@@ -489,7 +548,7 @@
       "set": true,
       "rect": {
         "x": 100,
-        "y": 125,
+        "y": 205,
         "w": 6,
         "h": 1
       },
@@ -500,7 +559,7 @@
       "note": "Willowmere Zorling center",
       "rect": {
         "x": 89,
-        "y": 112,
+        "y": 192,
         "w": 5,
         "h": 4
       }
@@ -508,14 +567,14 @@
     {
       "op": "prop",
       "kind": "center",
-      "at": [91, 115]
+      "at": [91, 195]
     },
     {
       "op": "clearProps",
       "note": "Willowmere shop",
       "rect": {
         "x": 104,
-        "y": 112,
+        "y": 192,
         "w": 4,
         "h": 4
       }
@@ -523,14 +582,14 @@
     {
       "op": "prop",
       "kind": "shop",
-      "at": [104, 115]
+      "at": [104, 195]
     },
     {
       "op": "clearProps",
       "note": "Elder's house (mustard roof)",
       "rect": {
         "x": 89,
-        "y": 105,
+        "y": 185,
         "w": 4,
         "h": 4
       }
@@ -538,7 +597,7 @@
     {
       "op": "prop",
       "kind": "house",
-      "at": [90, 108],
+      "at": [90, 188],
       "variant": 1
     },
     {
@@ -546,7 +605,7 @@
       "note": "Teal house, door on the right",
       "rect": {
         "x": 103,
-        "y": 105,
+        "y": 185,
         "w": 4,
         "h": 4
       }
@@ -554,7 +613,7 @@
     {
       "op": "prop",
       "kind": "house",
-      "at": [105, 108],
+      "at": [105, 188],
       "variant": 4
     },
     {
@@ -562,7 +621,7 @@
       "note": "Red house",
       "rect": {
         "x": 89,
-        "y": 121,
+        "y": 201,
         "w": 4,
         "h": 4
       }
@@ -570,7 +629,7 @@
     {
       "op": "prop",
       "kind": "house",
-      "at": [90, 124],
+      "at": [90, 204],
       "variant": 2
     },
     {
@@ -578,7 +637,7 @@
       "note": "Plum house, door on the right",
       "rect": {
         "x": 103,
-        "y": 121,
+        "y": 201,
         "w": 4,
         "h": 4
       }
@@ -586,203 +645,203 @@
     {
       "op": "prop",
       "kind": "house",
-      "at": [105, 124],
+      "at": [105, 204],
       "variant": 7
     },
     {
       "op": "prop",
       "kind": "well",
-      "at": [96, 121],
+      "at": [96, 201],
       "note": "Square well"
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [94, 113]
+      "at": [94, 193]
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [104, 113]
+      "at": [104, 193]
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [103, 121]
+      "at": [103, 201]
     },
     {
       "op": "prop",
       "kind": "tree",
-      "at": [110, 107],
+      "at": [110, 187],
       "variant": 2,
       "note": "Willowmere garden trees"
     },
     {
       "op": "prop",
       "kind": "tree",
-      "at": [111, 110],
+      "at": [111, 190],
       "variant": 5,
       "note": "Willowmere garden trees"
     },
     {
       "op": "prop",
       "kind": "tree",
-      "at": [111, 122],
+      "at": [111, 202],
       "variant": 1,
       "note": "Willowmere garden trees"
     },
     {
       "op": "prop",
       "kind": "tree",
-      "at": [110, 128],
+      "at": [110, 208],
       "variant": 6,
       "note": "Willowmere garden trees"
     },
     {
       "op": "prop",
       "kind": "tree",
-      "at": [92, 129],
+      "at": [92, 209],
       "variant": 3,
       "note": "Willowmere garden trees"
     },
     {
       "op": "prop",
       "kind": "tree",
-      "at": [106, 129],
+      "at": [106, 209],
       "variant": 4,
       "note": "Willowmere garden trees"
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [96, 103],
+      "at": [96, 183],
       "note": "Road sign at the town edge"
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [112, 115],
+      "at": [112, 195],
       "note": "Road sign at the town edge"
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [87, 118],
+      "at": [87, 198],
       "note": "Road sign at the town edge"
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [101, 130],
+      "at": [101, 210],
       "note": "Road sign at the town edge"
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [88, 126]
+      "at": [88, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [89, 126]
+      "at": [89, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [90, 126]
+      "at": [90, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [91, 126]
+      "at": [91, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [92, 126]
+      "at": [92, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [93, 126]
+      "at": [93, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [103, 126]
+      "at": [103, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [104, 126]
+      "at": [104, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [105, 126]
+      "at": [105, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [106, 126]
+      "at": [106, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [107, 126]
+      "at": [107, 206]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [108, 126]
+      "at": [108, 206]
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [93, 110],
+      "at": [93, 190],
       "variant": 1
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [107, 110],
+      "at": [107, 190],
       "variant": 3
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [94, 126],
+      "at": [94, 206],
       "variant": 5
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [102, 126],
+      "at": [102, 206],
       "variant": 2
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [89, 119],
+      "at": [89, 199],
       "variant": 4
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [110, 119],
+      "at": [110, 199],
       "variant": 6
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [109, 113]
+      "at": [109, 193]
     },
     {
       "op": "clearProps",
       "note": "Fernhollow: cleared town ground",
       "rect": {
         "x": 93,
-        "y": 52,
+        "y": 132,
         "w": 23,
         "h": 21
       }
@@ -792,7 +851,7 @@
       "note": "No wild Zorlings in town",
       "rect": {
         "x": 93,
-        "y": 52,
+        "y": 132,
         "w": 23,
         "h": 21
       },
@@ -803,7 +862,7 @@
       "set": false,
       "rect": {
         "x": 93,
-        "y": 52,
+        "y": 132,
         "w": 23,
         "h": 21
       }
@@ -814,7 +873,7 @@
       "set": false,
       "rect": {
         "x": 93,
-        "y": 52,
+        "y": 132,
         "w": 23,
         "h": 21
       },
@@ -826,7 +885,7 @@
       "set": true,
       "rect": {
         "x": 93,
-        "y": 62,
+        "y": 142,
         "w": 23,
         "h": 2
       },
@@ -838,7 +897,7 @@
       "set": true,
       "rect": {
         "x": 93,
-        "y": 58,
+        "y": 138,
         "w": 3,
         "h": 6
       },
@@ -850,7 +909,7 @@
       "set": true,
       "rect": {
         "x": 112,
-        "y": 62,
+        "y": 142,
         "w": 4,
         "h": 5
       },
@@ -862,7 +921,7 @@
       "set": true,
       "rect": {
         "x": 101,
-        "y": 52,
+        "y": 132,
         "w": 3,
         "h": 3
       },
@@ -874,7 +933,7 @@
       "set": true,
       "rect": {
         "x": 102,
-        "y": 52,
+        "y": 132,
         "w": 2,
         "h": 21
       },
@@ -886,7 +945,7 @@
       "set": true,
       "rect": {
         "x": 100,
-        "y": 68,
+        "y": 148,
         "w": 4,
         "h": 5
       },
@@ -898,7 +957,7 @@
       "set": true,
       "rect": {
         "x": 96,
-        "y": 56,
+        "y": 136,
         "w": 6,
         "h": 1
       },
@@ -910,7 +969,7 @@
       "set": true,
       "rect": {
         "x": 96,
-        "y": 70,
+        "y": 150,
         "w": 6,
         "h": 1
       },
@@ -922,7 +981,7 @@
       "set": true,
       "rect": {
         "x": 104,
-        "y": 70,
+        "y": 150,
         "w": 5,
         "h": 1
       },
@@ -933,7 +992,7 @@
       "note": "Fernhollow Zorling center",
       "rect": {
         "x": 96,
-        "y": 58,
+        "y": 138,
         "w": 5,
         "h": 4
       }
@@ -941,14 +1000,14 @@
     {
       "op": "prop",
       "kind": "center",
-      "at": [98, 61]
+      "at": [98, 141]
     },
     {
       "op": "clearProps",
       "note": "Fernhollow shop",
       "rect": {
         "x": 106,
-        "y": 58,
+        "y": 138,
         "w": 4,
         "h": 4
       }
@@ -956,14 +1015,14 @@
     {
       "op": "prop",
       "kind": "shop",
-      "at": [106, 61]
+      "at": [106, 141]
     },
     {
       "op": "clearProps",
       "note": "Mustard house",
       "rect": {
         "x": 95,
-        "y": 52,
+        "y": 132,
         "w": 4,
         "h": 4
       }
@@ -971,7 +1030,7 @@
     {
       "op": "prop",
       "kind": "house",
-      "at": [96, 55],
+      "at": [96, 135],
       "variant": 1
     },
     {
@@ -979,7 +1038,7 @@
       "note": "Open the nook behind the mustard house (was a closed pocket)",
       "rect": {
         "x": 93,
-        "y": 49,
+        "y": 129,
         "w": 4,
         "h": 3
       }
@@ -989,7 +1048,7 @@
       "note": "Grove Trial hall (plum roof)",
       "rect": {
         "x": 95,
-        "y": 66,
+        "y": 146,
         "w": 4,
         "h": 4
       }
@@ -997,7 +1056,7 @@
     {
       "op": "prop",
       "kind": "house",
-      "at": [96, 69],
+      "at": [96, 149],
       "variant": 3
     },
     {
@@ -1005,7 +1064,7 @@
       "note": "Teal house, door on the right",
       "rect": {
         "x": 106,
-        "y": 66,
+        "y": 146,
         "w": 4,
         "h": 4
       }
@@ -1013,72 +1072,72 @@
     {
       "op": "prop",
       "kind": "house",
-      "at": [108, 69],
+      "at": [108, 149],
       "variant": 4
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [101, 57]
+      "at": [101, 137]
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [104, 57]
+      "at": [104, 137]
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [101, 65]
+      "at": [101, 145]
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [111, 60]
+      "at": [111, 140]
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [100, 52]
+      "at": [100, 132]
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [94, 57]
+      "at": [94, 137]
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [104, 72]
+      "at": [104, 152]
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [99, 70],
+      "at": [99, 150],
       "note": "Trial stone by the hall door"
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [110, 65],
+      "at": [110, 145],
       "variant": 1
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [94, 66],
+      "at": [94, 146],
       "variant": 3
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [105, 55],
+      "at": [105, 135],
       "variant": 2
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [113, 68],
+      "at": [113, 148],
       "variant": 5
     },
     {
@@ -1086,7 +1145,7 @@
       "note": "Galecrest: cleared outpost ground",
       "rect": {
         "x": 152,
-        "y": 103,
+        "y": 183,
         "w": 17,
         "h": 15
       }
@@ -1096,7 +1155,7 @@
       "note": "No wild Zorlings in town",
       "rect": {
         "x": 152,
-        "y": 103,
+        "y": 183,
         "w": 17,
         "h": 15
       },
@@ -1107,7 +1166,7 @@
       "set": false,
       "rect": {
         "x": 152,
-        "y": 103,
+        "y": 183,
         "w": 17,
         "h": 15
       }
@@ -1118,7 +1177,7 @@
       "set": false,
       "rect": {
         "x": 152,
-        "y": 103,
+        "y": 183,
         "w": 17,
         "h": 15
       }
@@ -1129,7 +1188,7 @@
       "set": true,
       "rect": {
         "x": 152,
-        "y": 110,
+        "y": 190,
         "w": 17,
         "h": 2
       },
@@ -1141,7 +1200,7 @@
       "set": true,
       "rect": {
         "x": 152,
-        "y": 111,
+        "y": 191,
         "w": 3,
         "h": 3
       },
@@ -1153,7 +1212,7 @@
       "set": true,
       "rect": {
         "x": 161,
-        "y": 103,
+        "y": 183,
         "w": 3,
         "h": 9
       },
@@ -1165,7 +1224,7 @@
       "set": true,
       "rect": {
         "x": 165,
-        "y": 107,
+        "y": 187,
         "w": 4,
         "h": 5
       },
@@ -1176,7 +1235,7 @@
       "note": "Galecrest Zorling center",
       "rect": {
         "x": 155,
-        "y": 106,
+        "y": 186,
         "w": 5,
         "h": 4
       }
@@ -1184,14 +1243,14 @@
     {
       "op": "prop",
       "kind": "center",
-      "at": [157, 109]
+      "at": [157, 189]
     },
     {
       "op": "clearProps",
       "note": "Ranger hut (mustard roof), door on the right",
       "rect": {
         "x": 164,
-        "y": 103,
+        "y": 183,
         "w": 4,
         "h": 4
       }
@@ -1199,142 +1258,142 @@
     {
       "op": "prop",
       "kind": "house",
-      "at": [166, 106],
+      "at": [166, 186],
       "variant": 5
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [160, 108]
+      "at": [160, 188]
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [160, 113]
+      "at": [160, 193]
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [153, 109]
+      "at": [153, 189]
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [164, 103]
+      "at": [164, 183]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [155, 113]
+      "at": [155, 193]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [156, 113]
+      "at": [156, 193]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [157, 113]
+      "at": [157, 193]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [158, 113]
+      "at": [158, 193]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [159, 113]
+      "at": [159, 193]
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [135, 28],
+      "at": [135, 108],
       "variant": 3,
       "note": "Stone Circle"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [134, 31],
+      "at": [134, 111],
       "variant": 5,
       "note": "Stone Circle"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [130, 31],
+      "at": [130, 111],
       "variant": 1,
       "note": "Stone Circle"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [129, 28],
+      "at": [129, 108],
       "variant": 5,
       "note": "Stone Circle"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [130, 25],
+      "at": [130, 105],
       "variant": 3,
       "note": "Stone Circle"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [134, 25],
+      "at": [134, 105],
       "variant": 7,
       "note": "Stone Circle"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [104, 13],
+      "at": [104, 93],
       "variant": 5,
       "note": "Heartwood Shrine stones"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [103, 10],
+      "at": [103, 90],
       "variant": 7,
       "note": "Heartwood Shrine stones"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [100, 9],
+      "at": [100, 89],
       "variant": 5,
       "note": "Heartwood Shrine stones"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [97, 10],
+      "at": [97, 90],
       "variant": 5,
       "note": "Heartwood Shrine stones"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [96, 13],
+      "at": [96, 93],
       "variant": 5,
       "note": "Heartwood Shrine stones"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [97, 16],
+      "at": [97, 96],
       "variant": 3,
       "note": "Heartwood Shrine stones"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [103, 16],
+      "at": [103, 96],
       "variant": 5,
       "note": "Heartwood Shrine stones"
     },
@@ -1344,7 +1403,7 @@
       "set": true,
       "rect": {
         "x": 99,
-        "y": 14,
+        "y": 94,
         "w": 2,
         "h": 5
       },
@@ -1353,167 +1412,167 @@
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [98, 12],
+      "at": [98, 92],
       "variant": 3
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [102, 14],
+      "at": [102, 94],
       "variant": 6
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [18, 184],
+      "at": [18, 264],
       "variant": 2,
       "note": "Drowned Ruins"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [22, 185],
+      "at": [22, 265],
       "variant": 3,
       "note": "Drowned Ruins"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [19, 188],
+      "at": [19, 268],
       "variant": 7,
       "note": "Drowned Ruins"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [23, 188],
+      "at": [23, 268],
       "variant": 3,
       "note": "Drowned Ruins"
     },
     {
       "op": "prop",
       "kind": "menhir",
-      "at": [21, 183],
+      "at": [21, 263],
       "note": "Drowned Ruins"
     },
     {
       "op": "prop",
       "kind": "rock",
-      "at": [163, 40],
+      "at": [163, 120],
       "variant": 3,
       "note": "Crown Rock boulders"
     },
     {
       "op": "prop",
       "kind": "rock",
-      "at": [164, 45],
+      "at": [164, 125],
       "variant": 1,
       "note": "Crown Rock boulders"
     },
     {
       "op": "prop",
       "kind": "rock",
-      "at": [172, 45],
+      "at": [172, 125],
       "variant": 1,
       "note": "Crown Rock boulders"
     },
     {
       "op": "prop",
       "kind": "rock",
-      "at": [173, 40],
+      "at": [173, 120],
       "variant": 5,
       "note": "Crown Rock boulders"
     },
     {
       "op": "prop",
       "kind": "rock",
-      "at": [168, 37],
+      "at": [168, 117],
       "variant": 5,
       "note": "Crown Rock boulders"
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [182, 147]
+      "at": [182, 227]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [183, 147]
+      "at": [183, 227]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [184, 147]
+      "at": [184, 227]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [185, 147]
+      "at": [185, 227]
     },
     {
       "op": "prop",
       "kind": "fence",
-      "at": [186, 147]
+      "at": [186, 227]
     },
     {
       "op": "prop",
       "kind": "sign",
-      "at": [183, 151],
+      "at": [183, 231],
       "note": "Lookout sign"
     },
     {
       "op": "prop",
       "kind": "rock",
-      "at": [46, 42],
+      "at": [46, 122],
       "variant": 2
     },
     {
       "op": "prop",
       "kind": "rock",
-      "at": [51, 46],
+      "at": [51, 126],
       "variant": 5
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [49, 45],
+      "at": [49, 125],
       "variant": 1
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [42, 157],
+      "at": [42, 237],
       "variant": 2
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [46, 160],
+      "at": [46, 240],
       "variant": 4
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [155, 179],
+      "at": [155, 259],
       "variant": 1
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [157, 181],
+      "at": [157, 261],
       "variant": 5
     },
     {
       "op": "prop",
       "kind": "flowers",
-      "at": [154, 182],
+      "at": [154, 262],
       "variant": 3
     },
     {
       "op": "prop",
       "kind": "bush",
-      "at": [158, 178],
+      "at": [158, 258],
       "variant": 2
     },
     {
@@ -1521,7 +1580,7 @@
       "note": "Ferry dock clearing",
       "rect": {
         "x": 85,
-        "y": 194,
+        "y": 274,
         "w": 7,
         "h": 6
       }
@@ -1531,7 +1590,7 @@
       "set": false,
       "rect": {
         "x": 85,
-        "y": 194,
+        "y": 274,
         "w": 7,
         "h": 6
       }
@@ -1539,18 +1598,130 @@
     {
       "op": "prop",
       "kind": "sign",
-      "at": [86, 196],
+      "at": [86, 276],
       "note": "Ferry dock sign"
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [90, 196]
+      "at": [90, 276]
     },
     {
       "op": "prop",
       "kind": "lamp",
-      "at": [86, 198]
+      "at": [86, 278]
+    },
+    {
+      "op": "clearProps",
+      "note": "C36: road from the Heartwood Shrine north to Thornveil, past the shrine stone",
+      "rect": {
+        "x": 99,
+        "y": 80,
+        "w": 3,
+        "h": 9
+      }
+    },
+    {
+      "op": "clearProps",
+      "note": "C36: Thornveil road beside the shrine stone",
+      "rect": {
+        "x": 101,
+        "y": 88,
+        "w": 2,
+        "h": 5
+      }
+    },
+    {
+      "op": "terrain",
+      "note": "C36: Thornveil road",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 99,
+        "y": 80,
+        "w": 2,
+        "h": 8
+      }
+    },
+    {
+      "op": "terrain",
+      "note": "C36: Thornveil road",
+      "layer": "path",
+      "set": true,
+      "rect": {
+        "x": 101,
+        "y": 86,
+        "w": 1,
+        "h": 7
+      }
+    },
+    {
+      "op": "tall",
+      "note": "C36: Thornveil road",
+      "set": false,
+      "rect": {
+        "x": 99,
+        "y": 80,
+        "w": 4,
+        "h": 13
+      }
+    },
+    {
+      "op": "prop",
+      "note": "C36: Thornveil gate (the ranger stands at 100,81)",
+      "kind": "tree",
+      "at": [98, 81]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Thornveil gate",
+      "kind": "tree",
+      "at": [99, 81]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Thornveil gate",
+      "kind": "tree",
+      "at": [101, 81]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Thornveil gate",
+      "kind": "tree",
+      "at": [102, 81]
+    },
+    {
+      "op": "clearProps",
+      "note": "C36: Thornveil Camp, a wider clearing",
+      "rect": {
+        "x": 94,
+        "y": 61,
+        "w": 13,
+        "h": 11
+      }
+    },
+    {
+      "op": "tall",
+      "note": "C36: Thornveil Camp",
+      "set": false,
+      "rect": {
+        "x": 95,
+        "y": 62,
+        "w": 11,
+        "h": 9
+      }
+    },
+    {
+      "op": "prop",
+      "note": "C36: Thornveil Camp lamp",
+      "kind": "lamp",
+      "at": [96, 63]
+    },
+    {
+      "op": "prop",
+      "note": "C36: Thornveil Camp lamp",
+      "kind": "lamp",
+      "at": [104, 69]
     }
   ]
 }
