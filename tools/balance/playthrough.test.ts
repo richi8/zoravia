@@ -52,6 +52,27 @@ describe('Verdale playthrough', () => {
     expect(r.party.badges).toEqual(['core:grove-badge']);
   });
 
+  it('no starter is quietly worse up to the late fights (C41)', () => {
+    // Vex and Verdion are left out: a Sprigling team wins those by following their hints.
+    const late = new Set(['core:stormcatcher-vex', 'core:verdion']);
+    const seeds = [1, 2, 3, 4, 5, 6];
+    const mean = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
+    const plans = VERDALE_TEAMS.map((team) => {
+      const runs = seeds.map((seed) => run(team, seed));
+      const early = runs.map((r) => r.goals.filter((g) => !late.has(g.id)));
+      return {
+        battles: mean(early.map((gs) => gs.reduce((s, g) => s + g.wildBattles, 0))),
+        losses: mean(early.map((gs) => gs.reduce((s, g) => s + g.wildLosses, 0))),
+      };
+    });
+    const spread = (f: (p: (typeof plans)[number]) => number): number =>
+      Math.max(...plans.map(f)) - Math.min(...plans.map(f));
+    // Tighter than the plan's "about 15 battles and 5 losses" over 20 seeds: over these 6
+    // seeds the spread was 4 battles and 2.7 losses after C41, 8 and 4.8 before it.
+    expect(spread((p) => p.battles)).toBeLessThanOrEqual(10);
+    expect(spread((p) => p.losses)).toBeLessThanOrEqual(3.5);
+  });
+
   it('is deterministic for a seed', () => {
     const team = VERDALE_TEAMS[0];
     if (!team) throw new Error('No team plan');

@@ -91,11 +91,6 @@
           "species": "core:pipwing",
           "weight": 1,
           "levels": [16, 17]
-        },
-        {
-          "species": "core:galehawk",
-          "weight": 1,
-          "levels": [18, 22]
         }
       ]
     },
@@ -140,11 +135,13 @@
       "spawns": [
         {
           "species": "core:hearthog",
-          "weight": 2
+          "weight": 2,
+          "levels": [17, 21]
         },
         {
           "species": "core:ironshell",
-          "weight": 2
+          "weight": 2,
+          "levels": [17, 21]
         },
         {
           "species": "core:thornwing",

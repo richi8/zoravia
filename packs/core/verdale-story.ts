@@ -151,7 +151,12 @@ export const verdaleStoryTrainers: Record<string, TrainerInput> = {
             ],
           },
           { species: c('pipwing'), level: 11 },
-          { species: c('ironshell'), level: 10 },
+          {
+            species: c('ironshell'),
+            level: 10,
+            // C41: against Sprigling her third is one it can hit, as Ironshell is for Emberkit.
+            instead: [{ if: { flag: STARTER_FLAGS.sprigling }, species: c('puddlit') }],
+          },
         ],
       },
     ],

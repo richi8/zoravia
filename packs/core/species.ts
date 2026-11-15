@@ -22,7 +22,7 @@ export const species = {
     types: ['core:nature'],
     baseStats: { hp: 75, attack: 75, defense: 80, speed: 70 },
     trait: 'core:overgrowth',
-    learnset: learn([1, 'vine-snap'], [1, 'mud-toss'], [7, 'spore-cloud'], [12, 'updraft']),
+    learnset: learn([1, 'vine-snap'], [1, 'mud-toss'], [7, 'spore-cloud'], [12, 'iron-bash']),
     evolution: { into: 'core:fernwick', level: 16 },
   },
   fernwick: {
