@@ -1,7 +1,7 @@
 # C38 · Release prep — Log
 
 - **Date:** 2026-11-15
-- **Status:** done. The first deploy is waiting on a GitHub repository (the repo has no remote yet).
+- **Status:** done. Live at https://richi8.github.io/zoravia/ (first deploy 2026-11-15).
 - **Depends on:** C37
 
 ## Summary
@@ -55,7 +55,7 @@ The game builds as a small, game-only static site (2.9 MB, down from 8.9 MB) wit
 
 ## Deviations from plan / design
 - The plan's C38 entry lists deliverables but no "Done when". The checks below were taken from the deliverables.
-- **Not done in this session:** the first actual deployment. The repository has no GitHub remote and `gh` is not installed, so the workflow is ready but has not run. See "Notes for the next chunk".
+- The first deploy was done after the commit. The user added `origin` (https://github.com/richi8/zoravia.git) and pushed, since this machine had no GitHub credentials. The workflow then deployed the site.
 - **`DESIGN.md` updated:**
   - Settings: reduced-motion defaults.
   - A new "Release" section: Pages, what ships, version, accessibility.
@@ -67,7 +67,6 @@ The game builds as a small, game-only static site (2.9 MB, down from 8.9 MB) wit
 - `tools/README.md`: the debug launcher note.
 
 ## Issues & known limitations
-- The workflow has not run on GitHub yet, so the action versions (`checkout@v4`, `setup-node@v4`, `configure-pages@v5`, `upload-pages-artifact@v3`, `deploy-pages@v4`) and the Linux run of `npm run check` are untested there.
 - Free GitHub accounts can use Pages only with a **public** repository. A private one needs a paid plan. `package.json` is `UNLICENSED`, so making the repo public shows the source without granting a license.
 - Startup still has two long tasks in headless Chrome (288 ms and 245 ms): content loading and the title background bake. A "Loading" message now covers that time.
 - The map window's tier chips were checked by the contrast test only. A new game knows no zones, so the browser screenshot shows only "???" rows.
@@ -94,7 +93,7 @@ The game builds as a small, game-only static site (2.9 MB, down from 8.9 MB) wit
   - Performance pass: ✅ (resize crash fixed, no re-bake on resize, 3× smaller release, 60 fps on title and overworld).
   - Accessibility pass (contrast, remapping, text speed): ✅ (contrast fixes and tests; remapping and text speed exist since C33; reduced motion; canvas label).
   - Production build: ✅.
-  - Deployment: ✅ for the workflow and docs. ⏳ for the first deploy, which needs a GitHub repository.
+  - Deployment: ✅. The first workflow run ([run 43720129318](https://github.com/richi8/zoravia/actions/runs/43720129318)) passed check, build and deploy, on Linux. The live page and its bundle return 200, and headless Chrome shows the title with V1.0.0 and no failed requests.
   - Final trademark check reminder: ✅ (DESIGN "Open", README).
 
 ## Follow-ups
@@ -105,11 +104,7 @@ The game builds as a small, game-only static site (2.9 MB, down from 8.9 MB) wit
 - From C37: re-arm trainer spotting per region, a dither band where sea colors meet, rebuild outer walls that face filler, and draw the filler in the map window.
 
 ## Notes for the next chunk
-- **To deploy:**
-  1. Create a GitHub repository (public on a free plan).
-  2. Run `git remote add origin <url>` and `git push -u origin main`.
-  3. Set **Settings → Pages → Source: GitHub Actions**.
-  4. The push runs `.github/workflows/pages.yml`.
+- **Deploying:** every push to `main` on `origin` (github.com/richi8/zoravia) redeploys https://richi8.github.io/zoravia/ through `.github/workflows/pages.yml`, after `npm run check` passes on GitHub.
 - `npm run build` builds only the game now. Use `ZORAVIA_LAB=1 npm run build` for the lab, and `npm run dev` serves both.
 - Dev-only code: anything behind `import.meta.env.DEV` (the launcher, the demo, the `__zoravia` hook) is dropped from the release. Keep debug tools behind that flag.
 - Bump `version` in `package.json` and `GAME_VERSION` together.
