@@ -72,6 +72,8 @@ export interface WorldLink {
   readonly kind: string;
   readonly a: { readonly map: string; readonly x: number; readonly y: number };
   readonly b: { readonly map: string; readonly x: number; readonly y: number };
+  /** A ferry's sailing route from `a` to `b` (C37 `route` data), in world tiles. */
+  readonly route?: readonly { readonly x: number; readonly y: number }[];
   /** The open sea between the two regions, for a link across a gap (a ferry). */
   readonly sea?: {
     readonly x: number;
@@ -95,10 +97,15 @@ export function worldLinks(content: GameContent, regions: readonly WorldRegion[]
       if (done.has(ids)) continue;
       done.add(ids);
       const sea = gapBetween(r, o);
+      const back = content.maps.get(o.map)?.connections[there.connection]?.route;
+      const route = c.route
+        ? c.route.map(([x, y]) => ({ x: r.x + x, y: r.y + y }))
+        : back?.map(([x, y]) => ({ x: o.x + x, y: o.y + y })).reverse();
       out.push({
         kind: c.kind,
         a: { map: r.map, x: r.x + c.x, y: r.y + c.y },
         b: { map: o.map, x: o.x + there.x, y: o.y + there.y },
+        ...(route ? { route } : {}),
         ...(sea ? { sea } : {}),
       });
     }

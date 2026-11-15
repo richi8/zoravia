@@ -63,8 +63,9 @@ export const serviceNpcs: Record<string, NpcInput> = {
     anchor: 'ferryman',
     look: { outfit: 'sky', hair: 'grey', skin: 'warm' },
     lines: [
-      'The ferry to Verdale leaves from the end of the pier. Walk on board whenever you like.',
+      'The boat to Verdale waits at the end of the pier. The crossing is free.',
       'Gus runs the Willowmere side. Tell him Ola says his knots are still crooked.',
     ],
+    ferry: 'ferry',
   },
 };

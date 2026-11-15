@@ -28,6 +28,13 @@
  * - Trainers who spot you (C36d): a route trainer not beaten yet that sees the player standing
  *   in its line shows "!", walks up and talks (its dialogue starts the battle). The player
  *   waits meanwhile. Each trainer spots once per visit, and walks back to its spot after.
+ * - The seamless world (C37): the scene plays the whole composed world (`worldFor`). The
+ *   region under the player sets the biome, music and ambience (crossfading at a border), the
+ *   battle backdrop, the HUD's place name and where exploration is written; crossing into a
+ *   region shows its arrival toast. Saves keep the region map and local tile.
+ * - Ferries (C37): a rowboat waits at each pier. Bumping into it, facing it with `E` or
+ *   talking to a ferryman asks "Sail to <region>?"; on Yes the boat rows the route to the far
+ *   pier (input locked, camera on the boat, sea ambience) and the player steps off there.
  */
 
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
@@ -44,6 +51,7 @@ import { battleTransition } from '@game/battle/scene/transition';
 import {
   BlipCounter,
   fieldAudio,
+  seaAudio,
   playBlip,
   playJingle,
   playSfx,
@@ -88,6 +96,22 @@ import { BIOMES, TILE } from '@game/world/biomes';
 import { nextPhaseStart, type DayPhase } from '@game/world/lighting';
 import { connectionAt, linkedArrival, loadRegion, type WorldMap } from '@game/world/map';
 import {
+  worldFor,
+  type Ferry,
+  type FerryEnd,
+  type PlacedRegion,
+  type World,
+} from '@game/world/world-compose';
+import {
+  along,
+  boatFrame,
+  drawWake,
+  heading,
+  rideSeconds,
+  voyage,
+  type Voyage,
+} from '@game/world/overworld/boat';
+import {
   exploredData,
   exploredMap,
   visit,
@@ -108,6 +132,7 @@ import {
   type CharacterSheet,
 } from '@game/world/overworld/character-sprite';
 import {
+  DIR_STEP,
   dirBetween,
   type Dir,
   type GridMover,
@@ -205,8 +230,15 @@ export class OverworldScene implements Scene<Container> {
   readonly id = 'overworld';
   readonly view = new Container({ label: 'world:overworld' });
   readonly ui = new Container({ label: 'ui:overworld' });
+  /** The whole composed world (C37), and its map. */
+  readonly world: World;
   readonly map: WorldMap;
   readonly sim: OverworldSim;
+  /** The region the player is in (or was last in). */
+  private region: PlacedRegion;
+  /** A ferry ride under way (C37). */
+  private ride:
+    { ferry: Ferry; to: FerryEnd; voyage: Voyage; d: number; speed: number; t: number } | undefined;
   private readonly stream: TerrainStream;
   private readonly atmosphere: Atmosphere;
   private readonly fx: WorldFx;
@@ -282,34 +314,34 @@ export class OverworldScene implements Scene<Container> {
   private autosaveTimer = AUTOSAVE_EVERY;
   private savedNote = 0;
   private saveFailed = false;
-  /** This map's revealed cells and discovered places (C36b). */
-  private readonly explored: ExploredMap;
+  /** Each region's revealed cells and discovered places so far (C36b), by map id. */
+  private readonly explored = new Map<string, ExploredMap>();
   /** The tile last revealed around. */
   private visited = '';
 
   constructor(private readonly options: OverworldOptions) {
-    this.map = loadRegion(options.content, options.mapId);
+    this.world = worldFor(options.content, options.mapId);
+    this.map = this.world.map;
+    const home = this.world.region(options.mapId) ?? (this.world.regions[0] as PlacedRegion);
+    this.region = home;
     this.current = options.party;
     this.playtime = options.playtime ?? 0;
-    const start = this.onMap(options.start, true);
+    const start = this.onMap(options.start, true) ?? spawnOf(home);
     this.sim = new OverworldSim({
       content: options.content,
       mapId: options.mapId,
       map: this.map,
-      seed: options.seed ?? this.map.seed,
-      ...(start ? { start, facing: start.facing } : {}),
+      seed: options.seed ?? home.map.seed,
+      start,
+      facing: start.facing,
+      npcs: this.world.npcs(options.content),
     });
-    this.explored = exploredMap(this.map, options.explored?.[options.mapId]);
-    this.stream = new TerrainStream(this.map, BIOMES[this.map.biome]);
-    this.atmosphere = new Atmosphere(this.map, BIOMES[this.map.biome], this.map.seed);
+    this.region = this.world.regionAt(this.player.tx, this.player.ty) ?? home;
+    this.stream = new TerrainStream(this.map, (x, y) => this.world.lookAt(x, y));
+    this.atmosphere = new Atmosphere(this.map, BIOMES[home.biome], home.map.seed);
     this.atmosphere.update(0, this.player.x, this.player.y, true);
-    this.fx = new WorldFx(this.map.seed + 7);
+    this.fx = new WorldFx(home.map.seed + 7);
     this.sheet = buildCharacterSheet(PLAYER_OUTFIT);
-    for (const npc of this.sim.allNpcs) {
-      if (!npc.npc.zorling && !npc.npc.object) {
-        this.npcSheets.set(npc, buildCharacterSheet(outfitOf(npc.npc.look)));
-      }
-    }
     this.syncPresence();
     const ctx = this.canvas.getContext('2d');
     if (!ctx) throw new Error('2D canvas not available');
@@ -334,7 +366,7 @@ export class OverworldScene implements Scene<Container> {
     this.respawn = this.onMap(options.respawn, false) ?? this.firstRespawn();
     this.menus = new OverworldMenus(this.menuHost());
     if (options.arrived)
-      this.toasts.push(arrivalToast(this.map.name, !options.explored?.[options.mapId]));
+      this.toasts.push(arrivalToast(this.region.name, !options.explored?.[this.region.id]));
     this.explore();
     this.saved = { party: this.current, key: this.placeKey() };
   }
@@ -345,32 +377,63 @@ export class OverworldScene implements Scene<Container> {
     const key = `${tx},${ty}`;
     if (key === this.visited) return;
     this.visited = key;
-    for (const p of visit(this.map, this.explored, tx, ty)) this.toasts.push(discoveryToast(p));
+    const here = this.world.toLocal(tx, ty);
+    if (!here) return;
+    const e = this.exploredOf(here.region.id);
+    for (const p of visit(here.region.map, e, here.x, here.y)) this.toasts.push(discoveryToast(p));
   }
 
-  /** Every map's exploration as of now (this map's live one included). */
+  /** A region's exploration (C36b), loaded from the save the first time it is needed. */
+  private exploredOf(id: string): ExploredMap {
+    let e = this.explored.get(id);
+    if (!e) {
+      const r = this.world.region(id);
+      const m = r ? r.map : loadRegion(this.options.content, id);
+      e = exploredMap(m, this.options.explored?.[id]);
+      this.explored.set(id, e);
+    }
+    return e;
+  }
+
+  /** Every map's exploration as of now (the regions walked this visit included). */
   exploration(): Record<string, ExploredData> {
-    return {
-      ...this.options.explored,
-      [this.options.mapId]: exploredData(this.map, this.explored),
-    };
+    const out: Record<string, ExploredData> = { ...this.options.explored };
+    for (const [id, e] of this.explored) {
+      const r = this.world.region(id);
+      if (r) out[id] = exploredData(r.map, e);
+    }
+    return out;
   }
 
-  /** A saved place if it is on this map (and, for `walkable`, inside and not blocked). */
-  private onMap(p: Place | undefined, walkable: boolean): Place | undefined {
-    if (!p || p.map !== this.options.mapId) return undefined;
-    if (walkable && (!this.map.inside(p.x, p.y) || this.map.blocked(p.x, p.y))) return undefined;
-    return p;
+  /**
+   * A saved place as a world tile, if its map is in this world (and, for `walkable`, the tile
+   * is inside and not blocked).
+   */
+  private onMap(
+    p: Place | undefined,
+    walkable: boolean,
+  ): { x: number; y: number; facing: Dir } | undefined {
+    const t = p && this.world.toWorld(p.map, p.x, p.y);
+    if (!p || !t) return undefined;
+    if (walkable && (!this.map.inside(t.x, t.y) || this.map.blocked(t.x, t.y))) return undefined;
+    return { x: t.x, y: t.y, facing: p.facing };
+  }
+
+  /** A world tile as a saved place: its region's map and local tile. */
+  private placeOf(t: Tile, facing: Dir): Place {
+    const here = this.world.toLocal(t.x, t.y);
+    const r = here?.region ?? this.region;
+    return { map: r.id, x: t.x - r.x, y: t.y - r.y, facing };
   }
 
   /** Everything a save keeps, as of now. */
   snapshot(): GameState {
     const at = this.player.destination;
-    const map = this.options.mapId;
+    const r = this.respawn;
     return {
       party: this.party,
-      place: { map, x: at.x, y: at.y, facing: this.player.facing },
-      respawn: { map, ...this.respawn },
+      place: this.placeOf(at, this.player.facing),
+      respawn: this.placeOf(r, r.facing),
       playtime: this.playtime,
       explored: this.exploration(),
     };
@@ -393,8 +456,9 @@ export class OverworldScene implements Scene<Container> {
    */
   async saveNow(mode: 'auto' | 'manual' = 'auto'): Promise<string | undefined> {
     const { save } = this.options;
-    // After travel the next map's scene saves; this one's place is stale.
-    if (!save || this.leaving || (mode === 'auto' && !this.dirty)) return undefined;
+    // After travel the next map's scene saves; this one's place is stale. Mid-sea, the player
+    // is on the water: the save waits for the far pier.
+    if (!save || this.leaving || this.ride || (mode === 'auto' && !this.dirty)) return undefined;
     const state = this.snapshot();
     const key = this.placeKey();
     this.autosaveTimer = AUTOSAVE_EVERY;
@@ -439,29 +503,35 @@ export class OverworldScene implements Scene<Container> {
       content: this.options.content,
       theme: this.options.theme,
       stack: this.stack,
-      map: this.map,
+      get map() {
+        return scene.region.map;
+      },
       get party() {
         return scene.party;
       },
       set party(p: Party) {
         scene.party = p;
       },
-      mapId: this.options.mapId,
-      explored: (id: string) =>
-        id === this.options.mapId
-          ? this.explored
-          : exploredMap(loadRegion(this.options.content, id), this.options.explored?.[id]),
+      get mapId() {
+        return scene.region.id;
+      },
+      explored: (id: string) => this.exploredOf(id),
       pressed: (a: 'inspect' | 'zoom') => this.options.input.pressed(a),
       size: () => ({ width: this.width, height: this.height }),
       where: () => {
         const z = this.map.zoneAt(this.player.tx, this.player.ty);
         const place = z ? `${z.name} · Lv ${z.levels[0]}–${z.levels[1]}` : 'Town';
-        return { x: this.player.tx, y: this.player.ty, place };
+        const r = this.region;
+        return { x: this.player.tx - r.x, y: this.player.ty - r.y, place };
       },
-      services: () =>
-        this.sim.npcs.flatMap((n) =>
-          n.npc.role ? [{ x: n.mover.tx, y: n.mover.ty, role: n.npc.role.kind }] : [],
-        ),
+      services: () => {
+        const r = this.region;
+        return this.sim.npcs.flatMap((n) =>
+          n.npc.role && n.npc.map === r.id
+            ? [{ x: n.mover.tx - r.x, y: n.mover.ty - r.y, role: n.npc.role.kind }]
+            : [],
+        );
+      },
       say: (pages, speaker, done) => this.say(pages, speaker, done),
       ...(this.options.save
         ? {
@@ -481,11 +551,12 @@ export class OverworldScene implements Scene<Container> {
     };
   }
 
-  /** In front of the map's first center NPC, else the spawn point. */
+  /** In front of the starting region's first center NPC, else its spawn point. */
   private firstRespawn(): { x: number; y: number; facing: Dir } {
-    const center = this.sim.npcs.find((n) => n.npc.role?.kind === 'center');
+    const id = this.region.id;
+    const center = this.sim.npcs.find((n) => n.npc.role?.kind === 'center' && n.npc.map === id);
     if (center) return inFront(center.mover.destination, center.mover.facing);
-    const spot = this.map.anchors['spawn'] ?? { x: this.player.tx, y: this.player.ty };
+    const spot = spawnOf(this.region);
     return { x: spot.x, y: spot.y, facing: 'down' };
   }
 
@@ -495,7 +566,7 @@ export class OverworldScene implements Scene<Container> {
 
   enter(): void {
     this.setContext();
-    fieldAudio(this.map.biome);
+    fieldAudio(this.region.biome);
   }
 
   pause(): void {
@@ -508,7 +579,7 @@ export class OverworldScene implements Scene<Container> {
     this.ui.visible = true;
     this.inBattle = false;
     this.setContext();
-    fieldAudio(this.map.biome);
+    fieldAudio(this.region.biome);
     const quests = advanceQuests(this.options.content, this.party);
     this.party = quests.party;
     const split = splitNotes(quests.notes);
@@ -607,8 +678,12 @@ export class OverworldScene implements Scene<Container> {
     return { width: this.map.width * TILE, height: this.map.height * TILE };
   }
 
-  /** World point the camera centers on: the middle of the player's body. */
+  /** World point the camera centers on: the middle of the player's body (or the boat). */
   private focus(): [number, number] {
+    if (this.ride) {
+      const b = along(this.ride.voyage, this.ride.d);
+      return [b.x, b.y - 4];
+    }
     return [this.player.x * TILE + TILE / 2, this.player.y * TILE + TILE / 2 - 4];
   }
 
@@ -627,6 +702,10 @@ export class OverworldScene implements Scene<Container> {
     }
     if (this.savedNote > 0 && (this.savedNote -= dt) <= 0) this.lastZone = '-';
     if (this.inBattle || this.leaving) return;
+    if (this.ride) {
+      this.updateRide(dt);
+      return;
+    }
     if (this.stack.size) {
       this.stack.update(dt);
       // A dialog over a menu (or a menu after a dialog) changes the input context.
@@ -650,6 +729,7 @@ export class OverworldScene implements Scene<Container> {
     if (input.pressed('confirm') || this.interactAfter) {
       this.interactAfter = false;
       if (this.interact(this.sim.facing())) return;
+      if (!this.player.moving && this.offerFerry(this.player.facing)) return;
     }
 
     const intent = (at: Tile): Intent | undefined => {
@@ -661,12 +741,16 @@ export class OverworldScene implements Scene<Container> {
     for (const e of this.sim.update(dt, intent, this.viewTiles())) {
       if (e.kind === 'encounter') this.touch(e.roamer);
       else if (e.kind === 'player' && e.event.kind === 'bump') {
+        // Walking into the boat at a pier asks to sail (C37).
+        if (this.offerFerry(e.event.dir)) return;
         playSfx('world.bump', { key: 'bump', throttle: 0.25 });
         this.bumpNudge(e.event.dir);
       } else if (e.kind === 'player' && e.event.kind === 'step')
         this.stepFx(e.event.from, e.event.to);
       else if (e.kind === 'player' && e.event.kind === 'arrive' && this.travel(e.event.at)) return;
     }
+    // The region's arrival toast goes before the places it reveals.
+    this.crossBorder();
     this.explore();
     this.roamerFx();
     this.logSeen();
@@ -683,11 +767,14 @@ export class OverworldScene implements Scene<Container> {
    * and lets the host open that map (C34). True when the player leaves.
    */
   private travel(at: Tile): boolean {
-    const { content, mapId, onTravel } = this.options;
+    const { content, onTravel } = this.options;
     if (!onTravel) return false;
-    const key = connectionAt(content, mapId, at.x, at.y);
-    const to = key ? linkedArrival(content, mapId, key) : undefined;
-    if (!to) return false;
+    const here = this.world.toLocal(at.x, at.y);
+    if (!here) return false;
+    const key = connectionAt(content, here.region.id, here.x, here.y);
+    const to = key ? linkedArrival(content, here.region.id, key) : undefined;
+    // Inside the world the other end is just a walk (a pass) or a boat ride away (C37).
+    if (!to || this.world.region(to.map)) return false;
     this.leaving = true;
     this.clearPath();
     const state: GameState = {
@@ -698,6 +785,84 @@ export class OverworldScene implements Scene<Container> {
     void this.options.save?.(state).catch((e: unknown) => console.warn('Travel save failed:', e));
     onTravel(state);
     return true;
+  }
+
+  /**
+   * The player walked into another region (C37): its music and ambience crossfade in, the
+   * HUD names it and its arrival toast shows (gold-edged the first time).
+   */
+  private crossBorder(): void {
+    const r = this.world.regionAt(this.player.tx, this.player.ty);
+    if (!r || r === this.region) return;
+    const first = !this.options.explored?.[r.id] && !this.explored.has(r.id);
+    this.region = r;
+    this.lastZone = '-';
+    fieldAudio(r.biome);
+    this.toasts.push(arrivalToast(r.name, first));
+  }
+
+  /**
+   * Facing (or walking into) a pier's boat from its end, or `end` given by a ferryman: asks
+   * "Sail to <region>?" and starts the ride on Yes (C37). True when it asked.
+   */
+  private offerFerry(dir: Dir | undefined, end?: { ferry: Ferry; to: FerryEnd }): boolean {
+    let trip = end;
+    if (!trip && dir) {
+      const at = this.player.destination;
+      const [dx, dy] = DIR_STEP[dir];
+      trip = this.world.ferryAt(at, { x: at.x + dx, y: at.y + dy });
+    }
+    if (!trip) return false;
+    const { ferry, to } = trip;
+    this.clearPath();
+    this.say([`Sail to ${to.region.name}? The crossing is free.`], undefined, undefined, (box) =>
+      this.ask(['Yes', 'No'], box, (i) => {
+        if (i === 0) this.startRide(ferry, to);
+      }),
+    );
+    return true;
+  }
+
+  /** The ferry from the connection a ferryman stands by, as seen from his region. */
+  private ferryOf(npc: NpcActor): { ferry: Ferry; to: FerryEnd } | undefined {
+    const key = npc.npc.ferry;
+    return key ? this.world.ferryFrom(npc.npc.map, key) : undefined;
+  }
+
+  /** Boards the boat at the near pier and rows to `to` (C37). */
+  private startRide(ferry: Ferry, to: FerryEnd): void {
+    const route = to === ferry.b ? ferry.route : [...ferry.route].reverse();
+    const v = voyage(route);
+    this.ride = { ferry, to, voyage: v, d: 0, speed: v.length / rideSeconds(v), t: 0 };
+    this.lastZone = '-';
+    this.clearPath();
+    this.sim.clearWild();
+    seaAudio();
+    playSfx('world.rustle');
+  }
+
+  /** The boat moves on along its route; at the far pier the player steps off. */
+  private updateRide(dt: number): void {
+    const ride = this.ride;
+    if (!ride) return;
+    ride.t += dt;
+    ride.d = Math.min(ride.voyage.length, ride.d + ride.speed * dt);
+    const [cx, cy] = this.focus();
+    this.camera.follow(cx, cy, this.width, this.height, this.bounds, dt);
+    this.stream.prefetch(this.viewRect());
+    this.layoutHud();
+    if (ride.d < ride.voyage.length) return;
+    this.ride = undefined;
+    this.lastZone = '-';
+    const end = ride.to;
+    this.player.place({ x: end.tile.x, y: end.tile.y }, end.facing);
+    this.sim.clearWild();
+    this.visited = '';
+    this.crossBorder();
+    this.explore();
+    // The same region on both ends (or none): the field sound comes back by itself.
+    fieldAudio(this.region.biome);
+    this.autosave();
   }
 
   /** `Esc` and the menu keys (`P I B M J`). */
@@ -764,7 +929,7 @@ export class OverworldScene implements Scene<Container> {
 
   /** Grass bits stepping into tall grass, or a dust puff leaving a path tile. */
   private stepFx(from: Tile, to: Tile): void {
-    const biome = BIOMES[this.map.biome];
+    const biome = this.world.lookAt(to.x, to.y);
     if (this.map.tall(to.x, to.y)) {
       this.fx.rustle(to.x * TILE + TILE / 2, to.y * TILE + TILE - 2, biome.ramps.tall);
       playSfx('world.rustle', { key: 'rustle', throttle: 0.12 });
@@ -776,7 +941,6 @@ export class OverworldScene implements Scene<Container> {
 
   /** Wild Zorlings in view rustle the grass they step into. */
   private roamerFx(): void {
-    const tall = BIOMES[this.map.biome].ramps.tall;
     for (const r of this.sim.roamers) {
       const m = r.mover;
       // A wild Zorling cries when it starts to chase the player (C36e).
@@ -788,8 +952,11 @@ export class OverworldScene implements Scene<Container> {
       const last = this.roamerTiles.get(r);
       this.roamerTiles.set(r, tile);
       if (last === undefined || last === tile) continue;
-      if (this.map.tall(m.destination.x, m.destination.y) && this.onScreen(m))
-        this.fx.rustle(m.destination.x * TILE + TILE / 2, m.destination.y * TILE + TILE - 2, tall);
+      const { x, y } = m.destination;
+      if (this.map.tall(x, y) && this.onScreen(m)) {
+        const tall = this.world.lookAt(x, y).ramps.tall;
+        this.fx.rustle(x * TILE + TILE / 2, y * TILE + TILE - 2, tall);
+      }
     }
     for (const r of this.roamerTiles.keys())
       if (!this.sim.roamers.includes(r)) this.roamerTiles.delete(r);
@@ -854,6 +1021,13 @@ export class OverworldScene implements Scene<Container> {
       const at = npc.mover.destination;
       if (this.spotted.has(npc) && (at.x !== npc.home.x || at.y !== npc.home.y)) {
         npc.goHome();
+      }
+      // A ferryman offers the crossing after talking (C37).
+      const trip = this.ferryOf(npc);
+      if (trip) {
+        npc.talking = false;
+        this.offerFerry(undefined, trip);
+        return;
       }
       if (!role) {
         npc.talking = false;
@@ -1182,7 +1356,7 @@ export class OverworldScene implements Scene<Container> {
       speed: gameSettings().battleSpeed,
       money: this.party.money,
       confirmHotbarSwitch: gameSettings().confirmSwitch,
-      biome: this.map.biome,
+      biome: this.world.biomeAt(this.player.tx, this.player.ty),
       danger: zone?.tier === 'danger',
       onEnd: (result) => {
         end(result);
@@ -1233,6 +1407,8 @@ export class OverworldScene implements Scene<Container> {
     const spot = this.respawn;
     this.player.place({ x: spot.x, y: spot.y }, spot.facing);
     this.clearPath();
+    // The center may be in another region (C37): its sound and name come back with it.
+    this.crossBorder();
     const [cx, cy] = this.focus();
     this.camera.snap(cx, cy, this.width, this.height, this.bounds);
     this.afterBattle.push(
@@ -1299,9 +1475,17 @@ export class OverworldScene implements Scene<Container> {
     this.stream.draw(buf, v.x, v.y, this.time, glow);
     if (this.target) this.drawMarker(this.target, v.x, v.y);
     const list: Drawable[] = [];
-    list.push(this.characterDrawable(this.player, this.sheet));
+    if (!this.ride) list.push(this.characterDrawable(this.player, this.sheet));
+    this.boats(list, v.x, v.y);
+    // Only what is near the view is drawn (the world has every region's NPCs, C37).
+    const near = (m: GridMover): boolean =>
+      m.x * TILE > v.x - 4 * TILE &&
+      m.x * TILE < v.x + v.width + 3 * TILE &&
+      m.y * TILE > v.y - 2 * TILE &&
+      m.y * TILE < v.y + v.height + 4 * TILE;
     for (const npc of this.sim.npcs) {
-      const sheet = this.npcSheets.get(npc);
+      if (!near(npc.mover)) continue;
+      const sheet = this.sheetOf(npc);
       const alert = this.spot?.npc === npc && this.spot.t > 0;
       if (sheet) list.push(this.characterDrawable(npc.mover, sheet, alert));
       else if (npc.npc.zorling) {
@@ -1313,7 +1497,7 @@ export class OverworldScene implements Scene<Container> {
       // A `sign` object is not drawn: the map's sign or stone prop shows it.
     }
     for (const r of this.sim.roamers) {
-      list.push(this.zorlingDrawable(r.mover, r.species, r.side, r.alert));
+      if (near(r.mover)) list.push(this.zorlingDrawable(r.mover, r.species, r.side, r.alert));
     }
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.draw(v.x, v.y);
@@ -1321,6 +1505,72 @@ export class OverworldScene implements Scene<Container> {
     this.atmosphere.finish(buf);
     this.ctx.putImageData(this.image, 0, 0);
     this.texture.source.update();
+  }
+
+  /** An NPC's walking sprites, built the first time it is drawn (none for Zorlings and objects). */
+  private sheetOf(npc: NpcActor): CharacterSheet | undefined {
+    if (npc.npc.zorling || npc.npc.object) return undefined;
+    let sheet = this.npcSheets.get(npc);
+    if (!sheet) {
+      sheet = buildCharacterSheet(outfitOf(npc.npc.look));
+      this.npcSheets.set(npc, sheet);
+    }
+    return sheet;
+  }
+
+  /**
+   * The ferry boats (C37): one waiting at each pier, or the one under way with its wake and
+   * the player at the bow. Wakes go on the water now; the boats join the depth-sorted list.
+   */
+  private boats(list: Drawable[], camX: number, camY: number): void {
+    const bob = Math.round(Math.sin(this.time * 3.5));
+    const ride = this.ride;
+    for (const ferry of this.world.ferries) {
+      if (ride?.ferry === ferry) continue;
+      for (const [end, next] of [
+        [ferry.a, ferry.route[1]],
+        [ferry.b, ferry.route[ferry.route.length - 2]],
+      ] as const) {
+        const x = end.dock.x * TILE + TILE / 2;
+        const y = end.dock.y * TILE + TILE / 2;
+        if (
+          x < camX - 64 ||
+          x > camX + this.width + 64 ||
+          y < camY - 64 ||
+          y > camY + this.height + 64
+        )
+          continue;
+        const dir = next ? heading(end.dock, next) : 'down';
+        drawWake(this.buf, x - camX, y - camY, dir, this.time, false);
+        list.push(this.boatDrawable(x, y + bob, dir, this.time * 0.15, false));
+      }
+    }
+    if (ride) {
+      const b = along(ride.voyage, ride.d);
+      drawWake(this.buf, b.x - camX, b.y - camY, b.dir, this.time, true);
+      list.push(this.boatDrawable(b.x, b.y + bob, b.dir, ride.t * 0.8, true));
+    }
+  }
+
+  /** A boat whose hull middle is at world (`x`, `y`); with the player at the bow when riding. */
+  private boatDrawable(x: number, y: number, dir: Dir, phase: number, riding: boolean): Drawable {
+    return {
+      y: y / TILE,
+      draw: (camX, camY) => {
+        const f = boatFrame(dir, phase);
+        const left = Math.round(x - f.cx);
+        const top = Math.round(y - f.cy);
+        this.blit(f, left, top, Math.round(y) + 8, camX, camY);
+        if (!riding) return;
+        // The player sits at the bow: the bottom rows (legs) are hidden in the hull.
+        const frame = this.sheet[dir][0] as CharacterFrame;
+        const cut = 7;
+        const seated = { ...frame, height: frame.height - cut };
+        const px = Math.round(x + f.bow.x - CHARACTER_W / 2);
+        const py = Math.round(y + f.bow.y - (CHARACTER_H - cut));
+        this.blit(seated, px, py, Math.round(y) + 8, camX, camY);
+      },
+    };
   }
 
   private characterDrawable(m: GridMover, sheet: CharacterSheet, alert = false): Drawable {
@@ -1546,11 +1796,13 @@ export class OverworldScene implements Scene<Container> {
 
   private layoutHud(): void {
     const z = this.map.zoneAt(this.player.tx, this.player.ty);
-    const key = `${z?.key ?? ''}|${this.width}|${this.height}|${this.party.money}`;
+    const sea = this.ride ? 'sea' : '';
+    const key = `${this.region.id}|${z?.key ?? ''}|${sea}|${this.width}|${this.height}|${this.party.money}`;
     if (key === this.lastZone) return;
     this.lastZone = key;
     this.place.text = this.placeLabel();
-    this.help.text = this.savedNote > 0 ? 'Game saved' : help();
+    this.help.text =
+      this.savedNote > 0 ? 'Game saved' : this.ride ? 'The ferryman rows you across' : help();
     this.money.set(this.party.money);
     const w = Math.max(this.place.width + this.money.width + 16, this.help.width) + 16;
     const x = 6;
@@ -1562,8 +1814,9 @@ export class OverworldScene implements Scene<Container> {
   }
 
   private placeLabel(): string {
+    if (this.ride) return `At sea · to ${this.ride.to.region.name}`;
     const z = this.map.zoneAt(this.player.tx, this.player.ty);
-    return z ? `${z.name} · Lv ${z.levels[0]}–${z.levels[1]}` : `${this.map.name} · town`;
+    return z ? `${z.name} · Lv ${z.levels[0]}–${z.levels[1]}` : `${this.region.name} · town`;
   }
 }
 
@@ -1595,6 +1848,14 @@ function mirror(p: Packed): Packed {
     }
   }
   return { ...p, data, left: p.width - p.right, right: p.width - p.left };
+}
+
+/** A region's spawn point as a world tile (its middle when it has none). */
+function spawnOf(r: PlacedRegion): { x: number; y: number; facing: Dir } {
+  const a = r.map.anchors['spawn'];
+  const x = a?.x ?? r.map.width >> 1;
+  const y = a?.y ?? r.map.height >> 1;
+  return { x: r.x + x, y: r.y + y, facing: (a?.facing as Dir | undefined) ?? 'down' };
 }
 
 /** The tile in front of an NPC (where the player stands to talk), facing it. */

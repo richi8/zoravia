@@ -109,6 +109,16 @@ export const connectionSchema = z.strictObject({
     .string()
     .regex(/^[a-z0-9_-]+:[a-z0-9_-]+#[a-z0-9_-]+$/, 'Must look like "core:region#connection"')
     .optional(),
+  /**
+   * A ferry's sailing route (C37): water tiles in this map's coordinates (they may lie
+   * outside the map, over the sea between regions), from the boat's dock at this end to its
+   * dock at the other end. Without one, the boat sails straight between the two docks.
+   */
+  route: z
+    .array(z.tuple([z.number().int().min(-512).max(1024), z.number().int().min(-512).max(1024)]))
+    .min(2)
+    .max(32)
+    .optional(),
 });
 
 export const propRowSchema = z.tuple([

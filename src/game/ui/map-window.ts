@@ -145,6 +145,8 @@ export interface MapWindowLink {
   readonly kind: string;
   readonly a: { readonly x: number; readonly y: number };
   readonly b: { readonly x: number; readonly y: number };
+  /** The boat's route between the ends (C37), drawn instead of a straight line. */
+  readonly route?: readonly { readonly x: number; readonly y: number }[];
   readonly sea?: {
     readonly x: number;
     readonly y: number;
@@ -717,14 +719,20 @@ export class MapWindow implements Widget<Container> {
     // On top, unscaled: routes, markers, names, the selection and the player.
     const top = new Graphics();
     for (const l of links) {
-      const [ax, ay] = at(l.a.x, l.a.y);
-      const [bx, by] = at(l.b.x, l.b.y);
-      if (l.sea) {
-        const n = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay) / 3));
-        for (let k = 0; k <= n; k += 2)
+      if (!l.sea) continue;
+      // A dotted line through the boat's route (C37), else straight across.
+      const pts = [l.a, ...(l.route ?? []), l.b].map((p) => at(p.x, p.y));
+      let walked = 0;
+      for (let i = 1; i < pts.length; i++) {
+        const [ax, ay] = pts[i - 1] as [number, number];
+        const [bx, by] = pts[i] as [number, number];
+        const n = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay)));
+        for (let k = 0; k < n; k++, walked++) {
+          if (walked % 6 !== 0) continue;
           top
             .rect(Math.round(ax + ((bx - ax) * k) / n), Math.round(ay + ((by - ay) * k) / n), 1, 1)
             .fill({ color: paper.edge });
+        }
       }
     }
     for (const m of this.options.markers ?? []) {

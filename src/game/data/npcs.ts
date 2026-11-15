@@ -108,6 +108,11 @@ export const npcSchema = z
      * spots. Only NPCs whose mark is `trainer` spot.
      */
     sight: z.number().int().min(0).max(8).optional(),
+    /**
+     * A ferryman (C37): after talking, asks whether to sail from this connection of its map
+     * (a `ferry` connection), as the boat at the pier does.
+     */
+    ferry: z.string().min(1).optional(),
   })
   .superRefine((n, ctx) => {
     if (n.zorling && n.behavior.kind === 'wander') {

@@ -11,6 +11,8 @@
  * - NPCs with a `when` condition come and go (C27): `present` says which NPCs are there. One
  *   that should appear waits until its tile is free.
  * - `spotter` (C36d): a trainer that sees the player straight ahead, with nothing between.
+ * - The seamless world (C37): NPCs come placed on the world map, and only those within
+ *   `ACTIVE_RANGE` tiles of the player move; the others wait where they are.
  *
  * Deterministic for a seed: every random choice comes from split `Rng` streams.
  */
@@ -25,6 +27,9 @@ import { NpcActor, Roamer, ROAM, type Blocked, type Temperament } from './actors
 /** How far (tiles) from a door its service NPC may stand. */
 const DOOR_REACH = 6;
 import { DIR_STEP, GridMover, type Dir, type IntentFn, type MoveEvent, type Tile } from './mover';
+
+/** NPCs farther than this (tiles, either axis) from the player don't move (C37). */
+export const ACTIVE_RANGE = 40;
 
 /** Starting values, tuned in C31. */
 export const SPAWN = {
@@ -65,6 +70,13 @@ export interface SimOptions {
   readonly seed: Seed;
   readonly start?: Tile;
   readonly facing?: Dir;
+  /** The NPCs at their tiles (C37 world); default: the map's NPCs at their own places. */
+  readonly npcs?: readonly {
+    readonly npc: Npc;
+    readonly x: number;
+    readonly y: number;
+    readonly facing: Dir;
+  }[];
 }
 
 /** A species and level from a zone's spawn table. */
@@ -108,13 +120,15 @@ export class OverworldSim {
       options.facing ?? (map.anchors['spawn']?.facing as Dir | undefined) ?? 'down',
     );
     const npcRng = this.seed.split('npcs');
-    this.allNpcs = content.npcs
-      .values()
-      .filter((n: Npc) => n.map === options.mapId)
-      .map((n) => {
-        const p = npcPlace(n, map);
-        return new NpcActor(n, { x: p.x, y: p.y }, p.facing, npcRng.split(n.id));
-      });
+    const placed =
+      options.npcs ??
+      content.npcs
+        .values()
+        .filter((n: Npc) => n.map === options.mapId)
+        .map((n) => ({ npc: n, ...npcPlace(n, map) }));
+    this.allNpcs = placed.map(
+      (p) => new NpcActor(p.npc, { x: p.x, y: p.y }, p.facing, npcRng.split(p.npc.id)),
+    );
     this.npcs.push(...this.allNpcs);
   }
 
@@ -247,6 +261,8 @@ export class OverworldSim {
       covers(this.player, x, y) || (x === at.x && y === at.y);
 
     for (const npc of this.npcs) {
+      const m = npc.mover;
+      if (Math.abs(m.tx - at.x) > ACTIVE_RANGE || Math.abs(m.ty - at.y) > ACTIVE_RANGE) continue;
       npc.update(dt, (x, y) => this.map.blocked(x, y) || playerOn(x, y) || this.takenBy(npc, x, y));
     }
     for (const r of this.roamers) {

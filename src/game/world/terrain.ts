@@ -144,8 +144,20 @@ export class PropSprites {
   }
 }
 
-function placeProps(map: TerrainMap, painter: Painter): Placed[] {
-  const sprites = new PropSprites(painter);
+/** Prop sprites shared by every bake of a biome (they only depend on the biome's colors). */
+const SHARED_SPRITES = new WeakMap<Biome, PropSprites>();
+
+function spritesFor(biome: Biome): PropSprites {
+  let s = SHARED_SPRITES.get(biome);
+  if (!s) {
+    s = new PropSprites(new Painter(biome));
+    SHARED_SPRITES.set(biome, s);
+  }
+  return s;
+}
+
+function placeProps(map: TerrainMap, biome: Biome): Placed[] {
+  const sprites = spritesFor(biome);
   const placed = map.props.map((p): Placed => {
     const sprite = sprites.get(p);
     return { sprite, info: PROP_INFO[p.kind], ...placeProp(p, sprite) };
@@ -153,7 +165,27 @@ function placeProps(map: TerrainMap, painter: Painter): Placed[] {
   return placed.sort((a, b) => a.by - b.by);
 }
 
-export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): TerrainBake {
+export interface BakeOptions {
+  /**
+   * Props whose shadows fall on the ground, when not the drawn ones (C37: a block shared by
+   * two biomes draws each biome's props in its own bake, but every prop casts its shadow).
+   */
+  readonly shadows?: readonly PropPlacement[];
+  /** Tall-grass tiles that darken the ground, when not the drawn ones (as for `shadows`). */
+  readonly tallShade?: readonly (readonly [number, number])[];
+  /**
+   * Only these pixels get ground and liquid (index in the rect, true = this bake's); the
+   * others stay 0 (C37: each biome of a shared block bakes only the pixels it owns).
+   */
+  readonly only?: (i: number) => boolean;
+}
+
+export function bakeTerrain(
+  map: TerrainMap,
+  biome: Biome,
+  rect?: TileRect,
+  opts: BakeOptions = {},
+): TerrainBake {
   const r = rect ?? { x: 0, y: 0, width: map.width, height: map.height };
   const X0 = r.x * TILE;
   const Y0 = r.y * TILE;
@@ -161,7 +193,7 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
   const H = r.height * TILE;
   const s = map.seed;
   const painter = new Painter(biome);
-  const props = placeProps(map, painter);
+  const props = placeProps(map, biome);
   const local = (wx: number, wy: number): number => {
     const x = wx - X0;
     const y = wy - Y0;
@@ -170,7 +202,8 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
 
   // Shadows lower the light before the ramp lookup, so they stay on the palette.
   const shade = new Float32Array(W * H);
-  for (const p of props) {
+  const casters = opts.shadows ? placeProps({ ...map, props: opts.shadows }, biome) : props;
+  for (const p of casters) {
     if (!p.info.shadow) continue;
     const rx = p.sprite.width * 0.42;
     const ry = 3.5;
@@ -184,7 +217,7 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
     }
   }
   const tufts: Tuft[] = [];
-  for (const [tx, ty] of map.tall) {
+  for (const [tx, ty] of opts.tallShade ?? map.tall) {
     if (tx < r.x || ty < r.y || tx >= r.x + r.width || ty >= r.y + r.height) continue;
     for (let y = 0; y < TILE; y++) {
       for (let x = 0; x < TILE; x++) {
@@ -192,6 +225,9 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
         if (i >= 0) shade[i] = Math.max(shade[i] ?? 0, TILE_STYLE.tallShade);
       }
     }
+  }
+  for (const [tx, ty] of map.tall) {
+    if (tx < r.x || ty < r.y || tx >= r.x + r.width || ty >= r.y + r.height) continue;
     for (let n = 0; n < 6; n++) {
       const h = hash2(tx * 7 + n, ty, s + 50);
       tufts.push({
@@ -207,11 +243,13 @@ export function bakeTerrain(map: TerrainMap, biome: Biome, rect?: TileRect): Ter
   const base = new Uint32Array(W * H);
   const liquid: number[] = [];
   const { sparkle = 0, iceStreaks = false, altPits = 0 } = biome.details;
+  const only = opts.only;
   for (let ly = 0; ly < H; ly++) {
     const py = Y0 + ly;
     for (let lx = 0; lx < W; lx++) {
       const px = X0 + lx;
       const i = ly * W + lx;
+      if (only && !only(i)) continue;
       const ml = edge(map.liquid, px, py, s, 0.16);
       if (ml >= 0.5) {
         const depth = coverage(map.liquid, px, py, TILE);

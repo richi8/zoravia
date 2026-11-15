@@ -1,0 +1,71 @@
+{
+  "format": "zoravia-save",
+  "version": 6,
+  "savedAt": "2026-11-15T12:00:00.000Z",
+  "packs": {
+    "core": "0.1.0",
+    "emberwaste": "0.1.0",
+    "rimeholm": "0.1.0"
+  },
+  "playtime": 5432,
+  "place": {
+    "map": "emberwaste:emberwaste",
+    "x": 12,
+    "y": 104,
+    "facing": "right",
+    "origin": [0, 0]
+  },
+  "respawn": {
+    "map": "core:verdale",
+    "x": 101,
+    "y": 229,
+    "facing": "down",
+    "origin": [0, 80]
+  },
+  "party": {
+    "team": [
+      {
+        "uid": "starter",
+        "species": "core:sprigling",
+        "level": 6,
+        "xp": 215,
+        "hp": 25,
+        "moves": ["core:vine-snap", "core:mud-toss"],
+        "titanMark": false
+      }
+    ],
+    "storage": [],
+    "bag": {
+      "core:potion": 2,
+      "core:zorb": 5
+    },
+    "money": 500,
+    "dex": {
+      "seen": ["core:sprigling"],
+      "caught": ["core:sprigling"]
+    },
+    "bosses": {},
+    "flags": {
+      "core:starter-sprigling": 1
+    },
+    "quests": {},
+    "badges": [],
+    "trainers": {}
+  },
+  "explored": {
+    "core:verdale": {
+      "origin": [0, 80],
+      "cols": 50,
+      "rows": 70,
+      "cells": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMADAAAAAIAPAAAAAAA+AAAAAADwAAAAAHAAAAAAAOADAAAAAIAPAAAAAAAcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAIAHAAAAAAAeAAAAAAB4AAAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "places": ["zone:downs", "zone:galeback", "zone:meadow"]
+    },
+    "emberwaste:emberwaste": {
+      "origin": [0, 0],
+      "cols": 70,
+      "rows": 50,
+      "cells": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcwAAAAAAAADAngEAAAAAAACw9wAAAAAAAADsPQAAAAAAAAAADwAAAAAAAACAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "places": ["zone:obsidian"]
+    }
+  }
+}

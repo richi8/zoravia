@@ -211,3 +211,71 @@ export function biomeAmbience(biome: BiomeId, weather: readonly string[] = []): 
     layers: [...LAYERS[biome], ...extra.flatMap((w) => WEATHER_AMBIENCE[w] ?? [])],
   };
 }
+
+/**
+ * Out on the sea (C37 ferry ride): surf swelling under the boat, wind over open water, gulls,
+ * and the ferryman's oars dipping every stroke.
+ */
+const SEA: readonly AmbienceLayer[] = level(2.2, [
+  {
+    kind: 'bed',
+    source: 'noise',
+    filter: { type: 'lowpass', freq: 650 },
+    gain: 0.06,
+    swell: { rate: 0.16, depth: 0.9 },
+  },
+  {
+    kind: 'bed',
+    source: 'noise',
+    filter: { type: 'bandpass', freq: 900, q: 2.5 },
+    gain: 0.025,
+    swell: { rate: 0.07, depth: 0.8 },
+    sweep: { rate: 0.04, depth: 250 },
+  },
+  {
+    kind: 'events',
+    sounds: [
+      {
+        tones: [
+          {
+            wave: 'triangle',
+            freq: [1400, 1750, 1250],
+            dur: 0.32,
+            gain: 0.025,
+            attack: 0.03,
+            vibrato: { rate: 8, depth: 30 },
+          },
+        ],
+      },
+    ],
+    every: [5, 11],
+    pitch: [0.9, 1.15],
+    spread: 0.9,
+    burst: { count: [1, 3], gap: 0.35 },
+  },
+  {
+    kind: 'events',
+    sounds: [
+      {
+        tones: [
+          {
+            wave: 'triangle',
+            freq: [260, 140],
+            dur: 0.18,
+            gain: 0.03,
+            attack: 0.01,
+            filter: { type: 'lowpass', freq: 900 },
+          },
+        ],
+      },
+    ],
+    every: [1.1, 1.4],
+    pitch: [0.9, 1.1],
+    spread: 0.3,
+  },
+]);
+
+/** The ambience of a ferry ride over the sea (C37). */
+export function seaAmbience(): Ambience {
+  return { id: 'sea', layers: SEA };
+}

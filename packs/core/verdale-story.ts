@@ -1110,6 +1110,7 @@ const storyNpcs: Record<string, NpcInput> = {
     anchor: 'ferryman',
     look: { outfit: 'navy', hair: 'grey', skin: 'warm' },
     dialogue: c('ferryman-gus'),
+    ferry: 'ferry',
   },
 };
 

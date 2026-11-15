@@ -577,7 +577,14 @@
       "x": 100,
       "y": 0,
       "kind": "ferry",
-      "to": "core:verdale#ferry"
+      "to": "core:verdale#ferry",
+      "route": [
+        [100, -2],
+        [102, -6],
+        [103, -11],
+        [99, -17],
+        [100, -23]
+      ]
     }
   },
   "chunks": [

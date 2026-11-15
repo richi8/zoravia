@@ -112,6 +112,10 @@ All positions are tiles from the map's top-left. Rects are `{ "x", "y", "w", "h"
   `levels`. `null` removes the zone. Levels must stay inside the tier's range (T1 3–15,
   T2 15–30, T3 30–45, danger 45–60).
 - `anchors` / `connections`: a full entry adds or replaces, `null` removes.
+  A `ferry` connection may carry a `route` (C37): `[x, y]` water tiles in this map's
+  coordinates (outside the map is fine, over the sea between regions), from the boat's dock at
+  this end to its dock at the other end. The boat rows along it in the seamless world; without
+  one it rows straight. `packs/rimeholm/maps/rimeholm/overlay.json` has the Verdale ferry's.
 - `edits` run in order:
   - `terrain` sets every **corner** of the tiles in the rect.
   - `stamp` edits corners one by one from corner `at`: `#` set, `-` clear, `.` keep.

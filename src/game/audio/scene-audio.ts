@@ -5,7 +5,7 @@
 
 import type { GameContent } from '@game/data';
 import type { BiomeId } from '@game/world/biomes';
-import { battleMusic, biomeAmbience, fieldSong, titleSong } from './music';
+import { battleMusic, biomeAmbience, fieldSong, seaAmbience, titleSong } from './music';
 import {
   playAmbience,
   playMusic,
@@ -33,6 +33,12 @@ export function fieldAudio(biome: BiomeId): void {
   setMusicTone('normal', 0.1);
   playMusic(fieldSong(biome), { fade: 1.5 });
   playAmbience(biomeAmbience(biome));
+  setAmbienceLevel(1, 1.5);
+}
+
+/** A ferry ride (C37): the field song goes on, under the sea's ambience. */
+export function seaAudio(): void {
+  playAmbience(seaAmbience(), { fade: 1.5 });
   setAmbienceLevel(1, 1.5);
 }
 

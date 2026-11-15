@@ -39,25 +39,40 @@ export class TerrainRenderer {
   }
 
   draw(buf: PixelBuffer, camX: number, camY: number, t: number, sink?: GlowSink): void {
+    this.drawBase(buf, camX, camY);
+    this.drawLiquid(buf, camX, camY, t);
+    this.drawTufts(buf, camX, camY, t);
+    this.drawOverlay(buf, camX, camY, sink);
+    this.drawVents(buf, camX, camY, t);
+  }
+
+  /** The bake's columns on screen, [x0, x1) in screen pixels (empty when x1 <= x0). */
+  private span(buf: PixelBuffer, camX: number): [number, number] {
+    const ox = this.bake.x - camX;
+    return [Math.max(0, ox), Math.min(buf.width, ox + this.bake.width)];
+  }
+
+  /** Static ground (row copies, clipped). */
+  drawBase(buf: PixelBuffer, camX: number, camY: number): void {
     const { bake } = this;
     const out = buf.data;
     const W = buf.width;
-    const H = buf.height;
     const ox = bake.x - camX;
     const oy = bake.y - camY;
-
-    // Static ground (row copies, clipped).
-    const x0 = Math.max(0, ox);
-    const x1 = Math.min(W, ox + bake.width);
-    if (x1 > x0) {
-      for (let y = Math.max(0, oy); y < Math.min(H, oy + bake.height); y++) {
-        const src = (y - oy) * bake.width + (x0 - ox);
-        out.set(bake.base.subarray(src, src + (x1 - x0)), y * W + x0);
-      }
+    const [x0, x1] = this.span(buf, camX);
+    if (x1 <= x0) return;
+    for (let y = Math.max(0, oy); y < Math.min(buf.height, oy + bake.height); y++) {
+      const src = (y - oy) * bake.width + (x0 - ox);
+      out.set(bake.base.subarray(src, src + (x1 - x0)), y * W + x0);
     }
+  }
 
-    // Liquid.
-    const L = bake.liquid;
+  /** Water ripples or flowing lava. */
+  drawLiquid(buf: PixelBuffer, camX: number, camY: number, t: number): void {
+    const out = buf.data;
+    const W = buf.width;
+    const H = buf.height;
+    const L = this.bake.liquid;
     const lava = this.biome.liquid === 'lava';
     for (let j = 0; j < L.length; j += LIQUID_STRIDE) {
       const wx = L[j + 1] ?? 0;
@@ -71,29 +86,35 @@ export class TerrainRenderer {
         ? this.lavaPx(wx, wy, m, depth, t)
         : this.waterPx(wx, wy, m, depth, t);
     }
+  }
 
-    // Tall grass, swaying.
-    this.drawTufts(buf, camX, camY, t);
-
-    // Props.
-    if (x1 > x0) {
-      for (let y = Math.max(0, oy); y < Math.min(H, oy + bake.height); y++) {
-        const src = (y - oy) * bake.width - ox;
-        const row = y * W;
-        for (let x = x0; x < x1; x++) {
-          const c = bake.overlay[src + x] ?? 0;
-          if (!c) continue;
-          out[row + x] = c;
-          if (sink) {
-            const g = bake.glow[src + x] ?? 0;
-            if (g) sink.glow(row + x, c, g);
-          }
+  /** Prop pixels (lit ones reported to `sink`). */
+  drawOverlay(buf: PixelBuffer, camX: number, camY: number, sink?: GlowSink): void {
+    const { bake } = this;
+    const out = buf.data;
+    const W = buf.width;
+    const ox = bake.x - camX;
+    const oy = bake.y - camY;
+    const [x0, x1] = this.span(buf, camX);
+    if (x1 <= x0) return;
+    for (let y = Math.max(0, oy); y < Math.min(buf.height, oy + bake.height); y++) {
+      const src = (y - oy) * bake.width - ox;
+      const row = y * W;
+      for (let x = x0; x < x1; x++) {
+        const c = bake.overlay[src + x] ?? 0;
+        if (!c) continue;
+        out[row + x] = c;
+        if (sink) {
+          const g = bake.glow[src + x] ?? 0;
+          if (g) sink.glow(row + x, c, g);
         }
       }
     }
+  }
 
-    // Vent puffs.
-    for (const v of bake.vents) {
+  /** Vent puffs. */
+  drawVents(buf: PixelBuffer, camX: number, camY: number, t: number): void {
+    for (const v of this.bake.vents) {
       for (let k = 0; k < 5; k++) {
         const ph = (t * 0.6 + k / 5) % 1;
         const x = v.x + Math.sin(ph * 6 + k) * 2 + ph * 6 - camX;
