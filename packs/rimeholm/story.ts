@@ -958,6 +958,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'tidemaster-sigrun': {
     name: 'Tidemaster Sigrun',
+    mark: 'trial',
     map: MAP,
     anchor: 'trial',
     look: { outfit: 'navy', hair: 'blonde', skin: 'tan' },
@@ -965,6 +966,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'deckhand-pell': {
     name: 'Deckhand Pell',
+    mark: 'trial',
     map: MAP,
     x: 158,
     y: 66,
@@ -1004,6 +1006,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'mira-brinewick': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: MAP,
     x: 86,
     y: 38,
@@ -1014,6 +1017,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'mira-glimmerholm': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: MAP,
     x: 163,
     y: 70,
@@ -1024,6 +1028,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'mira-rimeport': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: MAP,
     x: 148,
     y: 128,
@@ -1034,6 +1039,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'lampwright-odessa': {
     name: 'Lampwright Odessa',
+    mark: 'boss',
     map: MAP,
     anchor: 'boss-stormspire',
     look: { outfit: 'mustard', hair: 'red', skin: 'warm' },

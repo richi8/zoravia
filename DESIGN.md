@@ -23,7 +23,7 @@ All graphics and audio are code-generated. Built from day one for expansion via 
   - **3 save slots**, each one playthrough. Writing a slot keeps the previous write as a backup, used if the main copy can't be read.
   - **Autosave** after every battle, when a menu, dialog or service closes with something changed, every 30 s of play while something changed, on quitting, and when the tab is hidden. The pause menu also has **Save**.
   - A save keeps the party (team, storage, bag, money, Dex, boss log, story flags and quests), the player's map, tile and facing, the last center used, and play time. Wild Zorlings and NPC positions are not kept; they respawn.
-  - Saves are **versioned** and old versions are upgraded on load. Since C36 (v5) each saved place keeps its map's `origin`, so a map that grew on its north or west side moves old positions with it. A save that needs content from a pack that isn't loaded is refused with the missing ids. Numbers a pack update moved (HP above the new max, bag counts above a new cap) are lowered instead.
+  - Saves are **versioned** and old versions are upgraded on load. Since C36 (v5) each saved place keeps its map's `origin`, so a map that grew on its north or west side moves old positions with it. Since C36b (v6) a save keeps each visited map's **exploration** (revealed cells and discovered places); a save from before gets a reveal around what its progress proves (its place, last center, trainers beaten, bosses logged and the hubs of regions with any of those). A save that needs content from a pack that isn't loaded is refused with the missing ids. Numbers a pack update moved (HP above the new max, bag counts above a new cap) are lowered instead.
 
 ## World
 - **Static map**: generated once offline from a fixed seed by a world tool, then hand-edited (towns, routes, landmarks, secrets). Shipped as data; identical for all players.
@@ -43,6 +43,11 @@ All graphics and audio are code-generated. Built from day one for expansion via 
 - Wild/zone levels fixed. Only campaign story bosses scale lightly (~+4 Lv per badge held).
 - Badge-based soft level cap: XP gain sharply reduced above cap. Values (C13, kept in C31): cap Lv 30 / 45 / 52 / 60 for 0 / 1 / 2 / 3 badges (+5 per further badge); XP at or above the cap ×0.1. In the C31 playthrough simulator Verdale ends at Lv ~40–42, under the one-badge cap.
 - **Pacing** (C31 balance pass, `npm run balance`): a region's campaign takes about 120–145 wild battles and 3–4 hours. Trainers field the stage a wild Zorling has at that level (no final forms below their evolution level), except a rival's ace. A new game starts with one **Lv 6** starter, 2 Potions, 5 Zorbs and 500 coins (C33); a region's first zone tops out at that level.
+
+- **Exploration** (C36b, user idea 2026-11-15): every map starts dark. Walking reveals it in 4×4-tile cells within 9 tiles of the player. Entering a zone, or coming near a town, landmark, secret, lair, shrine, arena or heart, **discovers** it: a toast shows its name and level range ("Discovered", "Town", gold-edged "Secret place").
+  - The `M` map shows unexplored land as blank parchment (preview pick), labels discovered places, and centers on the player at 1 px per tile when the region is bigger than the screen. `E` on it opens the Atlas.
+  - The **Atlas** (pause menu, layout "Ledger" from the preview round) shows every start region: its map tinted by tier with markers for towns, trainers, trial, rival, Titans, region boss, legendary, gate, Elder Titans and Keepers; a zone list (levels, storms, wild Zorlings seen and caught); a fight list (level, result, and the weak spot once beaten or caught); the quest log; and badges, hearts and the Dex. Nothing undiscovered shows: unknown zones, fights and Zorlings read "?". `A/D` region, `W/S` select, `Tab` next list, `F` a details card.
+  - Packs mark special NPCs for the Atlas (`mark`: trial, rival, boss, gate, elder, keeper); trainers, Titans and legendaries are recognized from the battles their dialogue starts.
 
 - Region maps settled in C28 (2026-11-13):
   - A region's big shapes (towns, roads, rivers, lakes, zone areas, landmark clearings, exits) are placed by hand in its layout; the world tool adds the organic detail (edges, ponds, trees, grass) once, then the overlay places buildings, signs and NPC spots.
@@ -247,13 +252,14 @@ Rules settled in C26 (2026-11-13):
 | Confirm / interact | `E` (also `Enter`, `Space`) |
 | Back / cancel | `Q` (also `Esc`, `Backspace`) |
 | Inspect (tooltips for icons/badges on screen; directions move between them) | `F` |
+| Next list or tab (screens with several, e.g. the Atlas) | `Tab` |
 
 Input is context-sensitive: `WASD`/arrows move the player in the overworld; while any menu is open (including the battle action menu) they navigate that menu instead. Every menu is a focusable list/grid with a clearly highlighted cursor. Cursor wraps around at the ends.
 
 The player has **one movement speed** (no running / running shoes), **3.75 tiles/second** (one tile per 16 frames at 60 fps). Tunable in playtesting, but there is never a slower walk.
 
 ### Overworld
-`I` inventory, `M` map, `P` party, `B` dex, `J` quests, `Esc` pause menu.
+`I` inventory, `M` map (`E` there opens the Atlas), `P` party, `B` dex, `J` quests, `Esc` pause menu (with the Atlas).
 
 ### Battle flow (keyboard)
 Settled at the G2 review (2026-11-13, option B of a preview round; replaces the Fight / Switch / Items / Run menu):

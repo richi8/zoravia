@@ -12,6 +12,7 @@ import type { GameContent } from '@game/data';
 import { healTeam, type Party } from '@game/player';
 import type { GameState, Place } from '@game/save/codec';
 import { advanceQuests } from '@game/story';
+import { legacyExploration } from '@game/world/explore';
 import { loadRegion } from '@game/world/map';
 import { playthrough } from './playthrough';
 import { VERDALE_ROUTE, VERDALE_START, VERDALE_TEAMS } from './verdale';
@@ -84,7 +85,14 @@ export function checkpointState(
   if (!center) throw new Error(`No anchor "${checkpoint.center}"`);
   // The healer stands at the anchor; the player stands in front, facing them.
   const place: Place = { map: MAP, x: center.x, y: center.y + 1, facing: 'up' };
-  return { party: withMainQuest(content, party), place, respawn: place, playtime: 0 };
+  const quest = withMainQuest(content, party);
+  // The map as a save from before exploration would show it (C36b).
+  const explored = legacyExploration(
+    content,
+    { places: [place], trainers: quest.trainers, bosses: quest.bosses },
+    (id) => loadRegion(content, id),
+  );
+  return { party: quest, place, respawn: place, playtime: 0, explored };
 }
 
 /** The main quest started (as if Elder Rowan was met) and moved on as far as it goes. */

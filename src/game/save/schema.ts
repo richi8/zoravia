@@ -9,8 +9,10 @@
  *   (one per save), play time, and the packs the save was made with.
  * - v3 (C26): story flags and quest progress in the party.
  * - v4 (C27): badges held, trainers beaten, and rematches won in the boss log.
- * - v5 (current, C36): each place keeps its map's `origin` when it was written, so a map
- *   that grew on its north or west side moves old positions along with it.
+ * - v5 (C36): each place keeps its map's `origin` when it was written, so a map that grew on
+ *   its north or west side moves old positions along with it.
+ * - v6 (current, C36b): `explored`, each visited map's revealed cells and discovered places.
+ *   A save without it (from v5) gets a reveal from its progress when loaded.
  */
 
 import { z } from 'zod';
@@ -19,7 +21,7 @@ import { TEAM_SIZE } from '@game/player';
 import { zorlingSchema } from '@game/progression';
 
 export const SAVE_FORMAT = 'zoravia-save';
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 const count = z.number().int().min(0);
 
@@ -57,6 +59,16 @@ export const partySchema = z.strictObject({
   trainers: z.record(ref, z.strictObject({ wins: z.number().int().min(1) })),
 });
 
+/** One map's exploration (C36b; see `world/explore.ts`). */
+export const exploredSchema = z.strictObject({
+  origin: z.tuple([count, count]),
+  cols: count,
+  rows: count,
+  /** One bit per cell, base64. */
+  cells: z.string().regex(/^[A-Za-z0-9+/]*={0,2}$/),
+  places: z.array(z.string().min(1)),
+});
+
 export const saveSchema = z.strictObject({
   format: z.literal(SAVE_FORMAT),
   version: z.literal(SAVE_VERSION),
@@ -69,6 +81,8 @@ export const saveSchema = z.strictObject({
   place: placeSchema,
   respawn: placeSchema.optional(),
   party: partySchema,
+  /** Map id → exploration (C36b). Missing in saves upgraded from v5. */
+  explored: z.record(ref, exploredSchema).optional(),
 });
 
 export type SaveData = z.output<typeof saveSchema>;

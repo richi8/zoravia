@@ -434,6 +434,7 @@ export class TitleScene implements Scene<Container> {
       start: state.place,
       ...(state.respawn ? { respawn: state.respawn } : {}),
       playtime: state.playtime,
+      explored: state.explored,
       save: (s) => queue.save(s),
       onTravel: (next) => {
         const to = this.worldScene(next, queue);

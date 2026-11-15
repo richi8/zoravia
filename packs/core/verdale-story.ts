@@ -1000,6 +1000,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'warden-elm': {
     name: 'Warden Elm',
+    mark: 'trial',
     map: MAP,
     anchor: 'trial',
     look: { outfit: 'forest', hair: 'grey', skin: 'warm' },
@@ -1007,6 +1008,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'apprentice-linden': {
     name: 'Apprentice Linden',
+    mark: 'trial',
     map: MAP,
     x: 103,
     y: 150,
@@ -1036,6 +1038,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'mira-willowmere': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: MAP,
     x: 99,
     y: 184,
@@ -1046,6 +1049,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'mira-fernhollow': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: MAP,
     x: 100,
     y: 152,
@@ -1056,6 +1060,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'mira-galecrest': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: MAP,
     x: 161,
     y: 184,
@@ -1066,6 +1071,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'stormcatcher-vex': {
     name: 'Stormcatcher Vex',
+    mark: 'boss',
     map: MAP,
     anchor: 'boss-crown-rock',
     look: { outfit: 'orange', hair: 'blonde', skin: 'tan' },

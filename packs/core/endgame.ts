@@ -162,7 +162,7 @@ export function dangerZone(z: DangerZoneSpec): ZoneContent {
       after: { say: [k.after] },
     },
   };
-  npcs[k.id] = { ...personOf(z.map, k), dialogue: id(k.id) };
+  npcs[k.id] = { ...personOf(z.map, k), mark: 'keeper', dialogue: id(k.id) };
 
   for (const [e, t] of Object.entries(z.elders)) {
     const { rematch: _, ...titan } = t.from;
@@ -191,6 +191,7 @@ export function dangerZone(z: DangerZoneSpec): ZoneContent {
     };
     npcs[e] = {
       name: t.name,
+      mark: 'elder',
       map: z.map,
       anchor: t.anchor,
       zorling: t.from.species,
@@ -233,6 +234,7 @@ export function dangerZone(z: DangerZoneSpec): ZoneContent {
 
   npcs['gate-ranger'] = {
     ...personOf(z.map, z.ranger),
+    mark: 'gate',
     behavior: { kind: 'stand' },
     when: { not: { badges: ZONE_BADGES } },
     lines: [
@@ -408,6 +410,7 @@ export const endgameDialogues: Record<string, DialogueInput> = {
 export const endgameNpcs: Record<string, NpcInput> = {
   'mira-finale': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: c('verdale'),
     x: 102,
     y: 64,

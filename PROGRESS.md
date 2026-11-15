@@ -48,5 +48,5 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C35a | Regional body models | ✅ | [log](logs/C35a-regional-models.md) |
 | C35 | Region 3: Rimeholm Isles (frozen coast islands) | ✅ | [log](logs/C35-rimeholm.md) |
 | C36 | Cross-region endgame | ✅ | [log](logs/C36-endgame.md) |
-| C36b | Map exploration | ⬜ | |
+| C36b | Map exploration | ✅ | [log](logs/C36b-map-exploration.md) |
 | C37 | Release prep | ⬜ | |

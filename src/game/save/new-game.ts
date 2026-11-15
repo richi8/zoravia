@@ -22,5 +22,6 @@ export function newGameState(content: GameContent, startId: string, species: str
     party: { ...party, flags: { [starter.flag]: 1 } },
     place: { map: map.id, x: spot.x, y: spot.y, facing: spot.facing ?? 'down' },
     playtime: 0,
+    explored: {},
   };
 }

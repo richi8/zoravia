@@ -50,7 +50,11 @@ import { ShopPanel, type ShopItem } from '@game/ui/shop';
 import { StoragePanel } from '@game/ui/storage-panel';
 import type { MoveLine, ZorlingView } from '@game/ui/zorling-view';
 import { BIOMES } from '@game/world/biomes';
-import { buildMinimap, type WorldMap } from '@game/world/map';
+import { buildMinimap, fogTint, loadRegion, tierTint, type WorldMap } from '@game/world/map';
+import { atlasMaps, atlasProgress, atlasRegion } from '@game/world/atlas';
+import { mapPlaces, type ExploredMap } from '@game/world/explore';
+import { AtlasPanel } from '@game/ui/atlas-panel';
+import type { PixelBuffer } from '@engine/render/pixel-buffer';
 import { questLog } from '@game/story';
 import { speciesLook } from '@game/zorlings/species-look';
 import { LevelUpFlow } from './level-up-flow';
@@ -62,6 +66,12 @@ export interface MenuHost {
   readonly theme: UiTheme;
   readonly stack: FocusStack<Container>;
   readonly map: WorldMap;
+  /** Id of `map`. */
+  readonly mapId: string;
+  /** A map's exploration (this map's live one, others as saved) (C36b). */
+  explored(mapId: string): ExploredMap;
+  /** Menu keys the UI input has no method for: `F` inspect, `Tab` next list. */
+  pressed(action: 'inspect' | 'next_tab'): boolean;
   party: Party;
   /** Screen size in game pixels. */
   size(): { width: number; height: number };
@@ -87,7 +97,11 @@ export class OverworldMenus {
   private readonly portraits = new Map<string, Texture>();
   private readonly art = new Map<string, Texture>();
   private readonly sizes = new Map<Widget<Container>, () => { w: number; h: number }>();
-  private mapImage: { texture: Texture; scale: number } | undefined;
+  /**
+   * Region textures of the map screens by map and kind, drawn again when the exploration they
+   * show changed. None is freed on close: a closing screen still draws during its animation.
+   */
+  private readonly maps = new Map<string, { key: string; texture: Texture }>();
   /** Move offers and evolutions after battles and from the party screen (C22b). */
   readonly levelUp: LevelUpFlow;
 
@@ -133,7 +147,8 @@ export class OverworldMenus {
     this.levelUp.dispose();
     for (const t of this.portraits.values()) t.destroy(true);
     for (const t of this.art.values()) t.destroy(true);
-    this.mapImage?.texture.destroy(true);
+    for (const m of this.maps.values()) m.texture.destroy(true);
+    this.maps.clear();
     this.portraits.clear();
     this.art.clear();
   }
@@ -183,6 +198,7 @@ export class OverworldMenus {
       ['Bag', key('inventory'), () => this.openBag()],
       ['Dex', key('dex'), () => this.openDex()],
       ['Map', key('map'), () => this.openMap()],
+      ['Atlas', '', () => this.openAtlas()],
       ['Quests', key('quests'), () => this.openQuests()],
       ...(this.host.save
         ? [['Save', '', () => this.saveGame()] as [string, string, () => void]]
@@ -343,27 +359,42 @@ export class OverworldMenus {
 
   // ------------------------------------------------------------ map & quests
 
+  /** A region texture for `slot`, drawn again only when `key` (what it shows) changed. */
+  private texture(slot: string, key: string, draw: () => PixelBuffer): Texture {
+    const have = this.maps.get(slot);
+    if (have?.key === key) return have.texture;
+    const buf = draw();
+    const canvas = document.createElement('canvas');
+    canvas.width = buf.width;
+    canvas.height = buf.height;
+    canvas.getContext('2d')?.putImageData(new ImageData(buf.bytes, buf.width, buf.height), 0, 0);
+    const texture = Texture.from(canvas);
+    texture.source.scaleMode = 'nearest';
+    have?.texture.destroy(true);
+    this.maps.set(slot, { key, texture });
+    return texture;
+  }
+
+  /**
+   * `M`: the region map at 1 px per tile around the player, unexplored land as blank
+   * parchment, discovered places labelled (C36b). `E` opens the Atlas.
+   */
   openMap(): void {
-    const { map } = this.host;
+    const { map, mapId } = this.host;
     const { width, height } = this.host.size();
-    const scale = Math.max(
-      1,
-      Math.floor(Math.min(width - 40, height - 70) / Math.max(map.width, map.height)),
+    const explored = this.host.explored(mapId);
+    const texture = this.texture(`${mapId}:map`, String(explored.explored), () =>
+      buildMinimap(
+        map,
+        BIOMES[map.biome],
+        1,
+        fogTint((x, y) => explored.seen(x, y)),
+      ),
     );
-    if (!this.mapImage || this.mapImage.scale !== scale) {
-      this.mapImage?.texture.destroy(true);
-      const buf = buildMinimap(map, BIOMES[map.biome], scale);
-      const canvas = document.createElement('canvas');
-      canvas.width = buf.width;
-      canvas.height = buf.height;
-      canvas.getContext('2d')?.putImageData(new ImageData(buf.bytes, buf.width, buf.height), 0, 0);
-      const texture = Texture.from(canvas);
-      texture.source.scaleMode = 'nearest';
-      this.mapImage = { texture, scale };
-    }
     const where = this.host.where();
     const markers: MapMarker[] = [];
     for (const s of this.host.services()) {
+      if (!explored.seen(s.x, s.y)) continue;
       const center = s.role === 'center';
       markers.push({
         x: s.x,
@@ -372,16 +403,60 @@ export class OverworldMenus {
         label: center ? 'Zorling center' : 'Shop',
       });
     }
+    const labels = mapPlaces(map)
+      .filter((p) => p.kind !== 'zone' && p.kind !== 'lair' && explored.places.has(p.key))
+      .map((p) => ({ x: p.x, y: p.y, text: p.name }));
     const panel = new MapPanel({
       title: map.name,
       place: where.place,
-      image: this.mapImage.texture,
-      scale,
+      image: texture,
+      scale: 1,
+      view: { width: Math.max(160, width - 40), height: Math.max(120, height - 70) },
       player: where,
       markers,
+      labels,
+      onAtlas: (p) => {
+        this.close(p);
+        this.openAtlas();
+      },
       onBack: (p) => this.close(p),
     });
     this.open(panel, () => ({ w: panel.width, h: panel.height }));
+  }
+
+  /** The Atlas (C36b): every region's map, zones, fights and the quest log. */
+  openAtlas(): void {
+    const { content, party } = this.host;
+    const ids = atlasMaps(content);
+    if (!ids.includes(this.host.mapId)) ids.push(this.host.mapId);
+    const maps = ids.map((id) =>
+      id === this.host.mapId ? this.host.map : loadRegion(content, id),
+    );
+    const explored = ids.map((id) => this.host.explored(id));
+    const regions = ids.map((id, i) =>
+      atlasRegion(content, party, id, maps[i] as WorldMap, explored[i] as ExploredMap),
+    );
+    const panel = new AtlasPanel({
+      regions,
+      start: ids.indexOf(this.host.mapId),
+      progress: atlasProgress(content, party),
+      quests: questLog(content, party),
+      image: (i) => {
+        const m = maps[i] as WorldMap;
+        const e = explored[i] as ExploredMap;
+        return this.texture(`${ids[i] ?? ''}:atlas`, String(e.explored), () =>
+          buildMinimap(
+            m,
+            BIOMES[m.biome],
+            1,
+            fogTint((x, y) => e.seen(x, y), tierTint(m)),
+          ),
+        );
+      },
+      pressed: (a) => this.host.pressed(a),
+      onBack: (p) => this.close(p),
+    });
+    this.open(panel, () => ({ w: AtlasPanel.WIDTH, h: AtlasPanel.HEIGHT }));
   }
 
   openQuests(): void {

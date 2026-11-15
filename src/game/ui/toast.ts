@@ -6,6 +6,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import { BADGE_NOTE, QUEST_NOTE } from '@game/story';
+import type { MapPlace } from '@game/world/explore';
 import { paper } from '../style/tokens';
 import { drawPaper } from './skin';
 import { uiText } from './text';
@@ -45,6 +46,13 @@ export function splitNotes(notes: readonly string[]): {
     else pages.push(n);
   }
   return { toasts, pages };
+}
+
+/** A place found for the first time (C36b): its name and wild levels; secrets in gold. */
+export function discoveryToast(p: MapPlace): Toast {
+  const title = p.kind === 'secret' ? 'Secret place' : p.kind === 'town' ? 'Town' : 'Discovered';
+  const levels = p.levels && p.kind !== 'town' ? ` · Lv ${p.levels[0]}–${p.levels[1]}` : '';
+  return { title, text: `${p.name}${levels}`, ...(p.kind === 'secret' ? { big: true } : {}) };
 }
 
 export class ToastQueue {

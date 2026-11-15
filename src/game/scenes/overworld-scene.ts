@@ -68,12 +68,19 @@ import type { DialogueBattle } from '@game/data';
 import { paper, surface } from '@game/style/tokens';
 import { ITEM_SPRITES } from '@game/ui/icons';
 import { MoneyLabel } from '@game/ui/panels';
-import { splitNotes, ToastQueue } from '@game/ui/toast';
+import { discoveryToast, splitNotes, ToastQueue } from '@game/ui/toast';
 import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
 import { BIOMES, TILE } from '@game/world/biomes';
 import { nextPhaseStart, type DayPhase } from '@game/world/lighting';
 import { connectionAt, linkedArrival, loadRegion, type WorldMap } from '@game/world/map';
+import {
+  exploredData,
+  exploredMap,
+  visit,
+  type ExploredData,
+  type ExploredMap,
+} from '@game/world/explore';
 import type { NpcActor, Roamer } from '@game/world/overworld/actors';
 import { Atmosphere } from '@game/world/overworld/atmosphere';
 import { Camera } from '@game/world/overworld/camera';
@@ -123,6 +130,8 @@ export interface OverworldOptions {
   readonly respawn?: Place;
   /** Seconds played before this visit. */
   readonly playtime?: number;
+  /** Exploration of every map so far (C36b); this map's grows as the player walks. */
+  readonly explored?: Readonly<Record<string, ExploredData>>;
   /** Writes the game state (autosave and the pause menu's "Save"). No saving when unset. */
   save?(state: GameState): Promise<void>;
   /**
@@ -237,6 +246,10 @@ export class OverworldScene implements Scene<Container> {
   private autosaveTimer = AUTOSAVE_EVERY;
   private savedNote = 0;
   private saveFailed = false;
+  /** This map's revealed cells and discovered places (C36b). */
+  private readonly explored: ExploredMap;
+  /** The tile last revealed around. */
+  private visited = '';
 
   constructor(private readonly options: OverworldOptions) {
     this.map = loadRegion(options.content, options.mapId);
@@ -250,6 +263,7 @@ export class OverworldScene implements Scene<Container> {
       seed: options.seed ?? this.map.seed,
       ...(start ? { start, facing: start.facing } : {}),
     });
+    this.explored = exploredMap(this.map, options.explored?.[options.mapId]);
     this.stream = new TerrainStream(this.map, BIOMES[this.map.biome]);
     this.atmosphere = new Atmosphere(this.map, BIOMES[this.map.biome], this.map.seed);
     this.atmosphere.update(0, this.player.x, this.player.y, true);
@@ -283,7 +297,25 @@ export class OverworldScene implements Scene<Container> {
     this.help.text = HELP;
     this.respawn = this.onMap(options.respawn, false) ?? this.firstRespawn();
     this.menus = new OverworldMenus(this.menuHost());
+    this.explore();
     this.saved = { party: this.current, key: this.placeKey() };
+  }
+
+  /** Reveals around the player's tile (once per tile) and toasts places found (C36b). */
+  private explore(): void {
+    const { tx, ty } = this.player;
+    const key = `${tx},${ty}`;
+    if (key === this.visited) return;
+    this.visited = key;
+    for (const p of visit(this.map, this.explored, tx, ty)) this.toasts.push(discoveryToast(p));
+  }
+
+  /** Every map's exploration as of now (this map's live one included). */
+  exploration(): Record<string, ExploredData> {
+    return {
+      ...this.options.explored,
+      [this.options.mapId]: exploredData(this.map, this.explored),
+    };
   }
 
   /** A saved place if it is on this map (and, for `walkable`, inside and not blocked). */
@@ -302,6 +334,7 @@ export class OverworldScene implements Scene<Container> {
       place: { map, x: at.x, y: at.y, facing: this.player.facing },
       respawn: { map, ...this.respawn },
       playtime: this.playtime,
+      explored: this.exploration(),
     };
   }
 
@@ -375,6 +408,12 @@ export class OverworldScene implements Scene<Container> {
       set party(p: Party) {
         scene.party = p;
       },
+      mapId: this.options.mapId,
+      explored: (id: string) =>
+        id === this.options.mapId
+          ? this.explored
+          : exploredMap(loadRegion(this.options.content, id), this.options.explored?.[id]),
+      pressed: (a: 'inspect' | 'next_tab') => this.options.input.pressed(a),
       size: () => ({ width: this.width, height: this.height }),
       where: () => {
         const z = this.map.zoneAt(this.player.tx, this.player.ty);
@@ -540,7 +579,9 @@ export class OverworldScene implements Scene<Container> {
     this.time += dt;
     this.playtime += dt;
     this.motion.update(dt);
-    if (!this.inBattle) this.toasts.update(dt);
+    // Toasts wait while a menu is open (they would cover it).
+    this.toasts.view.visible = !this.stack.size;
+    if (!this.inBattle && !this.stack.size) this.toasts.update(dt);
     if (!this.inBattle) {
       this.atmosphere.update(dt, this.player.x, this.player.y);
       this.fx.update(dt);
@@ -579,6 +620,7 @@ export class OverworldScene implements Scene<Container> {
         this.stepFx(e.event.from, e.event.to);
       else if (e.kind === 'player' && e.event.kind === 'arrive' && this.travel(e.event.at)) return;
     }
+    this.explore();
     this.roamerFx();
     this.logSeen();
     if ((this.autosaveTimer -= dt) <= 0) this.autosave();

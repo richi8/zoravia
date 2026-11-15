@@ -64,6 +64,8 @@ const STEPS: Readonly<Record<number, Step>> = {
       ...(v4['respawn'] === undefined ? {} : { respawn: at(v4['respawn']) }),
     };
   },
+  // C36b: no exploration yet; loading reveals around what the save's progress proves.
+  5: (v5) => ({ ...v5, version: 6 }),
 };
 
 /** The version a raw save says it has. */

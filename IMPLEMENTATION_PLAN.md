@@ -299,8 +299,16 @@ User plays Region 1. Decide what to change before building more.
   - The save keeps the explored cells of each map.
   - The `M` map shows only explored areas.
   - Entering a zone, town or landmark for the first time shows a toast with its name and level range. Discovered places are labelled on the map.
+  - **Atlas** (user request, 2026-11-15): a permanent pause-menu item with an in-game version of the C36 World Atlas page. It is drawn in code from pack data, like everything else:
+    - each region's map, tinted by tier, with markers for towns, trainers, trial, Mira, Titans, legendary, region boss, gate, Elder Titans and Keepers;
+    - a zone list (levels, storms, wild Zorlings seen or caught);
+    - bosses (level, weak spot once logged in the Dex), quests (from the quest log) and progress counts (badges, hearts, Dex).
+    - It shows only what the player has discovered. Undiscovered places, trainers and Zorlings stay dark or appear as “?”, so the atlas never spoils the world.
+    - Fully keyboard-driven: regions with `A/D`, list and markers with `W/S`, `F` for tooltips. It also opens from the `M` map.
+    - Preview round first (layout options as images).
 - **Done when:**
   - Exploring reveals the map.
+  - The Atlas opens from the pause menu, follows exploration and is fully usable by keyboard.
   - Old saves load with a sensible reveal (e.g. around visited towns).
   - The map stays fully usable by keyboard.
 - **Depends:** C36

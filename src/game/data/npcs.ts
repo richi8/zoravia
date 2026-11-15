@@ -58,6 +58,25 @@ export const npcRoleSchema = z.discriminatedUnion('kind', [
 ]);
 export type NpcRole = z.output<typeof npcRoleSchema>;
 
+/**
+ * What an NPC is on the Atlas (C36b). NPCs whose dialogue fights a trainer are `trainer`
+ * and NPCs who start a boss battle are `titan` or `legendary` (by the boss's kind) without
+ * one; set it for the rest: the trial master, the rival, the region boss, a gate keeper,
+ * Elder Titans and Keepers.
+ */
+export const NPC_MARKS = [
+  'trainer',
+  'trial',
+  'rival',
+  'titan',
+  'legendary',
+  'boss',
+  'gate',
+  'elder',
+  'keeper',
+] as const;
+export type NpcMark = (typeof NPC_MARKS)[number];
+
 export const npcLookSchema = z.strictObject({
   outfit: z.enum(OUTFIT_IDS).default('red'),
   hair: z.enum(HAIR_IDS).default('brown'),
@@ -80,6 +99,8 @@ export const npcSchema = z
     when: storyConditionSchema.optional(),
     zorling: ref.optional(),
     object: z.enum(['sign', 'item']).optional(),
+    /** Atlas marker (C36b); see `NPC_MARKS`. */
+    mark: z.enum(NPC_MARKS).optional(),
   })
   .superRefine((n, ctx) => {
     if (n.zorling && n.behavior.kind === 'wander') {

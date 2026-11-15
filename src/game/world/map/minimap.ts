@@ -87,3 +87,41 @@ function townColors(m: WorldMap, biome: Biome): Map<number, number> {
   }
   return out;
 }
+
+/** Unexplored paper (C36b): blank parchment with faint diagonal hatching. */
+const FOG = packColor(0xefe0c0);
+const FOG_HATCH = packColor(0xe2cfa8);
+
+/** Tints unexplored tiles as blank parchment (`seen` false), on top of `base`. */
+export function fogTint(
+  seen: (tx: number, ty: number) => boolean,
+  base?: MinimapTint,
+): MinimapTint {
+  return (c, tx, ty) => {
+    if (!seen(tx, ty)) return (tx + ty) % 5 === 0 ? FOG_HATCH : FOG;
+    return base ? base(c, tx, ty) : c;
+  };
+}
+
+/** Atlas tier colors (C36b), mixed into a zone's tiles. */
+export const TIER_TINTS = {
+  t1: 0x4fa84a,
+  t2: 0xd9a62c,
+  t3: 0xd8622a,
+  danger: 0x8b35c4,
+} as const;
+
+/** Mixes each zone's tier color into its tiles (`amount` 0–1). */
+export function tierTint(m: WorldMap, amount = 0.4): MinimapTint {
+  const keep = 1 - amount;
+  return (c, tx, ty) => {
+    const z = m.zoneAt(tx, ty);
+    if (!z) return c;
+    const t = TIER_TINTS[z.tier];
+    const r = c & 255;
+    const g = (c >> 8) & 255;
+    const b = (c >>> 16) & 255;
+    const mix = (a: number, x: number): number => Math.round(a * keep + x * amount);
+    return packColor((mix(r, t >> 16) << 16) | (mix(g, (t >> 8) & 255) << 8) | mix(b, t & 255));
+  };
+}

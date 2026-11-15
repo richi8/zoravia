@@ -13,6 +13,8 @@
 import type { Facing, GameContent } from '@game/data';
 import type { Party, QuestLog } from '@game/player';
 import { statsOf, type Zorling } from '@game/progression';
+import { loadRegion } from '@game/world/map';
+import { legacyExploration, type Exploration } from '@game/world/explore';
 import { migrate, SaveError } from './migrate';
 import { SAVE_FORMAT, SAVE_VERSION, type SaveData } from './schema';
 
@@ -33,6 +35,8 @@ export interface GameState {
   readonly respawn?: Place;
   /** Seconds played. */
   readonly playtime: number;
+  /** Revealed cells and discovered places by map (C36b); `{}` before any. */
+  readonly explored: Exploration;
 }
 
 export function toSave(content: GameContent, state: GameState, now = new Date()): SaveData {
@@ -46,6 +50,7 @@ export function toSave(content: GameContent, state: GameState, now = new Date())
     place: placeOut(content, state.place),
     ...(state.respawn ? { respawn: placeOut(content, state.respawn) } : {}),
     party: state.party,
+    explored: state.explored,
   } as SaveData;
   // A deep, plain copy: nothing shared with the live state, nothing that is not JSON.
   return JSON.parse(JSON.stringify(data)) as SaveData;
@@ -87,11 +92,25 @@ export function fromSave(content: GameContent, data: SaveData): GameState {
     badges: [...new Set(p.badges)],
     trainers: p.trainers,
   };
+  const place = placeIn(content, data.place);
+  const respawn = data.respawn ? placeIn(content, data.respawn) : undefined;
+  const explored: Exploration = data.explored
+    ? Object.fromEntries(Object.entries(data.explored).filter(([id]) => content.maps.has(id)))
+    : legacyExploration(
+        content,
+        {
+          places: respawn ? [place, respawn] : [place],
+          trainers: party.trainers,
+          bosses: party.bosses,
+        },
+        (id) => loadRegion(content, id),
+      );
   return {
     party,
-    place: placeIn(content, data.place),
-    ...(data.respawn ? { respawn: placeIn(content, data.respawn) } : {}),
+    place,
+    ...(respawn ? { respawn } : {}),
     playtime: data.playtime,
+    explored,
   };
 }
 

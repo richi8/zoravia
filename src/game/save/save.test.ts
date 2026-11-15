@@ -15,6 +15,7 @@ import v1 from '../../../tests/fixtures/saves/v1.json';
 import v2 from '../../../tests/fixtures/saves/v2.json';
 import v3 from '../../../tests/fixtures/saves/v3.json';
 import v4 from '../../../tests/fixtures/saves/v4.json';
+import v5 from '../../../tests/fixtures/saves/v5.json';
 import {
   formatPlaytime,
   MemoryStore,
@@ -68,6 +69,7 @@ function state(over: Partial<GameState> = {}): GameState {
     place: { map: 'core:test-region', x: 52, y: 50, facing: 'right' },
     respawn: { map: 'core:test-region', x: 48, y: 47, facing: 'up' },
     playtime: 754.25,
+    explored: {},
     ...over,
   };
 }
@@ -193,6 +195,38 @@ describe('save format', () => {
       y: 199,
       facing: 'down',
     });
+  });
+
+  it('migrates the v5 fixture with a reveal around what it proves (C36b)', () => {
+    expect(v5.version).toBe(5);
+    const data = migrate(v5);
+    expect(data.version).toBe(SAVE_VERSION);
+    expect(data.explored).toBeUndefined();
+    const s = readSave(content, v5);
+    const verdale = s.explored['core:verdale'];
+    expect(verdale?.places).toContain('anchor:town-fernhollow');
+    expect(verdale?.places).toContain('anchor:town-willowmere');
+    expect(verdale?.places).not.toContain('zone:elderroot');
+    // Written back as v6, it keeps the reveal.
+    const again = readSave(content, JSON.parse(JSON.stringify(toSave(content, s))));
+    expect(again.explored).toEqual(s.explored);
+  });
+
+  it('round-trips exploration and drops maps the packs no longer have', () => {
+    const explored = {
+      'core:test-region': {
+        origin: [0, 0],
+        cols: 2,
+        rows: 1,
+        cells: 'Aw==',
+        places: ['zone:meadow'],
+      },
+    } as const;
+    const s = state({ explored });
+    const data = JSON.parse(JSON.stringify(toSave(content, s))) as Record<string, unknown>;
+    expect(readSave(content, data).explored).toEqual(explored);
+    data['explored'] = { ...explored, 'gone:map': explored['core:test-region'] };
+    expect(Object.keys(readSave(content, data).explored)).toEqual(['core:test-region']);
   });
 
   it('keeps boss rematches and refuses unknown badges or trainers', () => {

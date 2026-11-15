@@ -435,6 +435,7 @@ export class DebugLauncherScene implements Scene<Container> {
         facing: spawn?.facing ?? 'down',
       },
       playtime: 0,
+      explored: {},
     };
     await saves.write(slot, state);
     await this.play(slot, state);
@@ -474,6 +475,7 @@ export class DebugLauncherScene implements Scene<Container> {
       start: state.place,
       ...(state.respawn ? { respawn: state.respawn } : {}),
       playtime: state.playtime,
+      explored: state.explored,
       save: (s) => queue.save(s),
       onParty: (p) => this.reportParty(p),
       seed: this.seed++,

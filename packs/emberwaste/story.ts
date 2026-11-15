@@ -951,6 +951,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'forgemaster-hale': {
     name: 'Forgemaster Hale',
+    mark: 'trial',
     map: MAP,
     anchor: 'trial',
     look: { outfit: 'maroon', hair: 'grey', skin: 'tan' },
@@ -958,6 +959,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'apprentice-flint': {
     name: 'Apprentice Flint',
+    mark: 'trial',
     map: MAP,
     x: 104,
     y: 66,
@@ -997,6 +999,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'mira-cinderwell': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: MAP,
     x: 100,
     y: 106,
@@ -1007,6 +1010,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'mira-kilnreach': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: MAP,
     x: 100,
     y: 72,
@@ -1017,6 +1021,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'mira-slagwatch': {
     name: 'Rival Mira',
+    mark: 'rival',
     map: MAP,
     x: 161,
     y: 104,
@@ -1027,6 +1032,7 @@ const storyNpcs: Record<string, NpcInput> = {
   },
   'glassmaker-gorran': {
     name: 'Glassmaker Gorran',
+    mark: 'boss',
     map: MAP,
     anchor: 'boss-cap-works',
     look: { outfit: 'white', hair: 'brown', skin: 'warm' },
