@@ -56,6 +56,7 @@ export const MARKER_COLORS: Readonly<Record<AtlasMarkerKind, number>> = {
   elder: 0x7a2fb0,
   keeper: 0x4a1a7a,
   gate: 0x222222,
+  campfire: 0xf08a2a,
 };
 
 const KIND_NAMES: Readonly<Record<AtlasMarkerKind, string>> = {
@@ -69,6 +70,7 @@ const KIND_NAMES: Readonly<Record<AtlasMarkerKind, string>> = {
   elder: 'Elder Titan',
   keeper: 'Keeper',
   gate: 'Gate',
+  campfire: 'Campfire',
 };
 
 /** The player's marker: bright gold, stands out on green and blue. */

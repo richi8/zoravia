@@ -7,6 +7,7 @@
 import type { GameContent } from '@game/data';
 import { newParty } from '@game/player';
 import { createZorling } from '@game/progression';
+import { NO_CAMP } from '@game/world/rest';
 import type { GameState } from './codec';
 
 export function newGameState(content: GameContent, startId: string, species: string): GameState {
@@ -23,5 +24,6 @@ export function newGameState(content: GameContent, startId: string, species: str
     place: { map: map.id, x: spot.x, y: spot.y, facing: spot.facing ?? 'down' },
     playtime: 0,
     explored: {},
+    camp: NO_CAMP,
   };
 }

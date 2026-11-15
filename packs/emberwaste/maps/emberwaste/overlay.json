@@ -1356,6 +1356,30 @@
       "note": "C36: Rift Camp lamp",
       "kind": "lamp",
       "at": [216, 137]
+    },
+    {
+      "op": "prop",
+      "note": "C40: Rift Camp fire",
+      "kind": "campfire",
+      "at": [214, 136]
+    },
+    {
+      "op": "prop",
+      "note": "C40: Rift Camp tent",
+      "kind": "tent",
+      "at": [209, 136]
+    },
+    {
+      "op": "prop",
+      "note": "C40: obsidian zone fire (long T3 route)",
+      "kind": "campfire",
+      "at": [29, 23]
+    },
+    {
+      "op": "prop",
+      "note": "C40: cinder-dunes zone fire (long T2 route)",
+      "kind": "campfire",
+      "at": [58, 181]
     }
   ]
 }

@@ -1362,6 +1362,30 @@
       "note": "C36: Driftwatch Camp lamp",
       "kind": "lamp",
       "at": [94, 229]
+    },
+    {
+      "op": "prop",
+      "note": "C40: Driftwatch Camp fire",
+      "kind": "campfire",
+      "at": [93, 227]
+    },
+    {
+      "op": "prop",
+      "note": "C40: Driftwatch Camp tent",
+      "kind": "tent",
+      "at": [86, 227]
+    },
+    {
+      "op": "prop",
+      "note": "C40: squall-reach zone fire (long T2 route)",
+      "kind": "campfire",
+      "at": [28, 139]
+    },
+    {
+      "op": "prop",
+      "note": "C40: glacier zone fire (long T3 route)",
+      "kind": "campfire",
+      "at": [50, 162]
     }
   ]
 }

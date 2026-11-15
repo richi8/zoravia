@@ -5,7 +5,7 @@
  * Nothing undiscovered is given away: a zone not yet entered, a fight whose spot is still
  * dark and a wild Zorling never seen are marked unknown, and the screen shows them as "?".
  *
- * - **Markers**: towns (discovered), and NPCs with an Atlas mark (`NpcData.mark`, or derived:
+ * - **Markers**: towns (discovered), campfires (explored, C40), and NPCs with an Atlas mark (`NpcData.mark`, or derived:
  *   a trainer battle → `trainer`, a boss battle → `titan`/`legendary`). An NPC shows while it
  *   is there (`when` holds) or once beaten.
  * - **Zones**: tier, levels, battle weather and the wild Zorlings seen and caught.
@@ -19,7 +19,8 @@ import { holds } from '@game/story/conditions';
 import { mapPlaces, npcBattles, npcTile, type ExploredMap, type MapPlace } from './explore';
 import type { WorldMap } from './map/world-map';
 
-export type AtlasMarkerKind = NpcMark | 'town';
+/** `campfire`: a fire to rest at (C40), shown once its tile is explored. */
+export type AtlasMarkerKind = NpcMark | 'town' | 'campfire';
 
 export interface AtlasMarker {
   readonly kind: AtlasMarkerKind;
@@ -156,6 +157,9 @@ export function atlasRegion(
   for (const p of places)
     if (p.kind === 'town' && e.places.has(p.key))
       markers.push({ kind: 'town', name: p.name, x: p.x, y: p.y, beaten: false });
+  for (const p of m.props)
+    if (p.kind === 'campfire' && e.seen(p.tx, p.ty))
+      markers.push({ kind: 'campfire', name: 'Campfire', x: p.tx, y: p.ty, beaten: false });
 
   const badges = party.badges.length;
   const reactionName = (id: string): string => content.reactions.get(id)?.name ?? id;

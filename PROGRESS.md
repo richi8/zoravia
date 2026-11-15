@@ -55,5 +55,5 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C37 | Seamless world | ✅ | [log](logs/C37-seamless-world.md) |
 | C38 | Release prep | ✅ | [log](logs/C38-release-prep.md) |
 | C39 | Browser smoke test & crash screen | ✅ | [log](logs/C39-smoke-test-crash-screen.md) |
-| C40 | Campfires (rest spots) | ⬜ | |
+| C40 | Campfires (rest spots) | ✅ | [log](logs/C40-campfires.md) |
 | C41 | Sprigling's early game | ⬜ | |

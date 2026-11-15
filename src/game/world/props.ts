@@ -12,6 +12,7 @@ import { rampIndex } from '@engine/render/ramp';
 import { TILE_STYLE, type Biome, type Material } from './biomes';
 import * as town from './buildings';
 import { TOWN_RAMPS, type TownMaterial } from './buildings';
+import * as camp from './campfire';
 
 /** A biome material or a fixed town material (buildings, C28). */
 export type PaintMaterial = Material | TownMaterial;
@@ -40,6 +41,9 @@ export const PROP_KINDS = [
   'menhir',
   'bridge-v',
   'bridge-h',
+  // Camps (C40).
+  'campfire',
+  'tent',
 ] as const;
 
 export type PropKind = (typeof PROP_KINDS)[number];
@@ -67,6 +71,8 @@ export interface PropInfo {
   readonly walkway?: boolean;
   /** Its door opens a service: talking to the door talks to the nearest NPC with that role. */
   readonly service?: 'center' | 'shop';
+  /** A campfire to rest at (C40): `E` facing it asks "Rest?". */
+  readonly rest?: boolean;
 }
 
 export const PROP_INFO: Readonly<Record<PropKind, PropInfo>> = {
@@ -92,6 +98,8 @@ export const PROP_INFO: Readonly<Record<PropKind, PropInfo>> = {
   menhir: { shadow: true, solid: true },
   'bridge-v': { shadow: false, solid: false, onLiquid: true, flat: true, walkway: true },
   'bridge-h': { shadow: false, solid: false, onLiquid: true, flat: true, walkway: true },
+  campfire: { shadow: false, solid: true, rest: true },
+  tent: { shadow: true, solid: true, footprint: { w: 3, h: 2, left: 1 } },
 };
 
 /**
@@ -422,5 +430,9 @@ export function buildProp(p: Painter, kind: PropKind, variant: number): PropSpri
       return town.bridgeV(p, variant);
     case 'bridge-h':
       return town.bridgeH(p, variant);
+    case 'campfire':
+      return camp.campfire(p);
+    case 'tent':
+      return camp.tent(p);
   }
 }

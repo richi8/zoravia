@@ -121,7 +121,8 @@ export interface ActiveMood {
 
 // ------------------------------------------------------------------ prop lights
 
-export type PropLightKind = 'lamp' | 'window' | 'rune';
+/** `campfire` burns, `embers` is a fire burnt down after a rest (C40). */
+export type PropLightKind = 'lamp' | 'window' | 'rune' | 'campfire' | 'embers';
 
 export interface PropLight {
   readonly kind: PropLightKind;
@@ -136,6 +137,8 @@ const POOL: Readonly<
   lamp: { color: 0xffc46a, radius: 40, strength: 1, glow: GLOW.flame },
   window: { color: 0xffb85a, radius: 34, strength: 0.75, glow: GLOW.window },
   rune: { color: 0x70e6d0, radius: 22, strength: 0.8, glow: GLOW.rune },
+  campfire: { color: 0xffa050, radius: 52, strength: 1.1, glow: GLOW.flame },
+  embers: { color: 0xff6a3a, radius: 14, strength: 0.6, glow: GLOW.flame },
 };
 
 /** Windows closer than this (px, along x) share one light pool. */

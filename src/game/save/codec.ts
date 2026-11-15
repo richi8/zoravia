@@ -15,6 +15,7 @@ import type { Party, QuestLog } from '@game/player';
 import { statsOf, type Zorling } from '@game/progression';
 import { loadRegion } from '@game/world/map';
 import { legacyExploration, type Exploration } from '@game/world/explore';
+import { NO_CAMP, type CampState } from '@game/world/rest';
 import { migrate, SaveError } from './migrate';
 import { SAVE_FORMAT, SAVE_VERSION, type SaveData } from './schema';
 
@@ -37,6 +38,8 @@ export interface GameState {
   readonly playtime: number;
   /** Revealed cells and discovered places by map (C36b); `{}` before any. */
   readonly explored: Exploration;
+  /** Day-clock offset and campfire rests (C40); none before the first rest. */
+  readonly camp?: CampState;
 }
 
 export function toSave(content: GameContent, state: GameState, now = new Date()): SaveData {
@@ -51,6 +54,7 @@ export function toSave(content: GameContent, state: GameState, now = new Date())
     ...(state.respawn ? { respawn: placeOut(content, state.respawn) } : {}),
     party: state.party,
     explored: state.explored,
+    camp: state.camp ?? NO_CAMP,
   } as SaveData;
   // A deep, plain copy: nothing shared with the live state, nothing that is not JSON.
   return JSON.parse(JSON.stringify(data)) as SaveData;
@@ -111,6 +115,7 @@ export function fromSave(content: GameContent, data: SaveData): GameState {
     ...(respawn ? { respawn } : {}),
     playtime: data.playtime,
     explored,
+    camp: data.camp,
   };
 }
 

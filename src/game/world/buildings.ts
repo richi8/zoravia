@@ -36,6 +36,12 @@ export const TOWN_RAMPS = {
   roofMustard: [0x94661c, 0xbc8628, 0xdaa842, 0xf0cc70],
   roofPlum: [0x5a2e5a, 0x7a4278, 0x9a5c94, 0xbe82b2],
   roofGreen: [0x2e5e34, 0x407a40, 0x5a9a50, 0x80ba6a],
+  /** Campfire (C40): outer flame and embers, the bright core, ash, tent canvas. */
+  fire: [0xa8301c, 0xd8541e, 0xf6862c, 0xffb44a],
+  fireCore: [0xf6a83a, 0xffd860, 0xfff2b0],
+  ash: [0x4a4440, 0x6a625a],
+  canvas: [0x9c8462, 0xc2a87e, 0xdecaa0, 0xf2e6c6],
+  shade: [0x23252e, 0x383b46],
 } as const satisfies Record<string, readonly number[]>;
 
 export type TownMaterial = keyof typeof TOWN_RAMPS;
@@ -45,13 +51,15 @@ const GLOW_OF: Partial<Record<PaintMaterial, PropGlow>> = {
   glass: GLOW.window,
   rune: GLOW.rune,
   flame: GLOW.flame,
+  fire: GLOW.flame,
+  fireCore: GLOW.flame,
 };
 
 /** House roof colors by `variant & 3`. */
 const HOUSE_ROOFS: readonly TownMaterial[] = ['roofTeal', 'roofMustard', 'roofRed', 'roofPlum'];
 
 /** Sprite drawing surface: one material and light value per pixel. */
-class Canvas {
+export class Canvas {
   readonly mat: (PaintMaterial | null)[];
   readonly light: Float32Array;
 

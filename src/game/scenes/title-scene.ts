@@ -440,6 +440,7 @@ export class TitleScene implements Scene<Container> {
       ...(state.respawn ? { respawn: state.respawn } : {}),
       playtime: state.playtime,
       explored: state.explored,
+      ...(state.camp ? { camp: state.camp } : {}),
       arrived,
       save: (s) => queue.save(s),
       onTravel: (next) => {

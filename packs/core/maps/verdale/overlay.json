@@ -1722,6 +1722,30 @@
       "note": "C36: Thornveil Camp lamp",
       "kind": "lamp",
       "at": [104, 69]
+    },
+    {
+      "op": "prop",
+      "note": "C40: Thornveil Camp fire",
+      "kind": "campfire",
+      "at": [102, 67]
+    },
+    {
+      "op": "prop",
+      "note": "C40: Thornveil Camp tent",
+      "kind": "tent",
+      "at": [95, 67]
+    },
+    {
+      "op": "prop",
+      "note": "C40: mistmere zone fire (long T3 route)",
+      "kind": "campfire",
+      "at": [19, 262]
+    },
+    {
+      "op": "prop",
+      "note": "C40: reedmarsh zone fire (long T2 route)",
+      "kind": "campfire",
+      "at": [38, 240]
     }
   ]
 }

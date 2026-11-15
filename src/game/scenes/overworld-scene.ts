@@ -94,6 +94,8 @@ import { drawPaper } from '@game/ui/skin';
 import { uiText } from '@game/ui/text';
 import { BIOMES, TILE } from '@game/world/biomes';
 import { nextPhaseStart, type DayPhase } from '@game/world/lighting';
+import { dayClock, fireLit, NO_CAMP, restAt, restParty, type CampState } from '@game/world/rest';
+import { Campfires, type Campfire } from '@game/world/overworld/campfires';
 import { connectionAt, linkedArrival, loadRegion, type WorldMap } from '@game/world/map';
 import {
   worldFor,
@@ -171,6 +173,8 @@ export interface OverworldOptions {
   readonly respawn?: Place;
   /** Seconds played before this visit. */
   readonly playtime?: number;
+  /** Day-clock offset and campfire rests so far (C40). */
+  readonly camp?: CampState;
   /** Exploration of every map so far (C36b); this map's grows as the player walks. */
   readonly explored?: Readonly<Record<string, ExploredData>>;
   /** Entered by travel from another region (C36d): shows the region's arrival toast. */
@@ -241,6 +245,8 @@ export class OverworldScene implements Scene<Container> {
     { ferry: Ferry; to: FerryEnd; voyage: Voyage; d: number; speed: number; t: number } | undefined;
   private readonly stream: TerrainStream;
   private readonly atmosphere: Atmosphere;
+  private readonly campfires: Campfires;
+  private camp: CampState;
   private readonly fx: WorldFx;
   /** Last tile of each wild Zorling (grass rustle when it steps into tall grass). */
   private readonly roamerTiles = new Map<Roamer, number>();
@@ -326,6 +332,7 @@ export class OverworldScene implements Scene<Container> {
     this.region = home;
     this.current = options.party;
     this.playtime = options.playtime ?? 0;
+    this.camp = options.camp ?? NO_CAMP;
     const start = this.onMap(options.start, true) ?? spawnOf(home);
     this.sim = new OverworldSim({
       content: options.content,
@@ -339,6 +346,7 @@ export class OverworldScene implements Scene<Container> {
     this.region = this.world.regionAt(this.player.tx, this.player.ty) ?? home;
     this.stream = new TerrainStream(this.map, (x, y) => this.world.lookAt(x, y));
     this.atmosphere = new Atmosphere(this.map, BIOMES[home.biome], home.map.seed);
+    this.campfires = new Campfires(this.world);
     this.atmosphere.update(0, this.player.x, this.player.y, true);
     this.fx = new WorldFx(home.map.seed + 7);
     this.sheet = buildCharacterSheet(PLAYER_OUTFIT);
@@ -436,13 +444,14 @@ export class OverworldScene implements Scene<Container> {
       respawn: this.placeOf(r, r.facing),
       playtime: this.playtime,
       explored: this.exploration(),
+      camp: this.camp,
     };
   }
 
   private placeKey(): string {
     const at = this.player.destination;
     const r = this.respawn;
-    return `${at.x},${at.y},${this.player.facing}|${r.x},${r.y},${r.facing}`;
+    return `${at.x},${at.y},${this.player.facing}|${r.x},${r.y},${r.facing}|${this.camp.clock}`;
   }
 
   /** Whether the party or the place changed since the last save. */
@@ -631,7 +640,8 @@ export class OverworldScene implements Scene<Container> {
 
   /** Debug (dev console): moves the play clock on to the next `phase` of the day. */
   skipTo(phase: DayPhase): void {
-    this.playtime = nextPhaseStart(this.playtime, phase);
+    const now = dayClock(this.camp, this.playtime);
+    this.camp = { ...this.camp, clock: this.camp.clock + nextPhaseStart(now, phase) - now };
   }
 
   exit(): void {
@@ -730,6 +740,7 @@ export class OverworldScene implements Scene<Container> {
       this.interactAfter = false;
       if (this.interact(this.sim.facing())) return;
       if (!this.player.moving && this.offerFerry(this.player.facing)) return;
+      if (!this.player.moving && this.offerRest(this.player.facing)) return;
     }
 
     const intent = (at: Tile): Intent | undefined => {
@@ -821,6 +832,48 @@ export class OverworldScene implements Scene<Container> {
       }),
     );
     return true;
+  }
+
+  /**
+   * Facing a campfire (C40): a burning one asks "Rest?" and rests on Yes; embers only say
+   * so. True when the player faces a fire.
+   */
+  private offerRest(dir: Dir): boolean {
+    const at = this.player.destination;
+    const [dx, dy] = DIR_STEP[dir];
+    const fire = this.campfires.at(at.x + dx, at.y + dy);
+    if (!fire) return false;
+    this.clearPath();
+    if (!fireLit(this.camp, fire.key, this.playtime)) {
+      this.say(['Only embers are left. The fire will catch again by this time tomorrow.']);
+      return true;
+    }
+    this.say(['The campfire crackles. Rest here for a while?'], undefined, undefined, (box) =>
+      this.ask(['Yes', 'No'], box, (i) => {
+        if (i === 0) this.restAt(fire);
+      }),
+    );
+    return true;
+  }
+
+  /**
+   * Rests at a burning fire: standing team Zorlings heal, fainted ones stay fainted, the day
+   * clock moves on, the wild Zorlings around respawn and the fire burns down (C40).
+   */
+  private restAt(fire: Campfire): void {
+    const fainted = this.party.team.filter((z) => z.hp <= 0).length;
+    this.camp = restAt(this.camp, fire.key, this.playtime);
+    this.party = restParty(this.options.content, this.party);
+    this.sim.clearWild();
+    playSfx('world.heal');
+    const pages = ['Hours pass by the fire. Your Zorlings are rested.'];
+    if (fainted)
+      pages.push(
+        fainted === 1
+          ? 'One fainted Zorling still needs a center.'
+          : `${fainted} fainted Zorlings still need a center.`,
+      );
+    this.say(pages);
   }
 
   /** The ferry from the connection a ferryman stands by, as seen from his region. */
@@ -1471,12 +1524,18 @@ export class OverworldScene implements Scene<Container> {
     const { buf } = this;
     const v = this.viewRect();
     buf.fill(surface.background);
-    const glow = this.atmosphere.begin(this.playtime, v.x, v.y);
+    const glow = this.atmosphere.begin(
+      dayClock(this.camp, this.playtime),
+      v.x,
+      v.y,
+      this.campfires.lights(this.camp, this.playtime, v),
+    );
     this.stream.draw(buf, v.x, v.y, this.time, glow);
     if (this.target) this.drawMarker(this.target, v.x, v.y);
     const list: Drawable[] = [];
     if (!this.ride) list.push(this.characterDrawable(this.player, this.sheet));
     this.boats(list, v.x, v.y);
+    this.fires(list, v);
     // Only what is near the view is drawn (the world has every region's NPCs, C37).
     const near = (m: GridMover): boolean =>
       m.x * TILE > v.x - 4 * TILE &&
@@ -1549,6 +1608,41 @@ export class OverworldScene implements Scene<Container> {
       const b = along(ride.voyage, ride.d);
       drawWake(this.buf, b.x - camX, b.y - camY, b.dir, this.time, true);
       list.push(this.boatDrawable(b.x, b.y + bob, b.dir, ride.t * 0.8, true));
+    }
+  }
+
+  /** Burning campfires near the view, flickering over the map's burnt-down ones (C40). */
+  private fires(
+    list: Drawable[],
+    v: { x: number; y: number; width: number; height: number },
+  ): void {
+    for (const fire of this.campfires.list) {
+      if (fire.x > v.x + v.width || fire.y > v.y + v.height) continue;
+      if (fire.x + 32 < v.x || fire.baseY + 4 < v.y) continue;
+      if (!fireLit(this.camp, fire.key, this.playtime)) continue;
+      list.push({
+        y: fire.ty,
+        draw: (camX, camY) => {
+          const f = this.campfires.sprite(fire, this.time);
+          const { data, width, height } = this.buf;
+          const lights = this.atmosphere.lights;
+          for (let y = 0; y < f.height; y++) {
+            const Y = fire.y + y - camY;
+            if (Y < 0 || Y >= height) continue;
+            for (let x = 0; x < f.width; x++) {
+              const c = f.data[y * f.width + x] ?? 0;
+              if (!c) continue;
+              const X = fire.x + x - camX;
+              if (X < 0 || X >= width) continue;
+              if (this.stream.occludes(fire.x + x, fire.y + y, fire.baseY)) continue;
+              const i = Y * width + X;
+              data[i] = c;
+              // Flames shine at night: they keep their colors under the dark.
+              if (f.glow?.[y * f.width + x]) lights.emit(i, c, c);
+            }
+          }
+        },
+      });
     }
   }
 

@@ -135,15 +135,21 @@ export class Atmosphere {
   }
 
   /**
-   * Starts a frame at `playtime` with the camera at (`camX`, `camY`). Returns the sink for
+   * Starts a frame at day-clock time `clock` (seconds) with the camera at (`camX`, `camY`);
+   * `extra` are lights that change while playing (campfires, C40). Returns the sink for
    * glowing prop pixels, or nothing when no prop glows now.
    */
-  begin(playtime: number, camX: number, camY: number): GlowSink | undefined {
+  begin(
+    clock: number,
+    camX: number,
+    camY: number,
+    extra: readonly PropLight[] = [],
+  ): GlowSink | undefined {
     const { width, height } = this;
     const light = sceneLight(
-      dayLight(playtime),
+      dayLight(clock),
       this.activeMoods(),
-      this.props,
+      extra.length ? [...this.props, ...extra] : this.props,
       camX,
       camY,
       width,

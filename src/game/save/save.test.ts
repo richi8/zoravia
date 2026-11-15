@@ -70,6 +70,7 @@ function state(over: Partial<GameState> = {}): GameState {
     respawn: { map: 'core:test-region', x: 48, y: 47, facing: 'up' },
     playtime: 754.25,
     explored: {},
+    camp: { clock: 300, fires: { 'core:test-region:50,44': 1054.25 } },
     ...over,
   };
 }
@@ -210,6 +211,13 @@ describe('save format', () => {
     // Written back as v6, it keeps the reveal.
     const again = readSave(content, JSON.parse(JSON.stringify(toSave(content, s))));
     expect(again.explored).toEqual(s.explored);
+  });
+
+  it('migrates a v6 save: no rests yet, the clock on time (C40)', () => {
+    const v6 = { ...toSave(content, state()), version: 6 } as Record<string, unknown>;
+    delete v6['camp'];
+    const back = readSave(content, v6);
+    expect(back.camp).toEqual({ clock: 0, fires: {} });
   });
 
   it('round-trips exploration and drops maps the packs no longer have', () => {

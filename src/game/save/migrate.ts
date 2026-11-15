@@ -66,6 +66,8 @@ const STEPS: Readonly<Record<number, Step>> = {
   },
   // C36b: no exploration yet; loading reveals around what the save's progress proves.
   5: (v5) => ({ ...v5, version: 6 }),
+  // C40: no rests yet.
+  6: (v6) => ({ ...v6, version: 7, camp: { clock: 0, fires: {} } }),
 };
 
 /** The version a raw save says it has. */

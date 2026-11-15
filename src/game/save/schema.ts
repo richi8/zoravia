@@ -11,8 +11,10 @@
  * - v4 (C27): badges held, trainers beaten, and rematches won in the boss log.
  * - v5 (C36): each place keeps its map's `origin` when it was written, so a map that grew on
  *   its north or west side moves old positions along with it.
- * - v6 (current, C36b): `explored`, each visited map's revealed cells and discovered places.
+ * - v6 (C36b): `explored`, each visited map's revealed cells and discovered places.
  *   A save without it (from v5) gets a reveal from its progress when loaded.
+ * - v7 (current, C40): `camp`, how far rests moved the day clock on and when the player last
+ *   rested at each campfire.
  */
 
 import { z } from 'zod';
@@ -21,7 +23,7 @@ import { TEAM_SIZE } from '@game/player';
 import { zorlingSchema } from '@game/progression';
 
 export const SAVE_FORMAT = 'zoravia-save';
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 const count = z.number().int().min(0);
 
@@ -69,6 +71,12 @@ export const exploredSchema = z.strictObject({
   places: z.array(z.string().min(1)),
 });
 
+/** Rests at campfires (C40; see `world/rest.ts`). */
+export const campSchema = z.strictObject({
+  clock: z.number().min(0),
+  fires: z.record(z.string().min(1), z.number().min(0)),
+});
+
 export const saveSchema = z.strictObject({
   format: z.literal(SAVE_FORMAT),
   version: z.literal(SAVE_VERSION),
@@ -83,6 +91,7 @@ export const saveSchema = z.strictObject({
   party: partySchema,
   /** Map id → exploration (C36b). Missing in saves upgraded from v5. */
   explored: z.record(ref, exploredSchema).optional(),
+  camp: campSchema,
 });
 
 export type SaveData = z.output<typeof saveSchema>;
