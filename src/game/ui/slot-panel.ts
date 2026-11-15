@@ -11,6 +11,7 @@ import { GridCursor, uiSound, type UiInput, type Widget } from '@engine/ui';
 import { formatPlaytime, type SlotInfo } from '@game/save';
 import { paper } from '../style/tokens';
 import { KeyHint, row } from './badges';
+import { keyHint } from '@game/input/key-hint';
 import { drawCursor, drawPaper, drawWell } from './skin';
 import { uiText } from './text';
 import { PointerQueue, portraitSlot, SLOT } from './zorling-view';
@@ -147,7 +148,10 @@ export class SlotPanel implements Widget<Container> {
     });
     const by = TOP + this.slots.length * (CARD_H + GAP);
     if (this.options.note) add(uiText('body', this.options.note, paper.inkDim), 8, by - 1);
-    const hints = [new KeyHint('E', this.options.action), new KeyHint('Q', 'Back')];
+    const hints = [
+      new KeyHint(keyHint('confirm'), this.options.action),
+      new KeyHint(keyHint('back'), 'Back'),
+    ];
     for (const k of hints) this.dynamic.addChild(k);
     row(hints, 8, 7, h - 12);
   }

@@ -40,6 +40,7 @@ import { placeLabels } from './label-layout';
 import { FOG_HATCH_EVERY, FOG_HATCH_RGB, FOG_RGB, TIER_TINTS } from '@game/world/map/minimap';
 import { paper } from '../style/tokens';
 import { KeyHint, row } from './badges';
+import { keyHint, upDownHint } from '@game/input/key-hint';
 import { drawCursor, drawPaper, drawWell } from './skin';
 import { uiText } from './text';
 
@@ -1028,7 +1029,9 @@ export class MapWindow implements Widget<Container> {
     if (sel.kind === 'header') {
       if (full) return [];
       const hint =
-        this.group === sel.group ? 'W/S to go through, F for details.' : 'E to open the list.';
+        this.group === sel.group
+          ? `${upDownHint()} to go through, ${keyHint('inspect')} for details.`
+          : `${keyHint('confirm')} to open the list.`;
       return ['You are here', this.options.place, hint];
     }
     const region = sel.kind === 'quest' ? undefined : this.options.regions[sel.region]?.atlas.name;
@@ -1069,7 +1072,7 @@ export class MapWindow implements Widget<Container> {
       y += t.height + (i === 0 ? 2 : 0);
       items.push(t);
     }
-    const hint = new KeyHint('F', 'Close');
+    const hint = new KeyHint(keyHint('inspect'), 'Close');
     hint.position.set(8, y + 4);
     const h = Math.min(H - 8, Math.ceil(y + 18));
     const bg = drawPaper(new Graphics(), 0, 0, w, h);
@@ -1089,14 +1092,20 @@ export class MapWindow implements Widget<Container> {
     this.hits.hints.length = 0;
     const sel = this.selection();
     const hints: [KeyHint, () => void][] = [
-      [new KeyHint('W/S', 'Move'), () => this.move(1)],
+      [new KeyHint(upDownHint(), 'Move'), () => this.move(1)],
       [
-        new KeyHint('E', sel?.kind === 'header' && this.group === sel.group ? 'Fold' : 'Open'),
+        new KeyHint(
+          keyHint('confirm'),
+          sel?.kind === 'header' && this.group === sel.group ? 'Fold' : 'Open',
+        ),
         () => this.activate(),
       ],
-      [new KeyHint('F', 'Details'), () => this.openCard()],
-      [new KeyHint('Z', this.scale === NEAR ? 'Whole world' : 'Zoom in'), () => this.toggleZoom()],
-      [new KeyHint('Q', 'Close'), () => this.options.onBack(this)],
+      [new KeyHint(keyHint('inspect'), 'Details'), () => this.openCard()],
+      [
+        new KeyHint(keyHint('zoom'), this.scale === NEAR ? 'Whole world' : 'Zoom in'),
+        () => this.toggleZoom(),
+      ],
+      [new KeyHint(keyHint('back'), 'Close'), () => this.options.onBack(this)],
     ];
     const views = hints.map(([h]) => h);
     this.hintRow.addChild(...views);

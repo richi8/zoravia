@@ -30,6 +30,11 @@ export interface DialogOptions {
    * longer closes it) and `onDone` never fires.
    */
   readonly onLastPage?: (dialog: DialogBox) => void;
+  /**
+   * Called as the typewriter reveals text on its own (not when a page is skipped), with the
+   * characters revealed since the last call: the hook for text blips.
+   */
+  readonly onType?: (revealed: string) => void;
 }
 
 export class DialogBox implements Widget<Container> {
@@ -166,6 +171,8 @@ export class DialogBox implements Widget<Container> {
       }
       return;
     }
+    const page = this.typewriter.page;
+    const before = this.typewriter.visibleText.length;
     if (
       this.typewriter.update(dt, {
         confirmPressed: false,
@@ -173,6 +180,10 @@ export class DialogBox implements Widget<Container> {
         backPressed: false,
       })
     ) {
+      if (this.typewriter.page === page && this.options.onType) {
+        const text = this.typewriter.visibleText;
+        if (text.length > before) this.options.onType(text.slice(before));
+      }
       this.refresh();
     }
     this.blinkTime = (this.blinkTime + dt) % this.options.theme.motion.blink;

@@ -24,6 +24,7 @@ import { KeysPanel } from './keys-panel';
 import { drawPaper } from './skin';
 import { uiText } from './text';
 import { VolumeMenu } from './volume-menu';
+import { keyHint, keysHint } from '@game/input/key-hint';
 
 /** A widget with a size, so the host can place it. */
 export type SizedWidget = Widget<Container> & { readonly width: number; readonly height: number };
@@ -44,7 +45,8 @@ type Toggle = 'confirmSwitch' | 'shake' | 'flashes' | 'muteHidden';
 
 interface Row {
   readonly label: string;
-  readonly help: string;
+  /** A function for help that shows keys, so it follows rebinding (C36e). */
+  readonly help: string | (() => string);
   value?(s: GameSettings): string;
   change?(step: number): void;
   open?(): void;
@@ -80,14 +82,15 @@ export class SettingsMenu implements SizedWidget {
       },
       {
         label: 'Text speed',
-        help: 'How fast dialogue text appears. Hold E to speed it up.',
+        help: () => `How fast dialogue text appears. Hold ${keyHint('confirm')} to speed it up.`,
         value: (s) => TEXT_LABEL[s.textSpeed],
         change: (step) =>
           updateSettings({ textSpeed: cycle(TEXT_SPEEDS, gameSettings().textSpeed, step) }),
       },
       {
         label: 'Confirm 1 2 3 switch',
-        help: 'Ask before switching Zorlings with 1 2 3 in battle.',
+        help: () =>
+          `Ask before switching Zorlings with ${keysHint('hotbar1', 'hotbar2', 'hotbar3')} in battle.`,
         ...toggle('confirmSwitch'),
       },
       { label: 'Screen shake', help: 'Shake on big hits and bumps.', ...toggle('shake') },
@@ -186,7 +189,8 @@ export class SettingsMenu implements SizedWidget {
   }
 
   private showHelp(i: number): void {
-    this.help.text = this.rows[i]?.help ?? '';
+    const help = this.rows[i]?.help ?? '';
+    this.help.text = typeof help === 'function' ? help() : help;
     const y = this.menu.height + 2;
     drawPaper(this.helpBg.clear(), 0, y, WIDTH, HELP_H);
     this.help.position.set(7, y + 5);

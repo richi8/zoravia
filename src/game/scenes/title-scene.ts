@@ -49,6 +49,9 @@ import { speciesLook } from '@game/zorlings/species-look';
 import { renderZorling } from '@game/zorlings/render';
 import { DebugLauncherScene } from './debug-launcher-scene';
 import { OverworldScene } from './overworld-scene';
+import { keyHint, upDownHint } from '@game/input/key-hint';
+
+const titleHint = (): string => `${upDownHint()} choose · ${keyHint('confirm')} select`;
 
 export interface TitleOptions {
   readonly engine: Engine;
@@ -84,7 +87,7 @@ export class TitleScene implements Scene<Container> {
   private readonly layer = new Container({ label: 'title-menus' });
   /** Dims the logo while a screen is open over the main menu. */
   private readonly veil = new Graphics();
-  private readonly hint = uiText('body', 'W/S choose · E select', paper.light);
+  private readonly hint = uiText('body', titleHint(), paper.light);
   private readonly version: ReturnType<typeof uiText>;
   private readonly stack: FocusStack<Container>;
   private readonly motion: UiMotion;
@@ -536,6 +539,9 @@ export class TitleScene implements Scene<Container> {
     const top = Math.max(2, Math.round((height - total) / 2));
     this.logo.position.set(Math.round((width - this.logo.width) / 2), top);
     this.menu?.view.position.set(Math.round((width - MENU_W) / 2), top + logoH + 6);
+    // Follows the bindings (C36e): the keys panel opens from the title's settings.
+    const text = titleHint();
+    if (this.hint.text !== text) this.hint.text = text;
     this.hint.position.set(Math.round((width - this.hint.width) / 2), height - 14);
     this.veil.clear().rect(0, 0, width, height).fill({ color: paper.veil, alpha: 0.55 });
     this.veil.visible = this.stack.size > 1;

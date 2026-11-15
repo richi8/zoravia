@@ -7,6 +7,7 @@
 import {
   AmbiencePlayer,
   MusicPlayer,
+  OPEN_HZ,
   scaleSpec,
   specDuration,
   type Ambience,
@@ -128,6 +129,22 @@ export function currentMusic(): string | undefined {
 /** Scales the music, e.g. under a jingle. 1 = normal. */
 export function setMusicLevel(level: number, seconds = 0.5): void {
   music?.setLevel(level, seconds);
+}
+
+/** Battle music tone (C36e): `tense` muffles it while the active Zorling is low on HP. */
+export function setMusicTone(tone: 'normal' | 'tense', seconds = 0.6): void {
+  music?.setLowpass(tone === 'tense' ? TENSE_HZ : OPEN_HZ, seconds);
+}
+
+/** The lowpass of the `tense` music tone. */
+export const TENSE_HZ = 1100;
+
+/**
+ * A dialogue text blip (C36e) at `pitch` (1 = the base blip), on the SFX bus and throttled
+ * so fast text doesn't stack them.
+ */
+export function playBlip(pitch: number): void {
+  playSfx('world.blip', { pitch, key: 'world.blip', throttle: 0.045 });
 }
 
 let duckUntil = 0;

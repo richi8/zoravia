@@ -5,3 +5,4 @@ export * from './settings';
 export * from './sfx';
 export * from './sound';
 export * from './scene-audio';
+export * from './blip';

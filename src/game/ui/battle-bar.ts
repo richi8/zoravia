@@ -16,6 +16,7 @@ import {
 } from '@engine/ui';
 import { conditionColors, paper, type ConditionId, type TypeId } from '../style/tokens';
 import { CHIP_SIZE, ConditionChip, KeyHint, TypeBadge } from './badges';
+import { keyHint, keysHint, upDownHint } from '@game/input/key-hint';
 import type { MoveView } from './panels';
 import { drawPaper } from './skin';
 import { uiText } from './text';
@@ -209,10 +210,10 @@ export class MoveBar implements Widget<Container> {
     this.side.addChild(bg);
     this.side.position.set(x0, 0);
     const rows: [string, string, 'items' | 'run' | 'log' | undefined, boolean][] = [
-      ['I', 'Items', 'items', true],
-      ['Q', 'Run', 'run', this.canRun],
-      ['L', 'Log', 'log', true],
-      ['1-3', 'Switch', undefined, true],
+      [keyHint('inventory'), 'Items', 'items', true],
+      [keyHint('back'), 'Run', 'run', this.canRun],
+      [keyHint('log'), 'Log', 'log', true],
+      [keysHint('hotbar1', 'hotbar2', 'hotbar3'), 'Switch', undefined, true],
     ];
     rows.forEach(([key, label, action, on], i) => {
       const hint = new KeyHint(key, label);
@@ -324,7 +325,7 @@ export class BattleLogPanel implements Widget<Container> {
     const title = uiText('label', 'Battle log', paper.title);
     title.position.set(7, 5);
     const hints = new Container();
-    const keys = [new KeyHint('W/S', 'Scroll'), new KeyHint('L', 'Close')];
+    const keys = [new KeyHint(upDownHint(), 'Scroll'), new KeyHint(keyHint('log'), 'Close')];
     keys[1]?.position.set(Math.ceil(keys[0]?.width ?? 0) + 8, 0);
     hints.addChild(...keys);
     hints.position.set(7, this.height - 13);
@@ -409,7 +410,7 @@ export class BattleResultPanel implements Widget<Container> {
     body.position.set(8, 21);
     this.height = 21 + y + 18;
     drawPaper(bg, 0, 0, BattleResultPanel.WIDTH, this.height);
-    const hint = new KeyHint('E', 'Continue');
+    const hint = new KeyHint(keyHint('confirm'), 'Continue');
     hint.position.set(BattleResultPanel.WIDTH - Math.ceil(hint.width) - 8, this.height - 13);
     this.view.addChild(bg, head, body, hint);
     this.view.eventMode = 'static';

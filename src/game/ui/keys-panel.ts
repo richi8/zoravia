@@ -22,6 +22,7 @@ import {
 } from '@game/settings';
 import { paper } from '../style/tokens';
 import { KeyHint, row } from './badges';
+import { keyHint, leftRightHint } from '@game/input/key-hint';
 import { drawCursor, drawPaper, drawWell } from './skin';
 import { uiText } from './text';
 import { PointerQueue } from './zorling-view';
@@ -225,7 +226,11 @@ export class KeysPanel implements Widget<Container> {
     if (this.note) add(uiText('body', this.note, paper.title), 9, H - 25);
     const hints = this.capturing
       ? [new KeyHint('Esc', 'Cancel')]
-      : [new KeyHint('E', 'Change'), new KeyHint('A D', 'Slot'), new KeyHint('Q', 'Back')];
+      : [
+          new KeyHint(keyHint('confirm'), 'Change'),
+          new KeyHint(leftRightHint(), 'Slot'),
+          new KeyHint(keyHint('back'), 'Back'),
+        ];
     for (const h of hints) this.dynamic.addChild(h);
     row(hints, 8, 7, H - 12);
   }

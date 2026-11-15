@@ -223,7 +223,7 @@ Rules settled in C26 (2026-11-13):
 - **Overworld characters** (decided 2026-11-12, C20 review, after the user's reference sheet): 16×24 sprites with a single dark navy outline (unlike the tiles' tinted outlines, so characters stand out from the world), big round hair, plain 2×2 eyes, a flat side profile (no nose) and outfit colors from a palette, so NPCs reuse the same body. The face never changes between walk frames; the walk is stand, step, stand, other step, with a 1-pixel body dip and arm swing on steps. The player wears a teal jacket with gold trim and teal pants.
 - Starting sizes (tunable in playtesting):
   - World tiles **16×16** (≈ 30×17 tiles on screen); player and NPCs about 16×24.
-  - Overworld (roaming) Zorlings fit 32×32.
+  - Overworld (roaming) Zorlings fit 32×32. A Titan or legendary in its lair or shrine (and an Elder Titan) is drawn at **48×48** (C36e, picked from previews): its battle look, a Titan with a dithered glow in its type color, a legendary with its twinkling shine.
   - Battle sprites **96×96** (Titans 128×128; legendaries up to 128×128).
 - Procedural creatures, genome-based (body plan, parts, palette, seed), drawn as pixel-art sprites at those sizes.
 - **Regional model kits** (C35a, user review): each region's Zorlings come from its own body plans, so regions don't look like recolors of each other. A kit is pack data (`modelKits`): the plans a region's species may use, and part weights added to each plan's own (0 removes a kind). A species names its kit in `look.kit`, and its plans must come from it.
@@ -238,17 +238,21 @@ Rules settled in C26 (2026-11-13):
 - Lighting, weather particles, grass/water shaders, camera easing.
   - **Day and night** (C32) are cosmetic: a 20-minute day on the play clock (a new game starts in the morning). Lamps and windows light up from dusk. Wild spawns do not change with the time of day (day/night spawns stay a "Later" idea).
   - **Area moods** (C32) come from map data: a zone or an anchor can set a light mood (`canopy`, `shrine`, `mist`) and a zone can set cosmetic weather. Overworld weather never changes battles.
+- **Battle backdrops** (C36e, picked from previews) come from the zone's biome, drawn in code: Verdale's sunny hills and tree line; Emberwaste's **Ember dusk** (violet-orange sky, a lava-lit volcano, basalt ground with glowing cracks); Rimeholm's **Aurora pines** (night sky with aurora ribbons, a snowy pine line). A **danger zone** draws its biome's backdrop in a darker dusk-violet tone.
 - Presentation (C32): iris wipes into the world and out of battles; an intro splash before trainer and story-boss battles; quest and badge news as toasts that do not stop play; a full-screen evolution scene.
 - Audio: synth SFX, genome-derived cries, procedural biome music, hand-authored boss themes, ambience.
   - **Cries** (C24) come from the species' genome, so a species always sounds the same: the body plan picks the voice (a canine barks, a feline meows, an insect buzzes, a golem rumbles), size lowers the pitch (later evolution stages sound deeper), mood shapes it (cute higher with a rising end, fierce harsher, dark lower and detuned) and the first type adds a texture. Titans and legendaries in boss form sound deeper and longer.
   - Every battle action and UI action has a sound; turn markers are silent. A cry plays on send-out, and a low, slow one on faint.
+  - **Low HP** (C36e): when the active Zorling drops under ¼ of its HP, a short two-note sting plays once and the battle music is muffled (a lowpass) while it stays there. There is no looping beep.
+  - **Text blips** (C36e): a soft blip every third letter while a person's dialogue types out, pitched per speaker (fixed by name). Narration, signs and Zorlings are silent. Blips use the sound-effects volume.
+  - **Overworld cries** (C36e): a roaming wild Zorling cries when it starts to chase the player, and a Titan or legendary cries in its boss voice when the player speaks to it. The cry pans left or right with its place on screen.
   - **Volume settings** (master, music, sound effects; 10 % steps) belong to the device, not to a save slot.
   - **Music** (C25): each biome has a field theme and a battle theme, composed by a seeded composer from the biome's style (key, mode, tempo, instruments), so they never change between runs. Forest is a swung D-major flute piece, the volcanic desert a reed in E Phrygian dominant over hand drums, the frozen coast slow Lydian bells. Bosses play a hand-written theme from their pack (`theme` on the boss), or boss music composed from the biome's battle style when they have none.
   - Field music resumes where it was left after a battle; battle music always starts from the top. Changes crossfade. When a battle is decided, the music stops for the victory or defeat jingle.
   - **Ambience** plays under the music: biome beds (wind, brook, lava rumble, surf) with occasional sounds (birds, crackles, ice creaks, gulls), plus rain in wet weather. It is turned down in battle. It follows the music volume.
 
 ## Controls
-**The whole game must be fully playable with the keyboard alone.** Mouse is optional (click-to-move, click menu items), never required. All keys rebindable (Settings → Controls, C33; `Esc` stays Back and Menu); gamepad later.
+**The whole game must be fully playable with the keyboard alone.** Mouse is optional (click-to-move, click menu items), never required. All keys rebindable (Settings → Controls, C33; `Esc` stays Back and Menu); gamepad later. Every key hint on screen (help line, battle bar, panels, map window, title) shows the player's current key (C36e). The letters in this document are the defaults.
 
 ### Universal keys (everywhere, including every menu)
 | Action | Keys |

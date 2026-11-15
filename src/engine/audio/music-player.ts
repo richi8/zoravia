@@ -50,6 +50,8 @@ interface Deck {
 }
 
 const SILENT = 0.0001;
+/** A lowpass this high lets everything through. */
+export const OPEN_HZ = 20_000;
 
 export class MusicPlayer {
   private deck: Deck | undefined;
@@ -59,6 +61,9 @@ export class MusicPlayer {
   private timer: ReturnType<typeof setInterval> | undefined;
   private level: GainNode | undefined;
   private levelValue = 1;
+  /** Lowpass after the level (a muffled tone while a Zorling is low on HP, C36e). */
+  private filter: BiquadFilterNode | undefined;
+  private filterHz = OPEN_HZ;
   private voices = 0;
   private readonly bus: Bus;
   private readonly lookahead: number;
@@ -110,6 +115,23 @@ export class MusicPlayer {
     }
   }
 
+  /**
+   * Muffles everything this player plays through a lowpass at `hz` (`OPEN_HZ` or more: no
+   * muffle), gliding there over `seconds`.
+   */
+  setLowpass(hz: number, seconds = 0.5): void {
+    this.filterHz = Math.max(40, Math.min(OPEN_HZ, hz));
+    const ctx = this.audio.context;
+    if (this.filter && ctx) {
+      this.filter.frequency.cancelScheduledValues(ctx.currentTime);
+      this.filter.frequency.setTargetAtTime(
+        this.filterHz,
+        ctx.currentTime,
+        Math.max(0.01, seconds / 3),
+      );
+    }
+  }
+
   /** Stops the timer and drops everything at once. */
   dispose(): void {
     this.wanted = undefined;
@@ -147,9 +169,13 @@ export class MusicPlayer {
     const bus = this.audio.bus(this.bus);
     if (!bus) return undefined;
     if (!this.level) {
+      this.filter = ctx.createBiquadFilter();
+      this.filter.type = 'lowpass';
+      this.filter.frequency.value = this.filterHz;
+      this.filter.connect(bus);
       this.level = ctx.createGain();
       this.level.gain.value = this.levelValue;
-      this.level.connect(bus);
+      this.level.connect(this.filter);
     }
     return this.level;
   }

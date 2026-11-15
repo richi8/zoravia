@@ -11,6 +11,7 @@ import { Container, Graphics, Rectangle } from 'pixi.js';
 import { type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, TypeBadge, row } from './badges';
+import { keyHint, navHint } from '@game/input/key-hint';
 import { HpBar } from './bars';
 import { drawPaper, drawWell } from './skin';
 import { uiText } from './text';
@@ -268,8 +269,12 @@ export class StoragePanel implements Widget<Container> {
 
     const held = this.held ? this.zorlingAt(this.held) : undefined;
     const hints = held
-      ? [new KeyHint('E', 'Put here'), new KeyHint('Q', 'Cancel')]
-      : [new KeyHint('E', 'Pick up'), new KeyHint('WASD', 'Move'), new KeyHint('Q', 'Leave')];
+      ? [new KeyHint(keyHint('confirm'), 'Put here'), new KeyHint(keyHint('back'), 'Cancel')]
+      : [
+          new KeyHint(keyHint('confirm'), 'Pick up'),
+          new KeyHint(navHint(), 'Move'),
+          new KeyHint(keyHint('back'), 'Leave'),
+        ];
     for (const h of hints) this.dynamic.addChild(h);
     const hw = row(hints, 8, 7, H - 13);
     if (held) add(uiText('label', `Moving ${held.name}`, paper.title), 7 + hw + 12, H - 13);

@@ -11,6 +11,7 @@ import { Container, Graphics, Rectangle, Sprite, type Texture } from 'pixi.js';
 import { GridCursor, uiSound, type UiInput, type Widget } from '@engine/ui';
 import { paper, type TypeId } from '../style/tokens';
 import { KeyHint, row, TypeBadge } from './badges';
+import { keyHint, leftRightHint } from '@game/input/key-hint';
 import { drawCursor, drawPaper, drawWell } from './skin';
 import { uiText } from './text';
 import { PointerQueue } from './zorling-view';
@@ -145,7 +146,7 @@ export class RegionPanel implements Widget<Container> {
         Math.ceil(d.y + d.height + 4),
       );
     }
-    const hints = [new KeyHint('E', 'Choose'), new KeyHint('Q', 'Back')];
+    const hints = [new KeyHint(keyHint('confirm'), 'Choose'), new KeyHint(keyHint('back'), 'Back')];
     for (const h of hints) this.dynamic.addChild(h);
     row(hints, 8, 7, REGION_H - 12);
   }
@@ -309,9 +310,9 @@ export class StarterPanel implements Widget<Container> {
     this.dynamic.addChild(lv);
     lv.position.set(Math.round(this.w - 8 - lv.width), STARTER_H - 12);
     const hints = [
-      new KeyHint('A D', 'Choose'),
-      new KeyHint('E', 'Pick'),
-      new KeyHint('Q', 'Back'),
+      new KeyHint(leftRightHint(), 'Choose'),
+      new KeyHint(keyHint('confirm'), 'Pick'),
+      new KeyHint(keyHint('back'), 'Back'),
     ];
     for (const h of hints) this.dynamic.addChild(h);
     row(hints, 8, 7, STARTER_H - 12);

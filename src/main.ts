@@ -16,6 +16,7 @@ import { installCssVars } from '@game/style/css';
 import { loadFonts } from '@game/style/fonts';
 import { ZORAVIA_SCREEN_THEME } from '@game/style/theme';
 import { SCREEN, surface } from '@game/style/tokens';
+import { installKeyHints } from '@game/input/key-hint';
 
 document.title = GAME_TITLE;
 
@@ -40,6 +41,7 @@ async function main(): Promise<void> {
   installSettings(settingsStore);
   const input = createInput();
   persistBindings(input.bindings, settingsStore);
+  installKeyHints(input.bindings);
   attachDomInput(input, {
     pointerTarget: engine.app.canvas,
     mapPoint: (x, y) => engine.toScreen(x, y),

@@ -41,7 +41,17 @@ import { DialogBox, FocusStack, Menu, UiMotion, type UiInput, type UiTheme } fro
 import type { BattleResult, BattleSetup } from '@game/battle/logic';
 import { BattleScene } from '@game/battle/scene/battle-scene';
 import { battleTransition } from '@game/battle/scene/transition';
-import { fieldAudio, playJingle, playSfx } from '@game/audio';
+import {
+  BlipCounter,
+  fieldAudio,
+  playBlip,
+  playJingle,
+  playSfx,
+  playSpec,
+  screenPan,
+  speakerPitch,
+  speciesCry,
+} from '@game/audio';
 import type { GameContent } from '@game/data';
 import { MOVE_DIRECTIONS, type Action } from '@game/input/actions';
 import {
@@ -113,7 +123,9 @@ import { battleLook, speciesLook } from '@game/zorlings/species-look';
 import { pixelTexture } from '@engine/render/pixel-texture';
 import type { IntroSpec } from '@game/ui/intro-splash';
 import { renderZorling, SPRITE_SIZE } from '@game/zorlings/render';
+import { LAIR_PAD, lairLook } from '@game/zorlings/lair-look';
 import { OverworldMenus } from './overworld-menus';
+import { keyHint, keysHint } from '@game/input/key-hint';
 
 export interface OverworldOptions {
   readonly engine: Engine;
@@ -162,7 +174,9 @@ const SHADOW = 0x1e3a14;
 const AUTOSAVE_EVERY = 30;
 /** Seconds the HUD shows "Saved". */
 const SAVED_NOTE = 1.5;
-const HELP = 'WASD move · E talk · click to walk · Esc menu';
+/** The help line, with the player's keys (C36e). */
+const help = (): string =>
+  `${keysHint('move_up', 'move_down', 'move_left', 'move_right')} move · ${keyHint('confirm')} talk · click to walk · ${keyHint('pause')} menu`;
 
 /** A packed sprite plus where its figure starts (for the "!" bubble). */
 interface Packed extends CharacterFrame {
@@ -174,6 +188,12 @@ interface Packed extends CharacterFrame {
 interface WildSprite {
   readonly right: Packed;
   readonly left: Packed;
+}
+
+/** A Titan or legendary in its lair (C36e): frames facing each way. */
+interface LairSprite {
+  readonly right: readonly Packed[];
+  readonly left: readonly Packed[];
 }
 
 interface Drawable {
@@ -201,6 +221,9 @@ export class OverworldScene implements Scene<Container> {
   private readonly npcSides = new Map<NpcActor, 'left' | 'right'>();
   private itemFrame: CharacterFrame | undefined;
   private readonly wildSprites = new Map<string, WildSprite>();
+  private readonly lairSprites = new Map<string, LairSprite>();
+  /** Roaming Zorlings chasing the player (each cried once as it started). */
+  private readonly chasing = new Set<Roamer>();
   private readonly canvas = document.createElement('canvas');
   private readonly ctx: CanvasRenderingContext2D;
   private readonly texture: Texture;
@@ -307,7 +330,7 @@ export class OverworldScene implements Scene<Container> {
       this.setContext();
       this.autosave();
     };
-    this.help.text = HELP;
+    this.help.text = help();
     this.respawn = this.onMap(options.respawn, false) ?? this.firstRespawn();
     this.menus = new OverworldMenus(this.menuHost());
     if (options.arrived)
@@ -756,6 +779,11 @@ export class OverworldScene implements Scene<Container> {
     const tall = BIOMES[this.map.biome].ramps.tall;
     for (const r of this.sim.roamers) {
       const m = r.mover;
+      // A wild Zorling cries when it starts to chase the player (C36e).
+      if (r.state === 'chase' && !this.chasing.has(r)) {
+        this.chasing.add(r);
+        if (this.onScreen(m)) this.cryAt(r.species, m);
+      } else if (r.state !== 'chase') this.chasing.delete(r);
       const tile = m.destination.y * this.map.width + m.destination.x;
       const last = this.roamerTiles.get(r);
       this.roamerTiles.set(r, tile);
@@ -765,6 +793,18 @@ export class OverworldScene implements Scene<Container> {
     }
     for (const r of this.roamerTiles.keys())
       if (!this.sim.roamers.includes(r)) this.roamerTiles.delete(r);
+    for (const r of this.chasing) if (!this.sim.roamers.includes(r)) this.chasing.delete(r);
+  }
+
+  /**
+   * A Zorling's cry, panned left or right with its place on screen (C36e). A Titan or
+   * legendary in its lair cries in its deeper boss voice.
+   */
+  private cryAt(species: string, m: GridMover, boss?: 'titan' | 'legendary'): void {
+    const { content } = this.options;
+    const x = (m.x + 0.5) * TILE - this.viewRect().x;
+    const cry = speciesCry(content, species, boss ? { boss } : {});
+    playSpec(cry, { pan: screenPan(x, this.width), gain: 0.8 });
   }
 
   private bumpNudge(dir: Dir): void {
@@ -828,6 +868,12 @@ export class OverworldScene implements Scene<Container> {
     const { dialogue, lines } = npc.npc;
     // Signs and items speak without a name tag.
     const name = object ? undefined : npc.npc.name;
+    // A Titan or legendary cries as the player speaks to it (C36e).
+    const zorling = npc.npc.zorling;
+    if (zorling) {
+      const legendary = this.options.content.species.require(zorling).legendary;
+      this.cryAt(zorling, npc.mover, legendary ? 'legendary' : 'titan');
+    }
     this.dialogueNpc = npc;
     if (dialogue)
       this.runDialogue(new DialogueRun(this.options.content, dialogue, this.party, name), after);
@@ -921,6 +967,10 @@ export class OverworldScene implements Scene<Container> {
     // Text speed from the settings (C33).
     const base = this.options.theme;
     const theme = { ...base, motion: { ...base.motion, textSpeed: textCharsPerSecond() } };
+    // Text blips for people (C36e); narration, signs and Zorlings are silent.
+    const zorling = this.dialogueNpc?.npc.zorling && speaker === this.dialogueNpc.npc.name;
+    const blips = speaker && !zorling ? new BlipCounter() : undefined;
+    const pitch = speaker ? speakerPitch(speaker) : 1;
     const dialog: DialogBox = new DialogBox({
       theme,
       pages,
@@ -932,6 +982,7 @@ export class OverworldScene implements Scene<Container> {
         done?.();
       },
       ...(hold ? { onLastPage: hold } : {}),
+      ...(blips ? { onType: (text: string) => blips.typed(text) && playBlip(pitch) } : {}),
     });
     this.stack.push(dialog);
     this.layoutDialog();
@@ -1112,7 +1163,8 @@ export class OverworldScene implements Scene<Container> {
     if (teamDown(this.party)) this.party = healTeam(content, this.party);
     this.inBattle = true;
     // Battle weather of the zone the player stands in (C34: ash storms → Burning).
-    const weather = setup.weather ?? this.map.zoneAt(this.player.tx, this.player.ty)?.battleWeather;
+    const zone = this.map.zoneAt(this.player.tx, this.player.ty);
+    const weather = setup.weather ?? zone?.battleWeather;
     const scene = new BattleScene({
       content,
       input,
@@ -1131,6 +1183,7 @@ export class OverworldScene implements Scene<Container> {
       money: this.party.money,
       confirmHotbarSwitch: gameSettings().confirmSwitch,
       biome: this.map.biome,
+      danger: zone?.tier === 'danger',
       onEnd: (result) => {
         end(result);
         void engine.scenes.pop({ transition: engine.iris(() => this.playerScreen()) });
@@ -1255,7 +1308,7 @@ export class OverworldScene implements Scene<Container> {
         const f = npc.mover.facing;
         if (f === 'left' || f === 'right') this.npcSides.set(npc, f);
         const side = this.npcSides.get(npc) ?? 'left';
-        list.push(this.zorlingDrawable(npc.mover, npc.npc.zorling, side, 0));
+        list.push(this.lairDrawable(npc.mover, npc.npc.zorling, side));
       } else if (npc.npc.object === 'item') list.push(this.itemDrawable(npc.mover));
       // A `sign` object is not drawn: the map's sign or stone prop shows it.
     }
@@ -1312,6 +1365,38 @@ export class OverworldScene implements Scene<Container> {
         if (alert > 0) this.drawAlert(wx + TILE / 2, top + sprite.top - 2, camX, camY);
       },
     };
+  }
+
+  /**
+   * A Titan or legendary standing in its lair (C36e): its battle look at `LAIR_SIZE` with
+   * its glow or twinkling shine, feet on its tile.
+   */
+  private lairDrawable(m: GridMover, species: string, side: 'left' | 'right'): Drawable {
+    return {
+      y: m.y,
+      draw: (camX, camY) => {
+        const frames = this.lairSprite(species)[side];
+        const sprite = frames[Math.floor(this.time * 8) % frames.length] as Packed;
+        const wx = Math.round(m.x * TILE);
+        const wy = Math.round(m.y * TILE);
+        const left = wx + (TILE - sprite.width) / 2;
+        const top = wy + TILE - sprite.height + LAIR_PAD + 1;
+        const baseY = wy + BASE;
+        const rx = Math.max(6, Math.min(16, (sprite.right - sprite.left) / 2.6));
+        this.drawShadow(wx + TILE / 2, wy + TILE - 1, rx, baseY, camX, camY);
+        this.blit(sprite, left, top, baseY, camX, camY);
+        this.grassOver(m, left, top, sprite.width, sprite.height, baseY, camX, camY);
+      },
+    };
+  }
+
+  private lairSprite(species: string): LairSprite {
+    const have = this.lairSprites.get(species);
+    if (have) return have;
+    const right = lairLook(this.options.content, species).frames.map(packSprite);
+    const s: LairSprite = { right, left: right.map(mirror) };
+    this.lairSprites.set(species, s);
+    return s;
   }
 
   /** A hidden item lying on the ground (C30): a small Zorb that glints now and then. */
@@ -1465,7 +1550,7 @@ export class OverworldScene implements Scene<Container> {
     if (key === this.lastZone) return;
     this.lastZone = key;
     this.place.text = this.placeLabel();
-    this.help.text = this.savedNote > 0 ? 'Game saved' : HELP;
+    this.help.text = this.savedNote > 0 ? 'Game saved' : help();
     this.money.set(this.party.money);
     const w = Math.max(this.place.width + this.money.width + 16, this.help.width) + 16;
     const x = 6;

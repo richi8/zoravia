@@ -11,6 +11,7 @@ import { Container, Graphics, Rectangle } from 'pixi.js';
 import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, row } from './badges';
+import { keyHint, leftRightHint } from '@game/input/key-hint';
 import type { ItemSprite } from './icons';
 import { MoneyLabel, drawCoin, drawItem } from './panels';
 import { drawCursor, drawPaper } from './skin';
@@ -223,7 +224,11 @@ export class ShopPanel implements Widget<Container> {
       r.position.set(4, TOP + i * ROW_H);
       this.dynamic.addChild(r);
     });
-    const hints = [new KeyHint('E', 'Buy'), new KeyHint('A D', 'Qty'), new KeyHint('Q', 'Leave')];
+    const hints = [
+      new KeyHint(keyHint('confirm'), 'Buy'),
+      new KeyHint(leftRightHint(), 'Qty'),
+      new KeyHint(keyHint('back'), 'Leave'),
+    ];
     for (const h of hints) this.dynamic.addChild(h);
     row(hints, 8, 7, this.height - 13);
   }

@@ -13,10 +13,14 @@ import { Container, Graphics, Rectangle } from 'pixi.js';
 import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, TypeBadge, row } from './badges';
+import { keyHint } from '@game/input/key-hint';
 import { HpBar, XpBar } from './bars';
 import { drawCursor, drawPaper, drawWell } from './skin';
 import { uiText } from './text';
 import { PointerQueue, portraitSlot, SLOT, type ZorlingView } from './zorling-view';
+
+/** The hotbar actions, by party slot (their keys label the slots). */
+const HOTBAR = ['hotbar1', 'hotbar2', 'hotbar3'] as const;
 
 export interface PartyOptions {
   readonly team: readonly ZorlingView[];
@@ -161,7 +165,7 @@ export class PartyPanel implements Widget<Container> {
       const slot = portraitSlot(z.portrait, { frame: this.held === i, dim: z.hp <= 0 });
       slot.position.set(9, 5);
       r.addChild(slot);
-      const key = new KeyHint(String(i + 1), '');
+      const key = new KeyHint(keyHint(HOTBAR[i] ?? 'hotbar1'), '');
       key.position.set(9, 4);
       r.addChild(key);
       const name = uiText('name', z.name, z.hp <= 0 ? paper.inkDisabled : paper.ink);
@@ -198,10 +202,10 @@ export class PartyPanel implements Widget<Container> {
     const hints =
       this.held === undefined
         ? [
-            new KeyHint('E', this.options.onSelect ? 'Options' : 'Reorder'),
-            new KeyHint('Q', 'Back'),
+            new KeyHint(keyHint('confirm'), this.options.onSelect ? 'Options' : 'Reorder'),
+            new KeyHint(keyHint('back'), 'Back'),
           ]
-        : [new KeyHint('E', 'Put here'), new KeyHint('Q', 'Cancel')];
+        : [new KeyHint(keyHint('confirm'), 'Put here'), new KeyHint(keyHint('back'), 'Cancel')];
     for (const h of hints) this.dynamic.addChild(h);
     row(hints, 8, 7, H - 13);
     if (this.held !== undefined) {

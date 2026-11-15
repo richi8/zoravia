@@ -10,6 +10,7 @@ import { Container, Graphics, Rectangle, Sprite, type Texture } from 'pixi.js';
 import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper, type TypeId } from '../style/tokens';
 import { KeyHint, TypeBadge, row } from './badges';
+import { keyHint, leftRightHint, upDownHint } from '@game/input/key-hint';
 import { drawCursor, drawPaper, drawWell } from './skin';
 import { uiText } from './text';
 import { PointerQueue } from './zorling-view';
@@ -200,9 +201,9 @@ export class DexPanel implements Widget<Container> {
     }
 
     const hints = [
-      new KeyHint('W S', 'Choose'),
-      new KeyHint('A D', 'Page'),
-      new KeyHint('Q', 'Back'),
+      new KeyHint(upDownHint(), 'Choose'),
+      new KeyHint(leftRightHint(), 'Page'),
+      new KeyHint(keyHint('back'), 'Back'),
     ];
     for (const h of hints) this.dynamic.addChild(h);
     row(hints, 8, 7, H - 13);

@@ -10,6 +10,7 @@ import { Container, Graphics, Rectangle, Sprite } from 'pixi.js';
 import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, row } from './badges';
+import { keyHint, leftRightHint } from '@game/input/key-hint';
 import type { CombatantView } from './battle-hud';
 import type { ItemSprite } from './icons';
 import { MoneyLabel, drawItem } from './panels';
@@ -310,8 +311,16 @@ export class BagPanel implements Widget<Container> {
     // Key hints.
     const hints =
       this.mode === 'list'
-        ? [new KeyHint('E', 'Use'), new KeyHint('A D', 'Tab'), new KeyHint('Q', 'Back')]
-        : [new KeyHint('E', 'Confirm'), new KeyHint('A D', 'Target'), new KeyHint('Q', 'Back')];
+        ? [
+            new KeyHint(keyHint('confirm'), 'Use'),
+            new KeyHint(leftRightHint(), 'Tab'),
+            new KeyHint(keyHint('back'), 'Back'),
+          ]
+        : [
+            new KeyHint(keyHint('confirm'), 'Confirm'),
+            new KeyHint(leftRightHint(), 'Target'),
+            new KeyHint(keyHint('back'), 'Back'),
+          ];
     for (const h of hints) this.dynamic.addChild(h);
     row(hints, 8, 7, H - 13);
   }

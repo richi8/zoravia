@@ -569,11 +569,23 @@ const battle = {
       { wave: 'triangle', beat: 0.08, gain: 0.25 },
     ),
   },
+  /** The active Zorling dropped under a quarter of its HP (C36e): two falling pulses, once. */
+  'battle.lowHp': {
+    tones: [
+      { wave: 'square', dur: 0.09, freq: [988, 932], gain: 0.1 },
+      { wave: 'square', at: 0.13, dur: 0.16, freq: [784, 698], gain: 0.1 },
+      { wave: 'triangle', at: 0.13, dur: 0.2, freq: [392, 349], gain: 0.12 },
+    ],
+  },
 } satisfies Record<string, SoundSpec>;
 
 // ---------------------------------------------------------------- overworld
 
 const world = {
+  /** A dialogue text blip (C36e), pitched per speaker by `playBlip`. */
+  'world.blip': {
+    tones: [{ wave: 'triangle', dur: 0.028, freq: 620, gain: 0.07, attack: 0.004 }],
+  },
   'world.encounter': {
     tones: [
       { wave: 'square', dur: 0.06, freq: 1568, gain: 0.12 },

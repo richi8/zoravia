@@ -29,7 +29,15 @@ import {
   type UiTheme,
   type Widget,
 } from '@engine/ui';
-import { battleAudio, battleOverAudio, playSfx, playSpec, speciesCry } from '@game/audio';
+import {
+  battleAudio,
+  battleOverAudio,
+  playSfx,
+  playSpec,
+  setMusicTone,
+  speciesCry,
+} from '@game/audio';
+import { isLowHp } from './low-hp';
 import type { BiomeId } from '@game/world/biomes';
 import type { GameContent } from '@game/data';
 import type { Action } from '@game/input/actions';
@@ -91,6 +99,10 @@ import {
   type OverlayId,
   type Point,
 } from './vfx';
+import { keyHint } from '@game/input/key-hint';
+
+/** The hotbar actions, by party slot. */
+const HOTBAR = ['hotbar1', 'hotbar2', 'hotbar3'] as const;
 
 export interface BattleSceneOptions {
   readonly content: GameContent;
@@ -110,6 +122,8 @@ export interface BattleSceneOptions {
   readonly confirmHotbarSwitch?: boolean;
   /** Where the battle happens: picks the battle music and ambience. Default forest. */
   readonly biome?: BiomeId;
+  /** A danger-zone battle: the biome's backdrop in its darker tone (C36e). */
+  readonly danger?: boolean;
   /** Trainer and story-boss battles: the intro splash shown before the first events (C32). */
   readonly intro?: IntroSpec;
   /** Called once after the battle ended and its results were shown. */
@@ -162,6 +176,10 @@ export class BattleScene implements Scene<Container> {
 
   private readonly world = new Container({ label: 'world' });
   private readonly backdrop = new Graphics();
+  /** The active Zorling is under ¼ HP (sting played, music muffled). */
+  private lowHp = false;
+  /** The battle is decided and its music stopped. */
+  private musicOver = false;
   private readonly actorLayer = new Container({ label: 'actors' });
   private readonly vfxLayer = new Container({ label: 'vfx' });
   private readonly overlays: [ConditionOverlay, ConditionOverlay] = [
@@ -245,7 +263,7 @@ export class BattleScene implements Scene<Container> {
       condition: (id, turns) => conditionTip(content, id, turns),
       zorling: (v, slot) => ({
         title: `${slot + 1} · ${v.name}  Lv${v.level}`,
-        body: `HP ${v.hp}/${v.maxHp} · ${v.types.map((t) => typeColors[t].label).join('/')}. Press ${slot + 1} to switch (costs the turn).`,
+        body: `HP ${v.hp}/${v.maxHp} · ${v.types.map((t) => typeColors[t].label).join('/')}. Press ${keyHint(HOTBAR[slot] ?? 'hotbar1')} to switch (costs the turn).`,
       }),
     };
     this.foeCard = new CombatantCard({ side: 'foe', tips: this.tips });
@@ -342,7 +360,10 @@ export class BattleScene implements Scene<Container> {
   resize(width: number, height: number): void {
     this.width = width;
     this.height = height;
-    drawBackdrop(this.backdrop, width, height);
+    drawBackdrop(this.backdrop, width, height, {
+      biome: this.options.biome ?? 'forest',
+      danger: this.options.danger ?? false,
+    });
     this.splash?.layout(width, height);
     for (const side of [PLAYER, OPPONENT] as const) this.placeActor(side);
     const y = this.barY;
@@ -543,6 +564,7 @@ export class BattleScene implements Scene<Container> {
       for (const line of lines) await this.say(line, short);
     };
     if (e.kind === 'end') {
+      this.musicOver = true;
       battleOverAudio();
       // The outcome goes into the results panel, not a caption.
       this.endLines = lines;
@@ -992,6 +1014,7 @@ export class BattleScene implements Scene<Container> {
     this.allyCard.visible = mine.onField;
     if (foe) this.foeCard.set(this.viewOf(foe, OPPONENT, theirs.active), animate);
     if (ally) this.allyCard.set(this.viewOf(ally, PLAYER, mine.active), animate);
+    this.lowHpCue(mine.onField && ally ? ally : undefined);
     this.hotbar.set(
       mine.team.map((z, i) => this.viewOf(z, PLAYER, i)),
       mine.active,
@@ -1014,6 +1037,18 @@ export class BattleScene implements Scene<Container> {
       });
       this.overlays[side].set(ids, fa.look.size * fa.look.fill);
     }
+  }
+
+  /**
+   * Low HP (C36e): a sting once when the active Zorling drops under a quarter of its HP, and
+   * the music muffled while it stays there. Not after the battle is decided.
+   */
+  private lowHpCue(ally: { readonly hp: number; readonly maxHp: number } | undefined): void {
+    const low = !this.musicOver && ally !== undefined && isLowHp(ally.hp, ally.maxHp);
+    if (low === this.lowHp) return;
+    this.lowHp = low;
+    if (low) playSfx('battle.lowHp');
+    if (!this.musicOver) setMusicTone(low ? 'tense' : 'normal');
   }
 
   /**
@@ -1078,7 +1113,10 @@ export class BattleScene implements Scene<Container> {
   private openTurn(): void {
     this.refreshMoves();
     const foe = shownActive(this.shown, OPPONENT);
-    if (foe.subdued) this.showCaption(`${foe.name} is Subdued. Press I to throw a capture item!`);
+    if (foe.subdued)
+      this.showCaption(
+        `${foe.name} is Subdued. Press ${keyHint('inventory')} to throw a capture item!`,
+      );
     else this.caption.hide();
     this.push(this.moveBar, () => undefined);
   }
