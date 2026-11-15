@@ -172,6 +172,23 @@ describe('InputManager pointer (optional mouse)', () => {
     input.pointerLeave();
     expect(input.pointer.inside).toBe(false);
   });
+
+  it('reports a held button (drags) and the wheel per step', () => {
+    const input = make();
+    input.pointerDown(0, 5, 5);
+    input.update(DT);
+    input.update(DT);
+    expect(input.rawPressed('Mouse0')).toBe(false);
+    expect(input.rawHeld('Mouse0')).toBe(true);
+    input.pointerUp(0, 9, 5);
+    input.wheel(40);
+    input.wheel(-10);
+    input.update(DT);
+    expect(input.rawHeld('Mouse0')).toBe(false);
+    expect(input.wheelDelta).toBe(30);
+    input.update(DT);
+    expect(input.wheelDelta).toBe(0);
+  });
 });
 
 describe('keyLabel', () => {

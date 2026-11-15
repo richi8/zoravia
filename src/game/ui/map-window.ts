@@ -17,8 +17,9 @@
  * `Q` closes (the card first).
  *
  * Mouse: click a header to open or close it, a row to select it (and again for the card), the
- * map to pick the nearest known zone or fight, a scroll arrow or a key hint. Any click closes
- * the card; right click is Back, as everywhere.
+ * map to pick the nearest known zone or fight, a scroll arrow or a key hint. Drag the map to pan
+ * it (it follows the selection again once the selection moves). The wheel scrolls the list, or
+ * over the map zooms. Any click closes the card; right click is Back, as everywhere.
  *
  * Everything comes in as `AtlasRegion` models, so nothing undiscovered can show: unknown
  * entries read "???", and a region not explored yet shows no rows.
@@ -213,6 +214,11 @@ const ROW_H = 12;
 const ROWS = Math.floor((LIST_H - 4) / ROW_H);
 const DETAIL_Y = LIST_Y + LIST_H + 4;
 const DETAIL_H = MAP.y + MAP.h - DETAIL_Y;
+/** Wheel pixels per list line, and per zoom step on the map. */
+const WHEEL_LINE = 30;
+const WHEEL_ZOOM = 90;
+/** Pointer travel (px) that turns a press on the map into a drag. */
+const DRAG_START = 3;
 /** Map zoom levels (px per tile). */
 const NEAR = 1;
 const FAR = 0.5;
@@ -240,6 +246,22 @@ export class MapWindow implements Widget<Container> {
   private readonly hits: Record<'right' | 'hints', Hit[]> = { right: [], hints: [] };
   /** World tile at the map box's top-left corner (map clicks → tiles). */
   private origin = { x: 0, y: 0 };
+  /** World tile the map is centered on after a drag; cleared when the selection moves. */
+  private pan: { x: number; y: number } | undefined;
+  /** A press on the map: a drag once it moves, else a click (picks on release). */
+  private drag:
+    | {
+        readonly x: number;
+        readonly y: number;
+        readonly center: { x: number; y: number };
+        moved: boolean;
+      }
+    | undefined;
+  /** First line of the list shown (wheel and arrows scroll it; keys keep the selection in view). */
+  private scroll = 0;
+  private followSelection = true;
+  /** Wheel pixels not yet turned into a list line or a zoom step. */
+  private wheelLeft = 0;
 
   constructor(private readonly options: MapWindowOptions) {
     const bg = drawPaper(new Graphics(), 0, 0, W, H);
@@ -308,11 +330,20 @@ export class MapWindow implements Widget<Container> {
   }
 
   handleInput(input: UiInput): void {
-    const p = input.pointerPressed();
-    if (p) {
-      this.click(this.view.toLocal(p));
+    if (this.drag) {
+      const held = input.pointerHeld?.();
+      if (held) this.dragTo(this.view.toLocal(held));
+      else this.endDrag();
       return;
     }
+    const p = input.pointerPressed();
+    if (p) {
+      this.click(this.view.toLocal(p), !!input.pointerHeld);
+      return;
+    }
+    const wheel = input.wheel?.() ?? 0;
+    const at = input.pointer?.();
+    if (wheel && at) this.wheel(wheel, this.view.toLocal(at));
     if (this.cardOpen) {
       if (input.backPressed() || input.confirmPressed() || this.options.pressed('inspect'))
         this.closeCard();
@@ -351,13 +382,82 @@ export class MapWindow implements Widget<Container> {
   toggle(group: GroupId): void {
     this.group = this.group === group ? undefined : group;
     this.selKey = `h:${group}`;
+    this.pan = undefined;
+    this.followSelection = true;
     if (this.group === 'Quests') this.markQuestsShown();
     this.rebuild();
   }
 
+  /** Zooms in or out around the map's center (a panned map stays where it is). */
   toggleZoom(): void {
+    if (this.pan) this.pan = this.center;
     this.scale = this.scale === NEAR ? FAR : NEAR;
-    this.rebuild();
+    this.buildMap();
+    this.buildHints();
+  }
+
+  /** The wheel: over the list it scrolls the list, over the map it zooms. */
+  private wheel(dy: number, p: { x: number; y: number }): void {
+    const overList =
+      p.x >= RIGHT.x && p.x < RIGHT.x + RIGHT.w && p.y >= LIST_Y && p.y < LIST_Y + LIST_H;
+    const overMap = p.x >= MAP.x && p.x < MAP.x + MAP.w && p.y >= MAP.y && p.y < MAP.y + MAP.h;
+    if (!overList && !overMap) return;
+    // A trackpad sends many small steps; a wheel notch is about 100 px.
+    this.wheelLeft += dy;
+    const step = overList ? WHEEL_LINE : WHEEL_ZOOM;
+    const n = Math.trunc(this.wheelLeft / step);
+    if (!n) return;
+    this.wheelLeft -= n * step;
+    if (overList) this.scrollBy(n);
+    else if (n > 0 === (this.scale === NEAR)) {
+      this.wheelLeft = 0;
+      this.toggleZoom();
+    }
+  }
+
+  /** Scrolls the list by `lines` without moving the selection. */
+  scrollBy(lines: number): void {
+    this.scroll += lines;
+    this.followSelection = false;
+    this.buildRight();
+  }
+
+  private dragTo(p: { x: number; y: number }): void {
+    const d = this.drag;
+    if (!d) return;
+    const dx = p.x - d.x;
+    const dy = p.y - d.y;
+    if (!d.moved && Math.abs(dx) + Math.abs(dy) < DRAG_START) return;
+    d.moved = true;
+    const s = this.scale;
+    const before = this.origin;
+    const next = this.originFor({ x: d.center.x - dx / s, y: d.center.y - dy / s });
+    const ox = Math.round((before.x - next.x) * s);
+    const oy = Math.round((before.y - next.y) * s);
+    // Moving the built map is cheap; build it again only when its edge would show.
+    if (Math.abs(ox) > MAP.w * 0.8 || Math.abs(oy) > MAP.h * 0.8) {
+      this.pan = this.centerOf(next);
+      this.buildMap();
+      this.mapLayer.position.set(0, 0);
+    } else this.mapLayer.position.set(ox, oy);
+  }
+
+  private endDrag(): void {
+    const d = this.drag;
+    this.drag = undefined;
+    if (!d) return;
+    if (!d.moved) {
+      this.pickOnMap(
+        this.origin.x + (d.x - MAP.x) / this.scale,
+        this.origin.y + (d.y - MAP.y) / this.scale,
+      );
+      return;
+    }
+    const s = this.scale;
+    const shift = this.mapLayer.position;
+    this.pan = this.centerOf({ x: this.origin.x - shift.x / s, y: this.origin.y - shift.y / s });
+    this.mapLayer.position.set(0, 0);
+    this.buildMap();
   }
 
   /** Moves the selection through headers and rows, wrapping around. */
@@ -368,11 +468,15 @@ export class MapWindow implements Widget<Container> {
     const next = sel[(((i + step) % sel.length) + sel.length) % sel.length];
     if (!next) return;
     this.selKey = lineKey(next);
+    this.pan = undefined;
+    this.followSelection = true;
     this.rebuild();
   }
 
   private selectLine(l: Selectable): void {
     this.selKey = lineKey(l);
+    this.pan = undefined;
+    this.followSelection = true;
     this.rebuild();
   }
 
@@ -383,7 +487,7 @@ export class MapWindow implements Widget<Container> {
   }
 
   /** A left click at a point in panel coordinates. */
-  private click(p: { x: number; y: number }): void {
+  private click(p: { x: number; y: number }, canDrag = false): void {
     if (this.cardOpen) {
       this.closeCard();
       return;
@@ -395,7 +499,10 @@ export class MapWindow implements Widget<Container> {
       hit.act();
       return;
     }
-    if (p.x >= MAP.x && p.y >= MAP.y && p.x < MAP.x + MAP.w && p.y < MAP.y + MAP.h)
+    const onMap = p.x >= MAP.x && p.y >= MAP.y && p.x < MAP.x + MAP.w && p.y < MAP.y + MAP.h;
+    // A press on the map picks on release, unless it turns into a drag.
+    if (onMap && canDrag) this.drag = { x: p.x, y: p.y, center: this.center, moved: false };
+    else if (onMap)
       this.pickOnMap(
         this.origin.x + (p.x - MAP.x) / this.scale,
         this.origin.y + (p.y - MAP.y) / this.scale,
@@ -519,25 +626,39 @@ export class MapWindow implements Widget<Container> {
     return you;
   }
 
+  /** The map's top-left world tile for a center, kept within the world (whole pixels). */
+  private originFor(c: { x: number; y: number }): { x: number; y: number } {
+    const s = this.scale;
+    const b = this.options.bounds;
+    const pad = 8;
+    const clamp = (v: number, lo: number, size: number, view: number): number =>
+      size + 2 * pad <= view
+        ? lo + size / 2 - view / 2
+        : Math.max(lo - pad, Math.min(lo + size + pad - view, v - view / 2));
+    return {
+      x: Math.round(clamp(c.x, b.x, b.width, MAP.w / s) * s) / s,
+      y: Math.round(clamp(c.y, b.y, b.height, MAP.h / s) * s) / s,
+    };
+  }
+
+  private centerOf(o: { x: number; y: number }): { x: number; y: number } {
+    return { x: o.x + MAP.w / 2 / this.scale, y: o.y + MAP.h / 2 / this.scale };
+  }
+
   private buildMap(): void {
     // The blink and the player's marker outlive the map they sit on.
     this.blink.removeFromParent();
     this.you.removeFromParent();
     for (const c of this.mapLayer.removeChildren()) c.destroy({ children: true });
     const s = this.scale;
-    const b = this.options.bounds;
     const f = this.mapFocus();
     const vw = MAP.w / s;
     const vh = MAP.h / s;
-    const pad = 8;
-    const clamp = (v: number, lo: number, size: number, view: number): number =>
-      size + 2 * pad <= view
-        ? lo + size / 2 - view / 2
-        : Math.max(lo - pad, Math.min(lo + size + pad - view, v - view / 2));
-    // Whole pixels at either zoom, so the map stays crisp.
-    const ox = Math.round(clamp(f.x, b.x, b.width, vw) * s) / s;
-    const oy = Math.round(clamp(f.y, b.y, b.height, vh) * s) / s;
+    const { x: ox, y: oy } = this.originFor(this.pan ?? f);
     this.origin = { x: ox, y: oy };
+    // Built a box beyond each edge, so a drag can move it before building again.
+    const mx = vw;
+    const my = vh;
     const at = (wx: number, wy: number): [number, number] => [
       Math.round(MAP.x + (wx - ox) * s),
       Math.round(MAP.y + (wy - oy) * s),
@@ -550,11 +671,11 @@ export class MapWindow implements Widget<Container> {
     // Parchment in the world's hatch phase (a tile's x + y), as the fog of every region.
     const ground = new TilingSprite({
       texture: hatchTexture(),
-      width: Math.ceil(vw) + 2,
-      height: Math.ceil(vh) + 2,
+      width: Math.ceil(vw + 2 * mx) + 2,
+      height: Math.ceil(vh + 2 * my) + 2,
     });
-    const gx = Math.floor(ox) - 1;
-    const gy = Math.floor(oy) - 1;
+    const gx = Math.floor(ox - mx) - 1;
+    const gy = Math.floor(oy - my) - 1;
     ground.position.set(gx, gy);
     ground.tilePosition.set(-gx, -gy);
     world.addChild(ground);
@@ -607,7 +728,10 @@ export class MapWindow implements Widget<Container> {
       }
     this.mapLayer.addChild(top);
     const inView = (x: number, y: number): boolean =>
-      x > MAP.x - 40 && y > MAP.y - 10 && x < MAP.x + MAP.w + 40 && y < MAP.y + MAP.h + 10;
+      x > MAP.x - MAP.w - 40 &&
+      y > MAP.y - MAP.h - 10 &&
+      x < MAP.x + 2 * MAP.w + 40 &&
+      y < MAP.y + 2 * MAP.h + 10;
     for (const r of this.options.regions) {
       if (s >= NEAR) {
         for (const p of r.atlas.places) {
@@ -669,7 +793,13 @@ export class MapWindow implements Widget<Container> {
       0,
       lines.findIndex((l) => isSelectable(l) && lineKey(l) === this.selKey),
     );
-    const first = Math.max(0, Math.min(n - ROWS, selAt - Math.floor(ROWS / 2)));
+    // Keys keep the selection in view; the wheel and the arrows scroll freely.
+    if (this.followSelection) {
+      if (selAt < this.scroll) this.scroll = selAt;
+      else if (selAt >= this.scroll + ROWS) this.scroll = selAt - ROWS + 1;
+    }
+    this.scroll = Math.max(0, Math.min(Math.max(0, n - ROWS), this.scroll));
+    const first = this.scroll;
     const x = RIGHT.x + 2;
     const w = RIGHT.w - 4;
     for (let i = first; i < Math.min(n, first + ROWS); i++) {
@@ -692,7 +822,7 @@ export class MapWindow implements Widget<Container> {
       this.buildLine(g, l, x, y, w);
     }
     // Scroll arrows: a page up or down (added first, so they win over the rows they sit on).
-    const page = (step: number): void => this.move(step * ROWS);
+    const page = (step: number): void => this.scrollBy(step * (ROWS - 1));
     if (first > 0) {
       hits.unshift({ x: RIGHT.x + RIGHT.w - 12, y: LIST_Y, w: 12, h: 12, act: () => page(-1) });
       this.label('▲', paper.inkDim, RIGHT.x + RIGHT.w - 9, LIST_Y + 1);
@@ -905,7 +1035,7 @@ export class MapWindow implements Widget<Container> {
     const hints: [KeyHint, () => void][] = [
       [new KeyHint('W/S', 'Move'), () => this.move(1)],
       [
-        new KeyHint('E', sel?.kind === 'header' && this.group === sel.group ? 'Close' : 'Open'),
+        new KeyHint('E', sel?.kind === 'header' && this.group === sel.group ? 'Fold' : 'Open'),
         () => this.activate(),
       ],
       [new KeyHint('F', 'Details'), () => this.openCard()],

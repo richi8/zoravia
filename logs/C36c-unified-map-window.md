@@ -67,6 +67,29 @@ Every region sits at a fixed world place. Emberwaste is east of Verdale at Ember
 
   `settings.test.ts` now uses `K` as its free key, since `Z` is bound.
 
+- **Mouse follow-up** (user, same day: "the map list is not scrollable by mouse, also add mouse pan"):
+  - **Engine input:**
+    - `InputManager.wheel(dy)`, `wheelDelta` per step and `rawHeld(code)`;
+    - the DOM adapter listens to `wheel` on the canvas (non-passive, so the page does not scroll) and counts lines and pages as 16 and 400 px;
+    - `UiInput` has optional `pointerHeld()`, `pointer()` and `wheel()`, so existing widgets and test mocks need no change.
+  - **Map window:**
+    - The wheel over the list scrolls it, 30 px per line, without moving the selection.
+    - The ▲/▼ arrows now page the list view instead of the selection.
+    - Keys still keep the selection in view.
+    - The wheel over the map zooms: down zooms out, up zooms in (90 px per step).
+    - Dragging the map pans it. A press becomes a drag after 3 px; a press without a drag still picks the nearest entry on release.
+    - The view stays within the world bounds. Zooming keeps a panned center.
+    - The pan ends when the selection moves, so the map follows the selection again.
+    - The map is built one box beyond each edge. A drag only moves it, and builds it again only near that edge, so text is not redrawn every frame.
+  - `E` on an open group's header reads "Fold", so it no longer shows "Close" twice next to `Q`.
+  - **Test:** `input-manager.test.ts` covers a held button and the wheel per step.
+  - **Browser check** (real CDP mouse events):
+    - a drag of 150×100 px moved the center from (160, 190) to (121, 240), stopping at the world's west edge;
+    - the wheel over the list scrolled to Emberwaste and Rimeholm ("Not explored yet") with the selection kept;
+    - the wheel over the map zoomed out and back in, keeping the center;
+    - a drag at ½ px panned south over the sea;
+    - `S` reset the pan to the selection.
+
 ## Decisions
 - **Decision:** layout A and ½ px zoom.
   - **Why:** the user's picks from the preview round.
@@ -92,7 +115,7 @@ Every region sits at a fixed world place. Emberwaste is east of Verdale at Ember
   - World: one world map, the map window, zoom, and the groups. They replace the `M` map and Atlas bullets.
   - Story: the quest log is the Quests group.
   - Controls: `Z` (also `Tab`) map zoom; `M` and `J` open the map window.
-- Map dragging (optional in the plan) is not done. `UiInput` gives clicks, not drags. A drag would need pointer down, move and up in the engine's UI input.
+- Map dragging (optional in the plan) was added in the mouse follow-up, with wheel scrolling and wheel zoom.
 
 ## Issues & known limitations
 - Zoomed out, the world (292 px tall) is taller than the map box (214 px), so the map still scrolls vertically. The preview said so and the user accepted it.
@@ -100,7 +123,7 @@ Every region sits at a fixed world place. Emberwaste is east of Verdale at Ember
 - The world places must be updated by hand if a region map grows north or west (as Verdale did in C36). The pass and ferry tests would then fail, which flags it.
 - The zone blink is still a fixed box around the zone's middle (C36b limitation).
 - Labels can still overlap (no collision avoidance).
-- Clicking a header line selects whatever line sits there at the current scroll. When a long group is open, the other headers can be scrolled out of view and need `W/S` or the ▲ arrow.
+- When a long group is open, the other headers can be scrolled out of view. The wheel, the ▲ arrow or `W/S` brings them back.
 
 ## Verification
 - `npm run check`: typecheck, lint, format and tests all pass (81 files, 846 tests).
@@ -126,7 +149,6 @@ Every region sits at a fixed world place. Emberwaste is east of Verdale at Ember
 
 ## Follow-ups
 - **Seamless world** (Later): stream neighbouring maps at the world places, and turn the ferry into a boat ride. Exploration could then become per world.
-- Map dragging, once the UI input reports pointer drags.
 - A ½ px minimap built by averaging 2×2 tiles, instead of nearest sampling, if thin paths look broken.
 - C37 accessibility pass: the 7 px labels, the fog contrast, and whether `Z` is easy to find. The key hint shows it.
 

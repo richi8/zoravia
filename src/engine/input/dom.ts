@@ -63,6 +63,13 @@ export function attachDomInput<A extends string>(
     listen('pointerdown', (e) => input.pointerDown(e.button, ...local(e)));
     listen('pointerleave', () => input.pointerLeave());
     listen('contextmenu', (e) => e.preventDefault());
+    // Lines and pages count as 16 and 400 pixels, so every device scrolls about alike.
+    const wheel = (e: WheelEvent): void => {
+      e.preventDefault();
+      input.wheel(e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1));
+    };
+    el.addEventListener('wheel', wheel, { passive: false });
+    disposers.push(() => el.removeEventListener('wheel', wheel));
     // Release on window so a drag ending outside the canvas still releases.
     on(win, 'pointerup', (e) => input.pointerUp(e.button, ...local(e)));
   }

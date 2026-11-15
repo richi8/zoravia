@@ -13,6 +13,12 @@ export interface UiInput {
   backPressed(): boolean;
   /** Position of a primary (left) click started this step, if any. */
   pointerPressed(): { readonly x: number; readonly y: number } | undefined;
+  /** Where the pointer is while the primary (left) button is held: drags. Optional. */
+  pointerHeld?(): { readonly x: number; readonly y: number } | undefined;
+  /** Where the pointer is, when it is over the game. Optional. */
+  pointer?(): { readonly x: number; readonly y: number } | undefined;
+  /** Mouse wheel this step in pixels (positive = down). Optional. */
+  wheel?(): number;
   /** Ignore currently held keys until released (focus moved to a new widget). */
   suppressHeld(): void;
 }
@@ -38,6 +44,10 @@ export function uiInputFrom<A extends string>(
     backPressed: () => input.pressed(map.back),
     pointerPressed: () =>
       input.rawPressed('Mouse0') ? { x: input.pointer.x, y: input.pointer.y } : undefined,
+    pointerHeld: () =>
+      input.rawHeld('Mouse0') ? { x: input.pointer.x, y: input.pointer.y } : undefined,
+    pointer: () => (input.pointer.inside ? { x: input.pointer.x, y: input.pointer.y } : undefined),
+    wheel: () => input.wheelDelta,
     suppressHeld: () => input.suppressHeld(),
   };
 }

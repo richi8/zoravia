@@ -71,6 +71,8 @@ export class InputManager<A extends string> {
   private step = 0;
   private pointerState = { x: 0, y: 0, inside: false, moved: false };
   private pointerMovedPending = false;
+  private wheelPending = 0;
+  private wheelStep = 0;
 
   constructor(
     readonly bindings: Bindings<A>,
@@ -110,6 +112,11 @@ export class InputManager<A extends string> {
     this.pointerMovedPending = true;
   }
 
+  /** Mouse wheel, in pixels (positive = down / toward the user). */
+  wheel(dy: number): void {
+    this.wheelPending += dy;
+  }
+
   pointerLeave(): void {
     this.pointerState = { ...this.pointerState, inside: false };
   }
@@ -142,6 +149,8 @@ export class InputManager<A extends string> {
     }
     this.pointerState = { ...this.pointerState, moved: this.pointerMovedPending };
     this.pointerMovedPending = false;
+    this.wheelStep = this.wheelPending;
+    this.wheelPending = 0;
 
     for (const [action, s] of this.actions) {
       const keys = this.bindings.keysFor(action);
@@ -273,6 +282,17 @@ export class InputManager<A extends string> {
   rawPressed(code: KeyCode): boolean {
     const k = this.keys.get(code);
     return !!k && k.pressed && !k.suppressed;
+  }
+
+  /** Raw key/button held this step, ignoring contexts and bindings (e.g. `"Mouse0"` drags). */
+  rawHeld(code: KeyCode): boolean {
+    const k = this.keys.get(code);
+    return !!k && k.down && !k.suppressed;
+  }
+
+  /** Wheel movement this step, in pixels (positive = down). */
+  get wheelDelta(): number {
+    return this.wheelStep;
   }
 
   /** The first key or button pressed this step, ignoring contexts and bindings (key capture). */
