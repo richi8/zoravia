@@ -64,6 +64,8 @@ export class MapPanel implements Widget<Container> {
   readonly height: number;
   private readonly you = new Graphics();
   private time = 0;
+  /** Key hints that work as buttons (mouse). */
+  private readonly buttons: { view: Container; act: () => void }[] = [];
 
   constructor(private readonly options: MapPanelOptions) {
     const { image, scale } = options;
@@ -123,10 +125,16 @@ export class MapPanel implements Widget<Container> {
     yt.position.set(8, 0);
     youKey.addChild(yd, yt);
     this.view.addChild(bg, title, place, inner, mask);
-    const hints = [
-      ...(options.onAtlas ? [new KeyHint('E', 'Atlas')] : []),
-      new KeyHint('Q', 'Close'),
-    ];
+    const atlas = options.onAtlas;
+    const hints: KeyHint[] = [];
+    if (atlas) {
+      const h = new KeyHint('E', 'Atlas');
+      this.buttons.push({ view: h, act: () => atlas(this) });
+      hints.push(h);
+    }
+    const close = new KeyHint('Q', 'Close');
+    this.buttons.push({ view: close, act: () => options.onBack(this) });
+    hints.push(close);
     const items = [youKey, ...legend, ...hints];
     this.view.addChild(...items);
     row(items, 10, 7, this.height - 14);
@@ -164,6 +172,17 @@ export class MapPanel implements Widget<Container> {
   }
 
   handleInput(input: UiInput): void {
+    const p = input.pointerPressed();
+    if (p) {
+      // A click on a key hint does what its key does.
+      const at = this.view.toLocal(p);
+      const b = this.buttons.find(
+        ({ view: v }) =>
+          at.x >= v.x && at.y >= v.y - 2 && at.x < v.x + v.width && at.y < v.y + v.height + 2,
+      );
+      b?.act();
+      return;
+    }
     if (input.confirmPressed() && this.options.onAtlas) this.options.onAtlas(this);
     else if (input.backPressed() || input.confirmPressed()) this.options.onBack(this);
   }

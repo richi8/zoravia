@@ -78,6 +78,24 @@ It never shows what the player has not discovered. Saves are now v6 and keep eac
   - Save tests: the v5 fixture migrates and gets a reveal that survives saving again; exploration round-trips, and unknown maps are dropped.
   - Toast test: `discoveryToast`.
 
+- **Mouse support** (user follow-up, same day):
+  - The Atlas reads left clicks in `handleInput` (`pointerPressed`) against hit areas rebuilt with each part:
+    - region tabs and list tabs;
+    - rows: a click selects a row, and a click on the selected row opens its card;
+    - the ▲/▼ arrows, which page through the list;
+    - the key hints, which do what their keys do.
+  - A click on the map selects the nearest known entry of the list shown: a zone within 24 tiles of its middle, a fight within 10 tiles.
+  - Any click closes the card. Right click is Back, as everywhere.
+  - The `M` map's key hints (`E Atlas`, `Q Close`) are clickable.
+  - Checked in headless Chrome with real mouse events:
+    - pause menu → Atlas;
+    - the Bosses tab, then a row, then the same row again (the card opens);
+    - a click elsewhere closes the card;
+    - a click on Hollow Oak on the map selects Mossback Titan;
+    - the Emberwaste tab;
+    - "Q Close";
+    - "E Atlas" on the `M` map.
+
 ## Decisions
 - **Decision:** layout A "Ledger" and blank-parchment fog.
   - **Why:** the user's picks from the preview round (https://claude.ai/artifact/LUA1tYrK6VKcgN117Ptr6c).

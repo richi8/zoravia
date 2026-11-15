@@ -4,7 +4,11 @@
  * names; three lists on the right (Zones, Bosses, Quests) and a detail box for the selection.
  *
  * Keys: `A/D` region, `W/S` select (the map follows and the selection blinks), `Tab` next list,
- * `F` a details card, `Q` closes (the card first). Everything comes in as an `AtlasRegion`
+ * `F` a details card, `Q` closes (the card first).
+ *
+ * Mouse: click a region or list tab, a row (the selected row again opens the card), the
+ * scroll arrows, a key hint, or the map (selects the nearest known entry of the list shown);
+ * any click closes the card; right click is Back, as everywhere. Everything comes in as an `AtlasRegion`
  * model, so nothing undiscovered can show: unknown entries read "???".
  */
 
@@ -52,6 +56,19 @@ const KIND_NAMES: Readonly<Record<AtlasMarkerKind, string>> = {
   gate: 'Gate',
 };
 
+/** A clickable area in panel coordinates. */
+interface Hit {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  readonly act: () => void;
+}
+
+/** How far (tiles) from an entry a click on the map still picks it. */
+const PICK_SPOT = 10;
+const PICK_ZONE = 24;
+
 const TIER_LABEL = { t1: 'T1', t2: 'T2', t3: 'T3', danger: '!!' } as const;
 
 const LISTS = ['Zones', 'Bosses', 'Quests'] as const;
@@ -97,6 +114,14 @@ export class AtlasPanel implements Widget<Container> {
   private list: ListId = 'Zones';
   private index = 0;
   private time = 0;
+  /** Clickable areas, rebuilt with the part they belong to. */
+  private readonly hits: Record<'header' | 'right' | 'hints', Hit[]> = {
+    header: [],
+    right: [],
+    hints: [],
+  };
+  /** Map pixel at the box's top-left corner (map clicks → tiles). */
+  private mapOffset = { x: 0, y: 0 };
 
   constructor(private readonly options: AtlasPanelOptions) {
     this.region = Math.max(0, Math.min(options.regions.length - 1, options.start));
@@ -113,6 +138,17 @@ export class AtlasPanel implements Widget<Container> {
     ];
     this.view.addChild(bg, this.header, this.mapLayer, this.mapMask, this.right, ...hints);
     row(hints, 10, 8, H - 14);
+    const acts = [
+      () => this.nextRegion(1),
+      () => this.select(this.index + 1),
+      () => this.nextList(),
+      () => this.openCard(),
+      () => this.options.onBack(this),
+    ];
+    hints.forEach((h, i) => {
+      const act = acts[i];
+      if (act) this.hits.hints.push({ x: h.x, y: h.y - 2, w: h.width, h: h.height + 4, act });
+    });
     this.view.addChild(this.card);
     this.view.eventMode = 'static';
     this.view.hitArea = new Rectangle(0, 0, W, H);
@@ -151,6 +187,11 @@ export class AtlasPanel implements Widget<Container> {
   }
 
   handleInput(input: UiInput): void {
+    const p = input.pointerPressed();
+    if (p) {
+      this.click(this.view.toLocal(p));
+      return;
+    }
     if (this.cardOpen) {
       if (input.backPressed() || input.confirmPressed() || this.options.pressed('inspect'))
         this.closeCard();
@@ -165,23 +206,86 @@ export class AtlasPanel implements Widget<Container> {
       return;
     }
     if (this.options.pressed('next_tab')) {
-      this.list = LISTS[(LISTS.indexOf(this.list) + 1) % LISTS.length] ?? 'Zones';
-      this.index = 0;
-      this.rebuild();
+      this.nextList();
       return;
     }
     const d = input.direction();
+    if (d === 'left' || d === 'right') this.nextRegion(d === 'right' ? 1 : -1);
+    else if (d === 'up' || d === 'down') this.select(this.index + (d === 'down' ? 1 : -1));
+  }
+
+  // ------------------------------------------------------------ actions (keys and mouse)
+
+  private nextRegion(step: number): void {
+    const count = this.options.regions.length;
+    if (count < 2) return;
+    this.showRegion((this.region + step + count) % count);
+  }
+
+  private showRegion(i: number): void {
+    if (i === this.region) return;
+    this.region = i;
+    this.index = 0;
+    this.rebuild();
+  }
+
+  private nextList(): void {
+    this.showList(LISTS[(LISTS.indexOf(this.list) + 1) % LISTS.length] ?? 'Zones');
+  }
+
+  private showList(id: ListId): void {
+    if (id === this.list) return;
+    this.list = id;
+    this.index = 0;
+    this.rebuild();
+  }
+
+  /** Selects row `i`, wrapping around the list's ends. */
+  private select(i: number): void {
     const n = this.rows();
-    if (d === 'left' || d === 'right') {
-      const count = this.options.regions.length;
-      if (count < 2) return;
-      this.region = (this.region + (d === 'right' ? 1 : count - 1)) % count;
-      this.index = 0;
-      this.rebuild();
-    } else if ((d === 'up' || d === 'down') && n > 0) {
-      this.index = (this.index + (d === 'down' ? 1 : n - 1)) % n;
-      this.rebuild();
+    if (!n) return;
+    const next = ((i % n) + n) % n;
+    if (next === this.index) return;
+    this.index = next;
+    this.rebuild();
+  }
+
+  /** A left click at a point in panel coordinates. */
+  private click(p: { x: number; y: number }): void {
+    if (this.cardOpen) {
+      this.closeCard();
+      return;
     }
+    const inside = (h: Hit): boolean =>
+      p.x >= h.x && p.y >= h.y && p.x < h.x + h.w && p.y < h.y + h.h;
+    const hit = [...this.hits.header, ...this.hits.right, ...this.hits.hints].find(inside);
+    if (hit) {
+      hit.act();
+      return;
+    }
+    if (p.x >= MAP.x && p.y >= MAP.y && p.x < MAP.x + MAP.w && p.y < MAP.y + MAP.h)
+      this.pickOnMap(p.x - MAP.x + this.mapOffset.x, p.y - MAP.y + this.mapOffset.y);
+  }
+
+  /** Selects the known entry of the list shown nearest to a map tile, if one is close. */
+  private pickOnMap(tx: number, ty: number): void {
+    const r = this.current;
+    if (!r || this.list === 'Quests') return;
+    const spots =
+      this.list === 'Zones'
+        ? r.zones.map((z) => ({ known: z.known, x: z.x, y: z.y, reach: PICK_ZONE }))
+        : r.fights.map((f) => ({ known: f.known, x: f.x, y: f.y, reach: PICK_SPOT }));
+    let best = -1;
+    let bestD = Infinity;
+    spots.forEach((s, i) => {
+      if (!s.known) return;
+      const d = Math.hypot(s.x - tx, s.y - ty);
+      if (d <= s.reach && d < bestD) {
+        best = i;
+        bestD = d;
+      }
+    });
+    if (best >= 0) this.select(best);
   }
 
   // ------------------------------------------------------------ content
@@ -202,6 +306,7 @@ export class AtlasPanel implements Widget<Container> {
 
   private buildHeader(): void {
     for (const c of this.header.removeChildren()) c.destroy({ children: true });
+    this.hits.header.length = 0;
     const g = new Graphics();
     this.header.addChild(g);
     const title = uiText('name', 'Atlas', paper.title);
@@ -212,6 +317,7 @@ export class AtlasPanel implements Widget<Container> {
       const t = uiText('name', r.name, i === this.region ? paper.ink : paper.inkDim);
       const w = Math.ceil(t.width) + 10;
       if (i === this.region) g.rect(x, 5, w, 14).fill({ color: paper.cursor });
+      this.hits.header.push({ x, y: 4, w, h: 16, act: () => this.showRegion(i) });
       t.position.set(x + 5, 5);
       this.header.addChild(t);
       x += w + 2;
@@ -256,6 +362,7 @@ export class AtlasPanel implements Widget<Container> {
         : Math.max(0, Math.min(size - view, Math.round(v - view / 2)));
     const ox = clamp(f.x, image.width, MAP.w);
     const oy = clamp(f.y, image.height, MAP.h);
+    this.mapOffset = { x: ox, y: oy };
     const inner = new Container();
     inner.position.set(MAP.x - ox, MAP.y - oy);
     // Parchment around a map smaller than the box.
@@ -293,6 +400,8 @@ export class AtlasPanel implements Widget<Container> {
 
   private buildRight(): void {
     for (const c of this.right.removeChildren()) c.destroy({ children: true });
+    const hits = this.hits.right;
+    hits.length = 0;
     const r = this.current;
     if (!r) return;
     const g = new Graphics();
@@ -305,6 +414,7 @@ export class AtlasPanel implements Widget<Container> {
       const w = Math.ceil(t.width) + 10;
       g.rect(x, 22, w, 11).fill({ color: on ? paper.base : paper.well });
       if (on) g.rect(x, 32, w, 1).fill({ color: paper.accent });
+      hits.push({ x, y: 21, w, h: 13, act: () => this.showList(id) });
       t.position.set(x + 5, 24);
       this.right.addChild(t);
       x += w + 2;
@@ -325,6 +435,14 @@ export class AtlasPanel implements Widget<Container> {
     for (let i = first; i < Math.min(n, first + ROWS); i++) {
       const y = LIST_Y + 2 + (i - first) * ROW_H;
       if (i === this.index) drawCursor(g, RIGHT.x + 2, y, RIGHT.w - 4, ROW_H - 1, true);
+      // Click a row to select it; the selected one again opens its card.
+      hits.push({
+        x: RIGHT.x + 2,
+        y,
+        w: RIGHT.w - 16,
+        h: ROW_H,
+        act: () => (i === this.index ? this.openCard() : this.select(i)),
+      });
       this.buildRow(g, i, RIGHT.x + 10, y);
     }
     if (!n) {
@@ -336,6 +454,23 @@ export class AtlasPanel implements Widget<Container> {
       t.position.set(RIGHT.x + 8, LIST_Y + 4);
       this.right.addChild(t);
     }
+    // Scroll arrows: a page up or down (added first, so they win over the rows they sit on).
+    if (first > 0)
+      hits.unshift({
+        x: RIGHT.x + RIGHT.w - 14,
+        y: LIST_Y,
+        w: 14,
+        h: 12,
+        act: () => this.select(Math.max(0, this.index - ROWS)),
+      });
+    if (first + ROWS < n)
+      hits.unshift({
+        x: RIGHT.x + RIGHT.w - 14,
+        y: LIST_Y + LIST_H - 12,
+        w: 14,
+        h: 12,
+        act: () => this.select(Math.min(n - 1, this.index + ROWS)),
+      });
     if (first > 0)
       this.right.addChild(
         at(uiText('label', '▲', paper.inkDim), RIGHT.x + RIGHT.w - 9, LIST_Y + 1),
