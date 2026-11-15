@@ -313,6 +313,28 @@ User plays Region 1. Decide what to change before building more.
   - The map stays fully usable by keyboard.
 - **Depends:** C36
 
+### C36c · Unified map window
+- **Goal:** one window for the map, the Atlas and the quest log, built around a single world map (user idea, 2026-11-15). Every region sits at its place in the world, so there is no region switch. It is a first step toward the seamless world.
+- **Deliverables:**
+  - **World positions:** each region pack gives its map a world offset in tiles (a new optional field on the region's start entry or map, validated so that regions don't overlap). Emberwaste lies east of Verdale at Ember Pass and Rimeholm south across the ferry. The later seamless-world chunk reuses these offsets.
+  - **World map:** every region's map drawn at its offset, tinted by tier, with parchment fog and the C36b markers and labels. The sea or blank parchment fills the space between regions.
+    - It pans around the player at 1 px per tile. One key zooms out to the whole world at ½ px per tile, and pans follow the selection.
+    - Exploration and save data stay per map (no save change).
+  - **One window** replaces the `M` map panel, the Atlas and the quest panel:
+    - `M` opens it centered on the player, and `J` opens it with Quests expanded. The pause menu has one entry, "Map", which replaces "Map", "Atlas" and "Quests".
+    - The right side has **expandable groups**: Zones, Bosses and Quests, each with a count ("Zones 11/13 ▸"). Zones and Bosses are sorted by region, with small region subheadings. Quests are split into active and done, and the "New" marker of quests is kept.
+    - `W/S` moves through headers and rows, and `E` opens or closes a group. Selecting an entry pans the map to it. `F` opens the details card, which now also holds a quest's steps and reward. `Q` closes.
+    - Mouse: click a header to open or close it, a row to select it (and again for the card), the map to pick the nearest entry, and key hints. Dragging the map pans it (optional).
+  - Nothing undiscovered shows, as in C36b.
+  - Preview round first: two or three layouts of the window as images (memory: previews before code).
+- **Done when:**
+  - The user picked a layout from the preview.
+  - All regions show on one world map at their offsets, with no region switch.
+  - `M`, `J` and the pause menu open the same window, which is fully usable by keyboard and by mouse.
+  - Everything the quest log showed (steps, reward, giver, "New") is still reachable.
+  - Old saves load unchanged.
+- **Depends:** C36b
+
 ### C37 · Release prep
 - **Deliverables:** performance pass, accessibility pass (contrast, remapping, text speed), production build, deployment, final trademark check reminder.
 
