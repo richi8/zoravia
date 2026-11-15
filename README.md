@@ -49,3 +49,7 @@ logs/         per-chunk work logs
 ```
 Path aliases: `@engine/*`, `@game/*`, `@lab/*`, `@packs/*`.
 Tests live next to code as `*.test.ts` (or under `tests/`).
+
+## License
+[MIT](LICENSE). The MIT license covers the code. It grants no rights to the name "Zoravia" or
+its logo.

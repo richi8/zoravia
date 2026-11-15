@@ -6,3 +6,7 @@ coverage/
 .DS_Store
 .env
 .env.*
+
+# Editors
+.idea/
+.vscode/
