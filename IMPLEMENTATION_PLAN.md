@@ -338,24 +338,18 @@ User plays Region 1. Decide what to change before building more.
 ### C36d · World polish
 - **Goal:** finish existing world features without new content, and keep the game's friction (user picks, 2026-11-15). No fast travel, quest waypoints, healing outside centers, running shoes, battle skipping or XP sharing.
 - **Deliverables:**
-  - **Ferry fare:**
-    - Stepping onto a ferry connection asks "Take the ferry to <region> for N coins?", with Yes and No. No, or too little money, steps the player back off the pier.
-    - The fare is paid each way.
-    - The fare is optional connection data (`fare` on a `ferry` connection, or on its link). Passes stay free.
-    - Ferryman Gus and Ferryman Ola mention the fare in their lines. The amount is set with the balance sim in mind; a little under a Super Potion is a starting point.
   - **Trainers who spot you:**
     - A route trainer that has not been beaten sees a few tiles straight ahead, with an optional `sight` on the NPC and a default for derived `trainer` marks. When the player steps into that line, it shows "!", plays the alert sting, walks up and starts its dialogue and battle.
     - Walls, props and other NPCs block the line.
     - Beaten trainers, trial masters, Mira, bosses and NPCs without a battle never spot.
     - The player can't move or open menus until the trainer arrives. Nothing new is saved: it reads the trainers already beaten.
-  - **Arrival toast:** travelling to another region shows a toast with the region's name ("Emberwaste"), in the style of the discovery toasts. The first arrival is gold-edged, as a discovery.
+  - **Arrival toast:** entering another region shows a toast with the region's name ("Emberwaste"), in the style of the discovery toasts. The first arrival is gold-edged, as a discovery. For now this happens on travel; after C37 it happens on crossing a region border.
   - **Map labels:** in the map window, labels that would overlap shift up or down, or the one with the lower priority hides. Towns come first, then landmarks, then secrets. The selected zone blinks as an outline of its real tiles, not a fixed box.
 - **Done when:**
-  - A ferry ride costs its fare both ways, can be refused, and never strands a player with too little money (they stay on the near side).
   - Route trainers spot and walk up to the player once, and no trainer can trap the player in a loop (a trainer whose path is blocked doesn't start).
-  - Travelling shows the arrival toast.
+  - Entering a region shows the arrival toast.
   - Labels don't overlap at either zoom, and the selected zone's outline matches its tiles.
-  - The balance sim still passes with the fare. Old saves load unchanged. Everything stays keyboard-playable.
+  - The ferry stays free (user, 2026-11-15). Old saves load unchanged. Everything stays keyboard-playable.
 - **Depends:** C36c
 
 ### C36e · Presentation & sound polish
@@ -367,7 +361,7 @@ User plays Region 1. Decide what to change before building more.
     - Low HP: a short warning sting when the active Zorling drops under ¼ HP, and a subtle change in the battle music while it stays there. It is not a looping beep.
     - Dialogue text blips: a soft blip every few characters, pitched per speaker. It is off for narration and signs, and it follows the SFX volume.
     - Cries in the overworld: a roaming wild Zorling cries when it starts to chase, and a Titan or legendary in its lair cries when the player talks to it. The sound pans left or right with its place on screen.
-  - **Key hints follow the bindings:** every key hint shows the player's current key, through a `keyHint(action)` helper that reads the bindings. That covers the overworld help line, the battle bar, panels, the map window and the title. This item is moved here from C37.
+  - **Key hints follow the bindings:** every key hint shows the player's current key, through a `keyHint(action)` helper that reads the bindings. That covers the overworld help line, the battle bar, panels, the map window and the title. This item is moved here from release prep.
 - **Done when:**
   - The user picked the backgrounds and the boss sprite size from the previews, and each biome's battles use its background.
   - Titans and legendaries stand out in the overworld.
@@ -376,12 +370,54 @@ User plays Region 1. Decide what to change before building more.
   - Everything stays keyboard-playable.
 - **Depends:** C36d
 
-### C37 · Release prep
+### C37 · Seamless world
+- **Goal:** merge the regions into one big world map, so the player walks between regions with no loading, and the ferry becomes an animated boat that sails over the water from pier to pier (user, 2026-11-15). Content stays in the region packs.
+- **Deliverables:**
+  - **World composition:**
+    - At load, a pure step builds one world map from every region at its C36c `world` place. Each region's tiles, zones, props, anchors, connections and NPC spots are shifted by the region's offset.
+    - Packs keep region-local maps and data, and the world tool still edits one region at a time. Zone and anchor keys stay unique per region.
+    - A debug map (the test region) still loads on its own.
+  - **Between regions:**
+    - Open sea lies between Verdale's south coast and Rimeholm, and around the Rimeholm islands. It is the ferry's water and is never walkable.
+    - Other empty world space is impassable land drawn in the neighbouring biome (cliffs, dunes, forest).
+    - Nothing outside a region is walkable.
+  - **Seams:**
+    - Where Verdale and Emberwaste touch, the double border tree wall becomes one natural border that blends the two biomes (for example a ridge, or a tree line thinning into scrub). It stays closed except at Ember Pass.
+    - Ember Pass becomes an ordinary walk with no travel step.
+    - Danger-zone strips and their gates keep their own walls.
+  - **One biome per area:**
+    - The terrain, tall grass, footstep dust, minimap, ambience, music, overworld weather and battle backgrounds follow the region under the player.
+    - Music and ambience crossfade when the player crosses a border. Discovery and arrival toasts fire on crossing.
+  - **Ferry boat:**
+    - A boat is docked at each pier. Talking to the ferryman, or stepping onto the boat, asks "Sail to <region>?" with Yes and No. The ride is free.
+    - On Yes, the player boards and the boat sails a set route over the water to the far pier. The camera follows, the input is locked, and the boat bobs and leaves a wake to sea ambience for about 10–15 s. Then the player steps off.
+    - The route is data on the ferry link. Both directions work.
+    - `Q` doesn't cancel mid-sea, but a ride can be declined at the pier.
+  - **Streaming and performance:**
+    - Terrain chunks are baked only near the camera, over the whole world.
+    - NPCs and wild roamers are active only near the player.
+    - The frame rate holds while crossing a border, and memory stays bounded.
+  - **Saves:**
+    - A place keeps its region map and local tile, if that works, so no migration is needed. Otherwise a v7 stores world tiles, with a migration step.
+    - Exploration stays per region (the map window already shows it in world tiles).
+    - Old saves load at the same spot with the same exploration.
+    - The respawn center works across regions.
+  - Preview round first: images of the Verdale–Emberwaste border and of the boat at sea (memory: previews before code).
+- **Done when:**
+  - The user picked the border and the boat from the previews.
+  - Walking from Verdale to Emberwaste through Ember Pass has no loading or fade, and the biome, music and weather change at the border.
+  - The ferry is a free boat ride over animated water between the piers, both ways.
+  - No seam has a walkable gap or a hole, and no double tree wall is left where regions touch.
+  - The v5 and v6 save fixtures load at the same place with the same exploration.
+  - 60 fps holds while walking across a border (measured in the browser).
+  - The balance sim and all tests pass, and keyboard-only play is unchanged.
+- **Depends:** C36e
+
+### C38 · Release prep
 - **Deliverables:** performance pass, accessibility pass (contrast, remapping, text speed), production build, deployment, final trademark check reminder.
 
 ---
 
 ## Later / future (not scheduled)
-- **Seamless world** (user vision, 2026-11-15): regions joined without loading. The overworld would stream neighbouring maps at fixed world offsets, and the ferry to Rimeholm would become a boat ride. It is an engine chunk; C36 keeps the existing links.
 
 See "Feature plan" in `DESIGN.md`: day/night, fishing, following Zorling, league, held items, safari zone, condition flasks, item evolution; and future/server items (trading, PvP, breeding, mod loader, etc.).

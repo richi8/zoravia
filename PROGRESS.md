@@ -52,4 +52,5 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C36c | Unified map window | ✅ | [log](logs/C36c-unified-map-window.md) |
 | C36d | World polish | ⬜ | |
 | C36e | Presentation & sound polish | ⬜ | |
-| C37 | Release prep | ⬜ | |
+| C37 | Seamless world | ⬜ | |
+| C38 | Release prep | ⬜ | |
