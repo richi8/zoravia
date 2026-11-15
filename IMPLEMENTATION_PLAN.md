@@ -335,6 +335,47 @@ User plays Region 1. Decide what to change before building more.
   - Old saves load unchanged.
 - **Depends:** C36b
 
+### C36d · World polish
+- **Goal:** finish existing world features without new content, and keep the game's friction (user picks, 2026-11-15). No fast travel, quest waypoints, healing outside centers, running shoes, battle skipping or XP sharing.
+- **Deliverables:**
+  - **Ferry fare:**
+    - Stepping onto a ferry connection asks "Take the ferry to <region> for N coins?", with Yes and No. No, or too little money, steps the player back off the pier.
+    - The fare is paid each way.
+    - The fare is optional connection data (`fare` on a `ferry` connection, or on its link). Passes stay free.
+    - Ferryman Gus and Ferryman Ola mention the fare in their lines. The amount is set with the balance sim in mind; a little under a Super Potion is a starting point.
+  - **Trainers who spot you:**
+    - A route trainer that has not been beaten sees a few tiles straight ahead, with an optional `sight` on the NPC and a default for derived `trainer` marks. When the player steps into that line, it shows "!", plays the alert sting, walks up and starts its dialogue and battle.
+    - Walls, props and other NPCs block the line.
+    - Beaten trainers, trial masters, Mira, bosses and NPCs without a battle never spot.
+    - The player can't move or open menus until the trainer arrives. Nothing new is saved: it reads the trainers already beaten.
+  - **Arrival toast:** travelling to another region shows a toast with the region's name ("Emberwaste"), in the style of the discovery toasts. The first arrival is gold-edged, as a discovery.
+  - **Map labels:** in the map window, labels that would overlap shift up or down, or the one with the lower priority hides. Towns come first, then landmarks, then secrets. The selected zone blinks as an outline of its real tiles, not a fixed box.
+- **Done when:**
+  - A ferry ride costs its fare both ways, can be refused, and never strands a player with too little money (they stay on the near side).
+  - Route trainers spot and walk up to the player once, and no trainer can trap the player in a loop (a trainer whose path is blocked doesn't start).
+  - Travelling shows the arrival toast.
+  - Labels don't overlap at either zoom, and the selected zone's outline matches its tiles.
+  - The balance sim still passes with the fare. Old saves load unchanged. Everything stays keyboard-playable.
+- **Depends:** C36c
+
+### C36e · Presentation & sound polish
+- **Goal:** what is already in the game looks and sounds finished (user picks, 2026-11-15). No new content.
+- **Deliverables:**
+  - **Battle backgrounds by biome:** desert for Emberwaste and frozen coast for Rimeholm, drawn in code like Verdale's hills, chosen from the zone's biome. Danger zones may get a darker variant. Preview round first (images of each biome, memory: previews before code).
+  - **Bigger overworld Titans and legendaries:** their lair NPCs are drawn larger than a person (the Zorling's battle look at overworld scale), with the legendary's shine. Preview round first.
+  - **Sound:**
+    - Low HP: a short warning sting when the active Zorling drops under ¼ HP, and a subtle change in the battle music while it stays there. It is not a looping beep.
+    - Dialogue text blips: a soft blip every few characters, pitched per speaker. It is off for narration and signs, and it follows the SFX volume.
+    - Cries in the overworld: a roaming wild Zorling cries when it starts to chase, and a Titan or legendary in its lair cries when the player talks to it. The sound pans left or right with its place on screen.
+  - **Key hints follow the bindings:** every key hint shows the player's current key, through a `keyHint(action)` helper that reads the bindings. That covers the overworld help line, the battle bar, panels, the map window and the title. This item is moved here from C37.
+- **Done when:**
+  - The user picked the backgrounds and the boss sprite size from the previews, and each biome's battles use its background.
+  - Titans and legendaries stand out in the overworld.
+  - The low-HP sting, text blips and overworld cries play, and each follows its volume setting.
+  - Rebinding a key changes every hint that shows it.
+  - Everything stays keyboard-playable.
+- **Depends:** C36d
+
 ### C37 · Release prep
 - **Deliverables:** performance pass, accessibility pass (contrast, remapping, text speed), production build, deployment, final trademark check reminder.
 
