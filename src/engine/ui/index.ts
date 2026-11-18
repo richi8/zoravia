@@ -12,3 +12,4 @@ export * from './typewriter';
 export * from './ui-input';
 export * from './ui-sound';
 export * from './motion';
+export * from './wheel';

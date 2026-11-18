@@ -100,6 +100,21 @@ describe('Zoravia input — context-sensitive WASD', () => {
     expect(input.pressed('pause')).toBe(false);
   });
 
+  it('right click opens the menu in the overworld and is back in menus (C43)', () => {
+    const input = createInput();
+    input.setContexts(['overworld']);
+    input.pointerDown(2, 10, 10);
+    input.update(1 / 60);
+    expect(input.pressed('pause')).toBe(true);
+    input.pointerUp(2, 10, 10);
+    input.update(1 / 60);
+    input.pushContext('menu');
+    input.pointerDown(2, 10, 10);
+    input.update(1 / 60);
+    expect(input.pressed('back')).toBe(true);
+    expect(input.pressed('pause')).toBe(false);
+  });
+
   it('1 2 3 switch in battle; overworld menu keys work', () => {
     const input = createInput();
     input.setContexts(['battle']);

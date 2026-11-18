@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { FocusStack, type Widget } from './focus-stack';
 import { GridCursor } from './grid-cursor';
 import { Typewriter } from './typewriter';
+import { WheelSteps } from './wheel';
 import type { UiInput } from './ui-input';
 
 describe('GridCursor — list', () => {
@@ -260,5 +261,24 @@ describe('FocusStack', () => {
       expect(ctx.stack.size).toBe(2);
       ctx.noClick();
     });
+  });
+});
+
+describe('WheelSteps', () => {
+  it('turns wheel pixels into whole steps and keeps the rest', () => {
+    const w = new WheelSteps(30);
+    expect(w.take(100)).toBe(3); // one notch
+    expect(w.take(10)).toBe(0); // 10 + 10 left over
+    expect(w.take(10)).toBe(1);
+    expect(w.take(0)).toBe(0);
+  });
+
+  it('adds up small trackpad deltas, and drops them when the direction turns', () => {
+    const w = new WheelSteps(30);
+    for (let i = 0; i < 5; i++) expect(w.take(5)).toBe(0);
+    expect(w.take(5)).toBe(1);
+    expect(w.take(20)).toBe(0);
+    expect(w.take(-20)).toBe(0); // the 20 down is dropped
+    expect(w.take(-10)).toBe(-1);
   });
 });

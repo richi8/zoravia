@@ -9,6 +9,7 @@ import { Container, Graphics, Rectangle } from 'pixi.js';
 import {
   GridCursor,
   uiSound,
+  WheelSteps,
   type TooltipContent,
   type TooltipLayer,
   type UiInput,
@@ -308,13 +309,14 @@ export class BattleCaption extends Container {
   }
 }
 
-/** The whole battle so far (`L`). W/S scroll; E, Q or L close it. */
+/** The whole battle so far (`L`). W/S or the wheel (C43) scroll; E, Q, L or a click close it. */
 export class BattleLogPanel implements Widget<Container> {
   static readonly WIDTH = 300;
   static readonly ROWS = 12;
   readonly view = new Container({ label: 'battle-log' });
   private readonly rowsLayer = new Container();
   private top: number;
+  private readonly wheel = new WheelSteps(20);
 
   constructor(
     private readonly lines: readonly string[],
@@ -340,18 +342,27 @@ export class BattleLogPanel implements Widget<Container> {
 
   handleInput(input: UiInput): void {
     const dir = input.direction();
-    const max = Math.max(0, this.lines.length - BattleLogPanel.ROWS);
-    if (dir === 'up' && this.top > 0) {
-      this.top--;
-      this.render();
-    } else if (dir === 'down' && this.top < max) {
-      this.top++;
-      this.render();
-    }
-    if (input.confirmPressed() || input.backPressed()) {
+    const lines =
+      this.wheel.take(input.wheel?.() ?? 0) + (dir === 'up' ? -1 : dir === 'down' ? 1 : 0);
+    if (lines) this.scrollBy(lines);
+    // A click inside closes it too (outside: `dismiss`), so the mouse alone gets out.
+    if (input.confirmPressed() || input.backPressed() || input.pointerPressed()) {
       uiSound('back');
       this.onClose();
     }
+  }
+
+  /** Scrolls by `lines` (clamped). */
+  scrollBy(lines: number): void {
+    const max = Math.max(0, this.lines.length - BattleLogPanel.ROWS);
+    const next = Math.max(0, Math.min(max, this.top + lines));
+    if (next === this.top) return;
+    this.top = next;
+    this.render();
+  }
+
+  get scrollTop(): number {
+    return this.top;
   }
 
   dismiss(): void {

@@ -58,3 +58,4 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C40 | Campfires (rest spots) | ✅ | [log](logs/C40-campfires.md) |
 | C41 | Sprigling's early game | ✅ | [log](logs/C41-sprigling-early-game.md) |
 | C42 | A Dex you can finish | ✅ | [log](logs/C42-dex-you-can-finish.md) |
+| C43 | Mouse & controls pass | ✅ | [log](logs/C43-mouse-controls.md) |

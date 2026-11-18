@@ -4,11 +4,12 @@
  * another one to swap them, or on an empty spot to move it (deposit / withdraw).
  *
  * Keyboard: W A S D move (left of the box's first column is the team), E pick up / put down,
- * Q cancel / leave. Mouse: hover a slot, click to pick up / put down.
+ * Q cancel / leave. Mouse: hover a slot, click to pick up / put down, the wheel scrolls the
+ * box (C43).
  */
 
 import { Container, Graphics, Rectangle } from 'pixi.js';
-import { type UiInput, type Widget, uiSound } from '@engine/ui';
+import { type UiInput, type Widget, uiSound, WheelSteps } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, TypeBadge, row } from './badges';
 import { keyHint, navHint } from '@game/input/key-hint';
@@ -54,6 +55,7 @@ export class StoragePanel implements Widget<Container> {
   private focused = false;
   private message = '';
   private readonly pointer = new PointerQueue<'team' | 'storage'>(() => this.focused);
+  private readonly wheel = new WheelSteps();
 
   constructor(private readonly options: StorageOptions) {
     this.team = options.team;
@@ -106,10 +108,34 @@ export class StoragePanel implements Widget<Container> {
       if (p.click) this.confirm();
       return;
     }
+    const rows = this.wheel.take(input.wheel?.() ?? 0);
+    if (rows) {
+      this.scrollBy(rows);
+      return;
+    }
     const dir = input.direction();
     if (dir) this.step(dir);
     if (input.confirmPressed()) this.confirm();
     else if (input.backPressed()) this.back();
+  }
+
+  /**
+   * The wheel (C43): scrolls the box by rows. A selection in the box stays on a row that
+   * shows (same column), so E never acts on a hidden slot.
+   */
+  scrollBy(rows: number): void {
+    const max = Math.max(0, Math.ceil(this.cells / COLS) - ROWS);
+    const next = Math.max(0, Math.min(max, this.scroll + rows));
+    if (next === this.scroll) return;
+    this.scroll = next;
+    if (this.at.area === 'storage') {
+      const r = Math.floor(this.at.index / COLS);
+      const nr = Math.max(next, Math.min(next + ROWS - 1, r));
+      const index = Math.min(nr * COLS + (this.at.index % COLS), this.cells - 1);
+      this.at = { area: 'storage', index };
+    }
+    uiSound('move');
+    this.build();
   }
 
   private step(dir: 'up' | 'down' | 'left' | 'right'): void {

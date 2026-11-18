@@ -454,7 +454,7 @@ export class OverworldMenus {
   /** The center menu; `speaker` (the NPC's name) answers in dialogs. */
   openCenter(speaker = 'Zorling center'): void {
     const entries: [string, string, () => void][] = [
-      ['Heal your Zorlings', '', () => this.heal(speaker)],
+      ['Heal your Zorlings', '', () => this.heal(speaker, m)],
       ['Storage', '', () => this.openStorage()],
       ['Relearn moves', `${RELEARN_FEE} coins`, () => this.openRelearner()],
       ['Leave', '', () => this.close(m)],
@@ -467,7 +467,9 @@ export class OverworldMenus {
     );
   }
 
-  private heal(speaker: string): void {
+  /** Heals and closes the center menu (C43): one E on the reply and the player walks on. */
+  private heal(speaker: string, center: Menu): void {
+    this.close(center);
     this.host.party = healAll(this.host.content, this.host.party);
     this.host.centerUsed();
     playJingle('world.heal');

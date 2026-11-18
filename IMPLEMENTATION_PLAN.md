@@ -462,6 +462,17 @@ Design stance (user, 2026-11-15): keep old-game friction. No tutorial, no object
 - **Done when:** the completability test passes; a gated starter never spawns before its badge and does after (tests); the Dex tabs and habitat work by keyboard; `npm run balance` for all three regions stays within C41's bounds; `npm run check` passes.
 - **Depends:** C41
 
+### C43 · Mouse & controls pass
+- **Goal:** (user, 2026-11-18) Everything works with the mouse alone, and common actions take no needless keys.
+- **Deliverables:**
+  - Healing at a Zorling center closes the center menu (was: `E` through the reply, then `Q` out of the menu).
+  - Right click opens the pause menu in the overworld (default binding, like `Esc`); the help line says so.
+  - The mouse wheel scrolls the Dex list, the storage box and the battle log (shared `WheelSteps` for trackpads); the cursor stays on a row that shows.
+  - A click closes the battle log from inside it and skips the evolution scene.
+  - `DESIGN.md` Controls: mouse-alone play is a rule.
+- **Done when:** each of the above works in a real browser; `npm run check` passes.
+- **Depends:** C42
+
 ---
 
 ## Later / future (not scheduled)

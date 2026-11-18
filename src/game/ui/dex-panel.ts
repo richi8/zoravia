@@ -5,11 +5,11 @@
  * "Seen · Caught / total", and a seen species lists the zones the player found it in.
  *
  * Keyboard: W/S choose (the list scrolls), A/D page, Z/Tab next tab, Q back. Mouse:
- * hover/click rows, click a tab.
+ * hover/click rows, click a tab, the wheel scrolls the list (C43).
  */
 
 import { Container, Graphics, Rectangle, Sprite, type Texture } from 'pixi.js';
-import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
+import { GridCursor, type UiInput, type Widget, uiSound, WheelSteps } from '@engine/ui';
 import { paper, type TypeId } from '../style/tokens';
 import { KeyHint, TypeBadge, row } from './badges';
 import { keyHint, leftRightHint, upDownHint } from '@game/input/key-hint';
@@ -66,6 +66,7 @@ export class DexPanel implements Widget<Container> {
   private readonly kept: { index: number; scroll: number }[];
   private focused = false;
   private readonly pointer = new PointerQueue<'row' | 'tab'>(() => this.focused);
+  private readonly wheel = new WheelSteps();
 
   constructor(private readonly options: DexOptions) {
     const bg = drawPaper(new Graphics(), 0, 0, W, H);
@@ -143,6 +144,11 @@ export class DexPanel implements Widget<Container> {
       this.showTab(this.tab + 1);
       return;
     }
+    const lines = this.wheel.take(input.wheel?.() ?? 0);
+    if (lines) {
+      this.scrollBy(lines);
+      return;
+    }
     const dir = input.direction();
     if ((dir === 'up' || dir === 'down') && this.cursor.move(dir)) this.changed();
     else if (dir === 'left' || dir === 'right') {
@@ -155,6 +161,25 @@ export class DexPanel implements Widget<Container> {
       uiSound('back');
       this.options.onBack(this);
     }
+  }
+
+  /**
+   * The wheel (C43): scrolls the list; the cursor stays on a row that shows, so the entry on
+   * the right is always the highlighted one.
+   */
+  scrollBy(lines: number): void {
+    const max = Math.max(0, this.rows.length - VISIBLE);
+    const next = Math.max(0, Math.min(max, this.scroll + lines));
+    if (next === this.scroll) return;
+    this.scroll = next;
+    const i = this.cursor.index;
+    this.cursor.set(Math.max(next, Math.min(next + VISIBLE - 1, i)));
+    uiSound('move');
+    this.build();
+  }
+
+  get scrollTop(): number {
+    return this.scroll;
   }
 
   private changed(): void {

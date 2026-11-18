@@ -67,7 +67,8 @@ export const DEFAULT_BINDINGS: BindingTable<Action> = {
   party: ['KeyP'],
   dex: ['KeyB'],
   quests: ['KeyJ'],
-  pause: ['Escape'],
+  // Right click opens the menu in the overworld (C43), like `back` closes it in menus.
+  pause: ['Escape', 'Mouse2'],
   debug_overlay: ['F3'],
 };
 

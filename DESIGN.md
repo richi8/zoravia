@@ -262,7 +262,7 @@ Rules settled in C26 (2026-11-13):
   - **Ambience** plays under the music: biome beds (wind, brook, lava rumble, surf) with occasional sounds (birds, crackles, ice creaks, gulls), plus rain in wet weather. It is turned down in battle. It follows the music volume.
 
 ## Controls
-**The whole game must be fully playable with the keyboard alone.** Mouse is optional (click-to-move, click menu items), never required. All keys rebindable (Settings → Controls, C33; `Esc` stays Back and Menu); gamepad later. Every key hint on screen (help line, battle bar, panels, map window, title) shows the player's current key (C36e). The letters in this document are the defaults.
+**The whole game must be fully playable with the keyboard alone, and with the mouse alone** (user, 2026-11-18, C43). Mouse: click to walk, talk and battle; right click opens the menu in the overworld and is Back in menus; click menu items, rows, tabs and move cards; the wheel scrolls every list that scrolls (Dex, storage box, battle log, map window lists); a click advances dialog and skips the evolution scene. All keys rebindable (Settings → Controls, C33; `Esc` stays Back and Menu); gamepad later. Every key hint on screen (help line, battle bar, panels, map window, title) shows the player's current key (C36e). The letters in this document are the defaults.
 
 ### Universal keys (everywhere, including every menu)
 | Action | Keys |
@@ -278,7 +278,7 @@ Input is context-sensitive: `WASD`/arrows move the player in the overworld; whil
 The player has **one movement speed** (no running / running shoes), **3.75 tiles/second** (one tile per 16 frames at 60 fps). Tunable in playtesting, but there is never a slower walk.
 
 ### Overworld
-`I` inventory, `M` map window, `P` party, `B` dex, `J` the map window with quests open, `Esc` pause menu.
+`I` inventory, `M` map window, `P` party, `B` dex, `J` the map window with quests open, `Esc` (or right click) pause menu. Healing at a Zorling center closes the center menu: one `E` on the reply and the player walks on.
 
 ### Battle flow (keyboard)
 Settled at the G2 review (2026-11-13, option B of a preview round; replaces the Fight / Switch / Items / Run menu):

@@ -18,8 +18,9 @@
  * - Saves (C23): starts at a saved place, keeps play time, and autosaves through `save` after
  *   battles, when menus and dialogs close with something changed, every `AUTOSAVE_EVERY`
  *   seconds of walking, and on quitting. The pause menu has a manual "Save".
- * - Mouse (optional): click a tile to walk there along an A* path. Clicking an NPC or a wild
- *   Zorling walks next to it, faces it and talks / battles. Any direction key cancels the path.
+ * - Mouse: click a tile to walk there along an A* path. Clicking an NPC or a wild Zorling
+ *   walks next to it, faces it and talks / battles. Any direction key cancels the path. Right
+ *   click opens the pause menu (C43).
  * - Walking into a roaming Zorling (or one catching the player) starts a wild battle with the
  *   battle transition; the world resumes after it, with the result written to the party.
  * - Terrain streams in 8×8-tile blocks; props in front hide everyone (walk behind trees),
@@ -205,7 +206,7 @@ const AUTOSAVE_EVERY = 30;
 const SAVED_NOTE = 1.5;
 /** The help line, with the player's keys (C36e). */
 const help = (): string =>
-  `${keysHint('move_up', 'move_down', 'move_left', 'move_right')} move · ${keyHint('confirm')} talk · click to walk · ${keyHint('pause')} menu`;
+  `${keysHint('move_up', 'move_down', 'move_left', 'move_right')} move · ${keyHint('confirm')} talk · ${keyHint('pause')} / right click menu · click to walk`;
 
 /** A packed sprite plus where its figure starts (for the "!" bubble). */
 interface Packed extends CharacterFrame {

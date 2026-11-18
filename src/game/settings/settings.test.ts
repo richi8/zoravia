@@ -111,7 +111,7 @@ describe('key rebinding', () => {
     expect(rebindGroup(b, group('back'), 1, 'KeyX').ok).toBe(false);
     expect(slotLocked(b, group('pause'), 0)).toBe(true);
     expect(rebindGroup(b, group('pause'), 1, 'KeyX')).toEqual({ ok: true });
-    expect(b.keysFor('pause')).toEqual(['Escape', 'KeyX']);
+    expect(b.keysFor('pause')).toEqual(['Escape', 'Mouse2', 'KeyX']);
     expect(rebindGroup(b, group('back'), 0, 'Mouse0').ok).toBe(false);
   });
 

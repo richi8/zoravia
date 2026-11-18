@@ -3,7 +3,7 @@
  * dims to navy, gold rays turn slowly behind the Zorling at 2×, and sparkles rise around it.
  * It turns into a white silhouette, the old and new silhouettes swap faster and faster, a
  * full-screen white flash, and the new form shows with a burst of sparkles and its name.
- * `E` skips to the flash. Calls `onDone` once at the end; the caller then closes it and
+ * `E` or a click skips to the flash. Calls `onDone` once at the end; the caller then closes it and
  * tells what happened.
  *
  * It covers the whole screen: open it with the screen size (`resize` keeps it filled).
@@ -122,7 +122,8 @@ export class EvolutionPanel implements Widget<Container> {
   }
 
   handleInput(input: UiInput): void {
-    if (input.confirmPressed() && this.time < T.flash) this.time = T.flash;
+    const skip = input.confirmPressed() || input.pointerPressed() !== undefined;
+    if (skip && this.time < T.flash) this.time = T.flash;
   }
 
   update(dt: number): void {
