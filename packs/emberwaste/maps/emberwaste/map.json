@@ -24,6 +24,13 @@
         {
           "species": "emberwaste:tumblet",
           "weight": 2
+        },
+        {
+          "species": "emberwaste:sizzlet",
+          "weight": 1,
+          "if": {
+            "badge": "emberwaste:kiln-badge"
+          }
         }
       ]
     },
@@ -48,6 +55,13 @@
         {
           "species": "emberwaste:sandskink",
           "weight": 1
+        },
+        {
+          "species": "emberwaste:pricklet",
+          "weight": 1,
+          "if": {
+            "badge": "emberwaste:kiln-badge"
+          }
         }
       ]
     },
@@ -59,19 +73,26 @@
       "spawns": [
         {
           "species": "core:hearthog",
-          "weight": 2
+          "weight": 8
         },
         {
           "species": "emberwaste:rivetling",
-          "weight": 2
+          "weight": 8
         },
         {
           "species": "emberwaste:cindermite",
-          "weight": 2
+          "weight": 8
         },
         {
           "species": "emberwaste:oasip",
-          "weight": 1
+          "weight": 4
+        },
+        {
+          "species": "emberwaste:pebbit",
+          "weight": 3,
+          "if": {
+            "badge": "emberwaste:kiln-badge"
+          }
         }
       ]
     },

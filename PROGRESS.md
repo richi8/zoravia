@@ -57,3 +57,4 @@ Status: ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked · 🚦 g
 | C39 | Browser smoke test & crash screen | ✅ | [log](logs/C39-smoke-test-crash-screen.md) |
 | C40 | Campfires (rest spots) | ✅ | [log](logs/C40-campfires.md) |
 | C41 | Sprigling's early game | ✅ | [log](logs/C41-sprigling-early-game.md) |
+| C42 | A Dex you can finish | ✅ | [log](logs/C42-dex-you-can-finish.md) |

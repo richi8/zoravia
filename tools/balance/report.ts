@@ -20,6 +20,7 @@ import { newParty } from '@game/player';
 import { createZorling } from '@game/progression';
 import { trainerBattle } from '@game/story';
 import type { Zone } from '@game/world/map';
+import { openSpawns } from '@game/world/overworld/sim';
 import { playthrough, type PlaythroughResult, type PlaythroughSetup } from './playthrough';
 import { REGIONS, type BalanceRegion } from './regions';
 
@@ -312,7 +313,8 @@ export function starterTable(
   region: BalanceRegion = VERDALE,
 ): string {
   const meadow = zones.find((z) => z.key === region.firstZone);
-  const foes = [...new Set(meadow?.spawns.map((s) => s.species) ?? [])];
+  // A new game's table: spawns with a story condition (C42) are not out yet.
+  const foes = [...new Set(meadow ? openSpawns(meadow).map((s) => s.species) : [])];
   const rows: string[][] = [];
   for (const { starter } of region.teams) {
     for (const foe of foes) {

@@ -5,11 +5,18 @@
       "spawns": [
         {
           "species": "core:pipwing",
-          "weight": 3
+          "weight": 9
         },
         {
           "species": "core:sproutle",
-          "weight": 3
+          "weight": 9
+        },
+        {
+          "species": "core:sprigling",
+          "weight": 2,
+          "if": {
+            "badge": "core:grove-badge"
+          }
         }
       ]
     },
@@ -18,15 +25,22 @@
       "spawns": [
         {
           "species": "core:puddlit",
-          "weight": 3
+          "weight": 9
         },
         {
           "species": "core:mudpaddle",
-          "weight": 2
+          "weight": 6
         },
         {
           "species": "core:pipwing",
-          "weight": 1
+          "weight": 3
+        },
+        {
+          "species": "core:drizzlet",
+          "weight": 2,
+          "if": {
+            "badge": "core:grove-badge"
+          }
         }
       ]
     },
@@ -35,23 +49,30 @@
       "spawns": [
         {
           "species": "core:voltbat",
-          "weight": 2
+          "weight": 8
         },
         {
           "species": "core:hearthog",
-          "weight": 2
+          "weight": 8
         },
         {
           "species": "core:sproutle",
-          "weight": 1
+          "weight": 4
         },
         {
           "species": "core:puddlit",
-          "weight": 1
+          "weight": 4
         },
         {
           "species": "core:pipwing",
-          "weight": 1
+          "weight": 4
+        },
+        {
+          "species": "core:emberkit",
+          "weight": 3,
+          "if": {
+            "badge": "core:grove-badge"
+          }
         }
       ]
     },

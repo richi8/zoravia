@@ -41,6 +41,8 @@ All graphics and audio are code-generated. Built from day one for expansion via 
     - A ranger blocks the only way in until the player holds 3 badges, which is when the XP cap reaches 60.
     - Wild Zorlings are the region's own and core species, plus two **rares** per region from its own model kit.
 - Wild/zone levels fixed. Only campaign story bosses scale lightly (~+4 Lv per badge held).
+- **Conditional spawns** (C42): a zone spawn can carry a story condition (`if`); it spawns only while that holds. The overworld, the map window's zone lists, the Dex habitat and the balance simulator all follow the same rule. Saves are unchanged.
+- **Starters in the wild** (C42, so one save can fill the Dex): once the player holds a region's badge, all three of its starters spawn (first stage, the zone's levels) in its T1 zones at about 10%, one per zone by type: Verdale after the Grove Badge (Sprigling in the Sunny Meadow, Drizzlet on the Willow Shore, Emberkit on Brookside Trail), Emberwaste after the Kiln Badge (Sizzlet in the Sunbaked Flats, Pricklet on the Dustway, Pebbit on Redrock Trail), Rimeholm after the Tide Badge (Selkit on the Shingle Shore, Woolump on the Hoarfrost Heath, Sparkit on the Driftwood Strand). The hub town's kid (Tam, Juna, Little Kari) mentions the newcomers after the badge; no marker, no quest.
 - Badge-based soft level cap: XP gain sharply reduced above cap. Values (C13, kept in C31): cap Lv 30 / 45 / 52 / 60 for 0 / 1 / 2 / 3 badges (+5 per further badge); XP at or above the cap ×0.1. In the C31 playthrough simulator Verdale ends at Lv ~40–42, under the one-badge cap.
 - **Pacing** (C31 balance pass, `npm run balance`): a region's campaign takes about 120–145 wild battles and 3–4 hours. Trainers field the stage a wild Zorling has at that level (no final forms below their evolution level), except a rival's ace. A new game starts with one **Lv 6** starter, 2 Potions, 5 Zorbs and 500 coins (C33); a region's first zone tops out at that level.
 
@@ -100,7 +102,7 @@ Settled in C33 (2026-11-14):
 ## Team
 - **Hotbar = active team of 3** (keys `1 2 3`).
 - **Storage** holds all other owned creatures; swapping only at a creature center.
-- **Dex** tracks seen/caught species.
+- **Dex** tracks seen/caught species. **Goal** (C42): every species can be caught in one save, through a wild spawn, a boss capture, or evolving one of those (a test checks every shipped pack). The Dex shows "Seen x · Caught y / total" with tabs (`Z`/`Tab`): All, then one page per region (a pack's species; core = Verdale). A seen species lists the zones the player has entered whose spawns have it ("Found in"); nothing unfound shows.
 - Captures with a full team go to storage.
 - Rules settled in C22 (2026-11-13; starting values, tuned in C31):
   - The team always keeps at least one Zorling (the last one can be swapped, not deposited). The hotbar order can be changed anywhere from the party screen.

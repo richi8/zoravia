@@ -23,6 +23,7 @@ import {
 import { loadGameContent, statBand, statTotal, TIER_LEVELS, trainerTeam } from '@game/data';
 import { createZorling, type Zorling } from '@game/progression';
 import { loadRegion } from '@game/world/map';
+import { openSpawns } from '@game/world/overworld/sim';
 import { corePack } from '.';
 import { verdaleTrainers } from './verdale-trainers';
 
@@ -33,7 +34,12 @@ const c = (local: string): string => `core:${local}`;
 const STARTERS = ['sprigling', 'drizzlet', 'emberkit'];
 
 const zones = Object.values(map.zones);
-const wild = new Set(zones.flatMap((z) => z.spawns.map((s) => s.species)));
+/** The wild of a new game: spawns with a story condition (C42, starters after the badge) left out. */
+const wild = new Set(zones.flatMap((z) => openSpawns(z).map((s) => s.species)));
+/** The spawns that need a story condition (C42). */
+const gated = zones.flatMap((z) =>
+  z.spawns.filter((s) => s.if).map((s) => ({ zone: z, spawn: s })),
+);
 const verdale = content.species.values();
 const verdaleNpcs = content.npcs.values().filter((n) => n.map === 'core:verdale');
 /** Route trainers (C29); the story's trainers are tested in `verdale-story.test.ts`. */
@@ -94,12 +100,20 @@ describe('Verdale roster', () => {
     expect(verdale.filter((s) => s.legendary).map((s) => s.name)).toEqual(['Verdion']);
   });
 
-  it('has three 3-stage starters (Nature, Water, Fire) that are not found in the wild', () => {
+  it('has three 3-stage starters (Nature, Water, Fire) that join the wild only after the badge', () => {
     const types = STARTERS.map((id) => {
       const line = content.evolutionLine(c(id));
       expect(line.stage, id).toBe(1);
       expect(line.members, id).toHaveLength(3);
       for (const m of line.members) expect(wild.has(m.id), m.id).toBe(false);
+      // After the badge (C42): the first stage only, in one T1 zone.
+      const later = gated.filter((g) => line.members.some((m) => m.id === g.spawn.species));
+      expect(
+        later.map((g) => g.spawn.species),
+        id,
+      ).toEqual([c(id)]);
+      expect(later[0]?.zone.tier, id).toBe('t1');
+      expect(later[0]?.spawn.if, id).toEqual({ badge: 'core:grove-badge' });
       return content.species.require(c(id)).types[0];
     });
     expect(types).toEqual(['core:nature', 'core:water', 'core:fire']);
@@ -201,7 +215,7 @@ describe('Verdale balance', () => {
     for (const starter of STARTERS) {
       let rate = 0;
       let weights = 0;
-      for (const sp of meadow?.spawns ?? []) {
+      for (const sp of meadow ? openSpawns(meadow) : []) {
         for (let level = lo; level <= hi; level++) {
           const foe = sp.species.slice(5);
           const r = winRate(20, (seed) =>

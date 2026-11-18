@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { loadGameContent } from '@game/data';
-import { newParty, type Party } from '@game/player';
+import { dexPages, newParty, type Party } from '@game/player';
 import { createZorling } from '@game/progression';
 import { SHIPPED_PACKS } from '@packs/index';
-import { atlasMaps, atlasProgress, atlasRegion, npcMark, zoneEdges } from './atlas';
+import {
+  atlasMaps,
+  atlasProgress,
+  atlasRegion,
+  npcMark,
+  speciesHabitats,
+  zoneEdges,
+} from './atlas';
 import { ExploredMap, visit } from './explore';
 import { loadRegion } from './map';
 
@@ -116,6 +123,52 @@ describe('Atlas', () => {
     expect(progress.badges).toEqual([1, content.badges.size]);
     expect(progress.hearts).toEqual([1, 3]);
     expect(progress.dex[1]).toBe(content.species.size);
+  });
+});
+
+describe('Dex pages and habitat (C42)', () => {
+  it('has All, then one page per region with its own counts', () => {
+    const dex = { seen: ['core:pipwing', 'emberwaste:sizzlet'], caught: ['core:pipwing'] };
+    const pages = dexPages(content, dex);
+    expect(pages.map((p) => p.name)).toEqual(['All', 'Verdale', 'Emberwaste', 'Rimeholm Isles']);
+    expect(pages[0]?.entries).toHaveLength(content.species.size);
+    expect(pages.slice(1).reduce((n, p) => n + p.entries.length, 0)).toBe(content.species.size);
+    expect(pages[0]).toMatchObject({ seen: 2, caught: 1 });
+    expect(pages[1]).toMatchObject({ seen: 1, caught: 1 });
+    expect(pages[2]).toMatchObject({ seen: 1, caught: 0 });
+    expect(pages[3]).toMatchObject({ seen: 0, caught: 0 });
+    expect(pages[2]?.entries.every((e) => e.species.startsWith('emberwaste:'))).toBe(true);
+  });
+
+  it('lists the entered zones where a seen species lives, and nothing else', () => {
+    const dark = (): ExploredMap => new ExploredMap(1, 1);
+    const explored = (id: string): ExploredMap => (id === MAP ? allSeen() : dark());
+    const p = party({ dex: { seen: ['core:pipwing', 'core:sprigling'], caught: [] } });
+    const h = speciesHabitats(content, p, explored);
+    expect(h.get('core:pipwing')).toEqual([
+      'Sunny Meadow',
+      'Willow Shore',
+      'Brookside Trail',
+      'Fernwood',
+    ]);
+    // Unseen species and dark maps show nothing.
+    expect(h.has('core:voltbat')).toBe(false);
+    expect(speciesHabitats(content, p, dark).size).toBe(0);
+    // A starter's zone shows only once its spawn is open (after the badge).
+    expect(h.has('core:sprigling')).toBe(false);
+    const badge = party({ ...p, badges: ['core:grove-badge'] });
+    expect(speciesHabitats(content, badge, explored).get('core:sprigling')).toEqual([
+      'Sunny Meadow',
+    ]);
+  });
+
+  it('lists a starter in its zone on the map window only after the badge', () => {
+    const meadow = (p: Party) =>
+      atlasRegion(content, p, MAP, verdale, allSeen())
+        .zones.find((z) => z.key === 'meadow')
+        ?.spawns.map((s) => s.species);
+    expect(meadow(party())).not.toContain('core:sprigling');
+    expect(meadow(party({ badges: ['core:grove-badge'] }))).toContain('core:sprigling');
   });
 });
 

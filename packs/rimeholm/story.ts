@@ -339,6 +339,27 @@ function rematchNodes(trainer: string, ask: string, won: string): DialogueInput[
   };
 }
 
+/**
+ * A rumour (C42) said first once `when` holds, unless the dialogue's quest is under way: the
+ * townsfolk notice the region's starters out in the wild after its badge.
+ */
+function withRumour(
+  d: DialogueInput,
+  quest: string,
+  when: StoryCondition,
+  say: readonly string[],
+): DialogueInput {
+  const notBusy: StoryCondition = { not: { quest, is: 'active' } };
+  return {
+    start: 'rumour-hello',
+    nodes: {
+      ...d.nodes,
+      'rumour-hello': { branch: [{ if: { all: [when, notBusy] }, goto: 'rumour' }], goto: d.start },
+      rumour: { say: [...say], goto: d.start },
+    },
+  };
+}
+
 /** A quest giver: ask, remind, report back, thank. */
 function questGiver(
   quest: string,
@@ -644,21 +665,29 @@ const mainDialogues: Record<string, DialogueInput> = {
 };
 
 const sideDialogues: Record<string, DialogueInput> = {
-  'little-kari': questGiver('lost-mitten', 'mitten-told', {
-    ask: [
-      'A Flurret stole my red mitten! It ran into the snow and was gone.',
-      'They hide mittens in the drifts. Can you catch one? I want to see the thief up close.',
+  'little-kari': withRumour(
+    questGiver('lost-mitten', 'mitten-told', {
+      ask: [
+        'A Flurret stole my red mitten! It ran into the snow and was gone.',
+        'They hide mittens in the drifts. Can you catch one? I want to see the thief up close.',
+      ],
+      yes: 'I’ll catch it',
+      yesThanks: 'Yay! They dart through the snow on the Shingle Shore, south of town.',
+      no: 'Maybe later',
+      remind: 'Flurrets live on the Shingle Shore, south of town.',
+      report: [
+        'You caught one! Look at its little nose. It does not look sorry at all.',
+        'Here, take these. Grandma is knitting me new mittens. On a string.',
+      ],
+      thanks: 'My new mittens are on a string now. The Flurrets can only stare.',
+    }),
+    r('lost-mitten'),
+    { badge: TIDE_BADGE },
+    [
+      'There is a new pup on the Shingle Shore! It slides down the snowbanks on its belly.',
+      'Grandma saw a woolly calf asleep on the Hoarfrost Heath, and Bram says something on the Driftwood Strand crackles when you get close.',
     ],
-    yes: 'I’ll catch it',
-    yesThanks: 'Yay! They dart through the snow on the Shingle Shore, south of town.',
-    no: 'Maybe later',
-    remind: 'Flurrets live on the Shingle Shore, south of town.',
-    report: [
-      'You caught one! Look at its little nose. It does not look sorry at all.',
-      'Here, take these. Grandma is knitting me new mittens. On a string.',
-    ],
-    thanks: 'My new mittens are on a string now. The Flurrets can only stare.',
-  }),
+  ),
   'netmaker-gro': questGiver('netmakers-lamp', 'net-told', {
     ask: [
       'Without the winter lights the nights are pitch dark. I cannot see my own knots!',

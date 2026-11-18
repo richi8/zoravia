@@ -20,7 +20,7 @@ import { bagCount } from '@game/inventory';
 import {
   buyItem,
   canMove,
-  dexEntries,
+  dexPages,
   fieldUseProblem,
   healAll,
   maxBuyable,
@@ -41,7 +41,7 @@ import {
 } from '@game/progression';
 import { styleTypes, typeIdOf } from '@game/style/ids';
 import { BagPanel, type BagItem, type BagTab } from '@game/ui/bag';
-import { DexPanel, type DexRow } from '@game/ui/dex-panel';
+import { DexPanel, type DexRow, type DexTab } from '@game/ui/dex-panel';
 import { MapWindow, type GroupId, type MapWindowMarker } from '@game/ui/map-window';
 import { formatMoney } from '@game/ui/panels';
 import { PartyPanel } from '@game/ui/party-panel';
@@ -50,7 +50,7 @@ import { StoragePanel } from '@game/ui/storage-panel';
 import type { MoveLine, ZorlingView } from '@game/ui/zorling-view';
 import { BIOMES } from '@game/world/biomes';
 import { buildMinimap, fogTint, loadRegion, tierTint, type WorldMap } from '@game/world/map';
-import { atlasProgress, atlasRegion } from '@game/world/atlas';
+import { atlasProgress, atlasRegion, speciesHabitats } from '@game/world/atlas';
 import { worldBounds, worldLayout, worldLinks } from '@game/world/world-layout';
 import type { ExploredMap } from '@game/world/explore';
 import type { PixelBuffer } from '@engine/render/pixel-buffer';
@@ -330,25 +330,29 @@ export class OverworldMenus {
   // ------------------------------------------------------------ Dex
 
   openDex(): void {
-    const { content } = this.host;
-    const entries = dexEntries(content, this.host.party.dex);
-    const rows: DexRow[] = entries.map((e) => {
-      const s = content.species.require(e.species);
-      return {
-        number: e.number,
-        name: s.name,
-        seen: e.seen,
-        caught: e.caught,
-        types: styleTypes(s.types),
-        description: s.description,
-      };
-    });
+    const { content, party } = this.host;
+    // Where each seen species was found (C42), over every region's exploration.
+    const habitats = speciesHabitats(content, party, (id) => this.host.explored(id));
+    const tabs: DexTab[] = dexPages(content, party.dex).map((page) => ({
+      name: page.name,
+      rows: page.entries.map((e): DexRow => {
+        const s = content.species.require(e.species);
+        return {
+          number: e.number,
+          species: e.species,
+          name: s.name,
+          seen: e.seen,
+          caught: e.caught,
+          types: styleTypes(s.types),
+          description: s.description,
+          habitat: e.seen ? (habitats.get(e.species) ?? []) : [],
+        };
+      }),
+    }));
     const panel = new DexPanel({
-      rows,
-      sprite: (i) => {
-        const e = entries[i];
-        return e ? this.speciesArt(e.species) : undefined;
-      },
+      tabs,
+      sprite: (species) => this.speciesArt(species),
+      pressed: (action) => this.host.pressed(action),
       onBack: (p) => this.close(p),
     });
     this.open(panel, () => ({ w: DexPanel.WIDTH, h: DexPanel.HEIGHT }));

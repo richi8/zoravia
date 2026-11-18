@@ -26,6 +26,7 @@ import { PROP_KINDS } from '@game/world/props';
 import { WEATHER_IDS } from '@game/world/weather';
 import { name, ref, refTo } from './common';
 import { MAX_LEVEL } from './species';
+import { conditionRefs, storyConditionSchema } from './story';
 
 export const MAP_FORMAT = 1;
 export const DEFAULT_CHUNK_TILES = 32;
@@ -68,6 +69,11 @@ export const spawnSchema = z.strictObject({
   weight: z.number().int().positive().default(1),
   /** Narrower level range for this species; omitted = the zone's. */
   levels: levels.optional(),
+  /**
+   * Story condition (C42): the species spawns only while it holds, e.g. a region's starters
+   * after its badge. Omitted = always.
+   */
+  if: storyConditionSchema.optional(),
 });
 
 export const zoneSchema = z.strictObject({
@@ -279,6 +285,9 @@ export const maps = defineRegistry('maps', regionMapSchema, {
   refs: (m) =>
     Object.entries(m.zones).flatMap(([k, z]) => [
       ...z.spawns.map((s, i) => refTo('species', s.species, 'zones', k, 'spawns', i, 'species')),
+      ...z.spawns.flatMap((s, i) =>
+        s.if ? conditionRefs(s.if, 'zones', k, 'spawns', i, 'if') : [],
+      ),
       ...(z.battleWeather ?? []).map((c, i) =>
         refTo('conditions', c, 'zones', k, 'battleWeather', i),
       ),

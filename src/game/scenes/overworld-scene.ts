@@ -343,6 +343,8 @@ export class OverworldScene implements Scene<Container> {
       facing: start.facing,
       npcs: this.world.npcs(options.content),
     });
+    // Spawns with a story condition (C42: starters after a badge) follow the live save.
+    this.sim.spawnsWhen((c) => holds(options.content, this.party, c));
     this.region = this.world.regionAt(this.player.tx, this.player.ty) ?? home;
     this.stream = new TerrainStream(this.map, (x, y) => this.world.lookAt(x, y));
     this.atmosphere = new Atmosphere(this.map, BIOMES[home.biome], home.map.seed);

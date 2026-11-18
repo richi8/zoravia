@@ -42,3 +42,40 @@ export function dexEntries(content: GameContent, dex: Dex): DexEntry[] {
     caught: dex.caught.includes(s.id),
   }));
 }
+
+export interface DexPage {
+  /** `All`, or a region's name (C42). */
+  readonly name: string;
+  readonly entries: readonly DexEntry[];
+  readonly seen: number;
+  readonly caught: number;
+}
+
+/**
+ * The Dex pages (C42): All, then one per start region with the species of its pack (core is
+ * Verdale), in pack order. A pack with no start region has no page of its own.
+ */
+export function dexPages(content: GameContent, dex: Dex): DexPage[] {
+  const all = dexEntries(content, dex);
+  const page = (name: string, entries: readonly DexEntry[]): DexPage => ({
+    name,
+    entries,
+    seen: entries.filter((e) => e.seen).length,
+    caught: entries.filter((e) => e.caught).length,
+  });
+  const packOf = (id: string): string => id.slice(0, id.indexOf(':'));
+  const regions = new Map<string, string>();
+  for (const s of content.starts.values()) {
+    const pack = packOf(s.map);
+    if (!regions.has(pack)) regions.set(pack, content.maps.get(s.map)?.name ?? s.name);
+  }
+  return [
+    page('All', all),
+    ...[...regions].map(([pack, name]) =>
+      page(
+        name,
+        all.filter((e) => packOf(e.species) === pack),
+      ),
+    ),
+  ];
+}

@@ -14,6 +14,13 @@
         {
           "species": "rimeholm:pinchill",
           "weight": 2
+        },
+        {
+          "species": "rimeholm:selkit",
+          "weight": 1,
+          "if": {
+            "badge": "rimeholm:tide-badge"
+          }
         }
       ]
     },
@@ -35,6 +42,13 @@
         {
           "species": "core:rimewisp",
           "weight": 1
+        },
+        {
+          "species": "rimeholm:woolump",
+          "weight": 1,
+          "if": {
+            "badge": "rimeholm:tide-badge"
+          }
         }
       ]
     },
@@ -56,6 +70,13 @@
         {
           "species": "core:mudpaddle",
           "weight": 1
+        },
+        {
+          "species": "rimeholm:sparkit",
+          "weight": 1,
+          "if": {
+            "badge": "rimeholm:tide-badge"
+          }
         }
       ]
     },

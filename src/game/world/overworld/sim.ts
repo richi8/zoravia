@@ -5,7 +5,8 @@
  * - Everyone blocks everyone: an actor stands on its tile and reserves the tile it walks to.
  * - Wild Zorlings spawn from the zone spawn tables (weights, fixed levels) in the area around
  *   the view, mostly in tall grass, never right next to the player, and only off screen once
- *   the area is filled. Far ones despawn. They stay in their zone.
+ *   the area is filled. Far ones despawn. They stay in their zone. A spawn with a story
+ *   condition (C42) comes only while `spawnsWhen` says it holds.
  * - Walking into a roaming Zorling (or one chasing the player catching it) is an encounter.
  * - `facing()` is what the player would talk to or touch with `E`.
  * - NPCs with a `when` condition come and go (C27): `present` says which NPCs are there. One
@@ -18,7 +19,7 @@
  */
 
 import { Rng, type Seed } from '@engine/core/rng';
-import type { GameContent } from '@game/data';
+import type { GameContent, StoryCondition } from '@game/data';
 import { npcPlace, type Npc } from '@game/data/npcs';
 import type { WorldMap, Zone } from '@game/world/map';
 import type { TileRect } from '@game/world/terrain';
@@ -79,9 +80,27 @@ export interface SimOptions {
   }[];
 }
 
-/** A species and level from a zone's spawn table. */
-export function pickSpawn(zone: Zone, rng: Rng): { species: string; level: number } {
-  const s = rng.weighted(zone.spawns, (e) => e.weight);
+/** Tests a spawn's story condition (C42) against the save. */
+export type SpawnTest = (c: StoryCondition) => boolean;
+
+/** The zone's spawns that can appear now: those without a condition, or whose condition holds. */
+export function openSpawns(
+  zone: Pick<Zone, 'spawns'>,
+  test: SpawnTest = () => false,
+): Zone['spawns'] {
+  return zone.spawns.filter((s) => !s.if || test(s.if));
+}
+
+/**
+ * A species and level from a zone's spawn table, among the spawns whose condition holds
+ * (`test`; without one, only spawns with no condition). The zone must have an open spawn.
+ */
+export function pickSpawn(
+  zone: Zone,
+  rng: Rng,
+  test?: SpawnTest,
+): { species: string; level: number } {
+  const s = rng.weighted(openSpawns(zone, test), (e) => e.weight);
   const [lo, hi] = s.levels ?? zone.levels;
   return { species: s.species, level: rng.int(lo, hi) };
 }
@@ -99,6 +118,7 @@ export class OverworldSim {
   /** Every NPC of the map, there or not, in pack order. */
   readonly allNpcs: readonly NpcActor[];
   private isPresent: (npc: Npc) => boolean = () => true;
+  private spawnTest: SpawnTest = () => false;
   readonly roamers: Roamer[] = [];
   private readonly spawnRng: Rng;
   private readonly battleRng: Rng;
@@ -139,6 +159,18 @@ export class OverworldSim {
   present(isPresent: (npc: Npc) => boolean): void {
     this.isPresent = isPresent;
     this.syncNpcs();
+  }
+
+  /**
+   * Tests spawn conditions (C42): wild Zorlings come only from spawns whose condition holds.
+   * Until set, spawns with a condition never appear. Zorlings already out stay.
+   */
+  spawnsWhen(test: SpawnTest): void {
+    this.spawnTest = test;
+  }
+
+  private open(zone: Zone | undefined): boolean {
+    return !!zone && openSpawns(zone, this.spawnTest).length > 0;
   }
 
   private syncNpcs(): void {
@@ -296,7 +328,7 @@ export class OverworldSim {
     const a = this.activeArea(view, SPAWN.margin);
     let tiles = 0;
     for (let y = a.y; y < a.y + a.height; y++) {
-      for (let x = a.x; x < a.x + a.width; x++) if (this.map.zoneAt(x, y)?.spawns.length) tiles++;
+      for (let x = a.x; x < a.x + a.width; x++) if (this.open(this.map.zoneAt(x, y))) tiles++;
     }
     return Math.min(SPAWN.max, Math.round(tiles / SPAWN.tilesPer));
   }
@@ -314,14 +346,14 @@ export class OverworldSim {
       const x = rng.int(a.x, a.x + a.width - 1);
       const y = rng.int(a.y, a.y + a.height - 1);
       const zone = this.map.zoneAt(x, y);
-      if (!zone?.spawns.length) continue;
+      if (!zone || !this.open(zone)) continue;
       if (this.map.blocked(x, y) || this.occupant(x, y) || covers(this.player, x, y)) continue;
       const p = this.player.destination;
       if (Math.abs(x - p.x) + Math.abs(y - p.y) < SPAWN.playerGap) continue;
       if (!initial && inside(view, x, y, 1)) continue;
       if (!this.map.tall(x, y) && !rng.chance(SPAWN.openGround)) continue;
       const id = this.nextId++;
-      const { species, level } = pickSpawn(zone, rng);
+      const { species, level } = pickSpawn(zone, rng, this.spawnTest);
       const own = this.seed.split(`wild-${id}`);
       this.roamers.push(
         new Roamer(id, species, level, zone.key, { x, y }, pickTemperament(own), own),

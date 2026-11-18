@@ -12,7 +12,8 @@ import type { NpcActor } from './actors';
 import { Roamer, ROAM, dirsToward } from './actors';
 import { DIR_STEP, type Dir, type IntentFn, type Tile } from './mover';
 import { outfitOf, OUTFIT_IDS } from './outfits';
-import { OverworldSim, pickSpawn, SPAWN, type SimEvent } from './sim';
+import { holds } from '@game/story/conditions';
+import { openSpawns, OverworldSim, pickSpawn, SPAWN, type SimEvent } from './sim';
 
 const DT = 1 / 60;
 const content = loadGameContent([corePack]);
@@ -179,6 +180,64 @@ describe('wild spawns', () => {
     // Weights 3 : 2 : 2 : 1.
     expect((counts.get('core:sproutle') ?? 0) / 4000).toBeCloseTo(3 / 8, 1);
     expect((counts.get('core:voltbat') ?? 0) / 4000).toBeCloseTo(1 / 8, 1);
+  });
+
+  it('leave out spawns whose story condition does not hold (C42)', () => {
+    const meadow = map.zones.find((z) => z.key === 'meadow');
+    if (!meadow) throw new Error('no meadow');
+    const gated = {
+      ...meadow,
+      spawns: [
+        ...meadow.spawns,
+        {
+          species: 'core:sprigling' as (typeof meadow.spawns)[number]['species'],
+          weight: 50,
+          if: { badge: 'core:grove-badge' },
+        },
+      ],
+    };
+    expect(openSpawns(gated).map((s) => s.species)).not.toContain('core:sprigling');
+    expect(openSpawns(gated, () => true).map((s) => s.species)).toContain('core:sprigling');
+    const rng = new Rng(9);
+    for (let i = 0; i < 500; i++) expect(pickSpawn(gated, rng).species).not.toBe('core:sprigling');
+    let seen = 0;
+    for (let i = 0; i < 500; i++)
+      if (pickSpawn(gated, rng, () => true).species === 'core:sprigling') seen++;
+    expect(seen).toBeGreaterThan(300);
+  });
+
+  it('bring a region’s starters out in its T1 zones only after its badge (C42)', () => {
+    const verdale = loadRegion(content, 'core:verdale');
+    const starters = ['core:sprigling', 'core:drizzlet', 'core:emberkit'];
+    const species = (badge: boolean): Set<string> => {
+      const party = newParty({
+        team: [createZorling(content, { uid: 'p', species: 'core:pipwing', level: 5 })],
+      });
+      const withBadge: Party = badge ? { ...party, badges: ['core:grove-badge'] } : party;
+      const out = new Set<string>();
+      for (const zone of ['meadow', 'willow-shore', 'brookside']) {
+        const start = spotIn(verdale, zone, 'right');
+        for (let seed = 1; seed <= 40; seed++) {
+          const sim = new OverworldSim({
+            content,
+            mapId: 'core:verdale',
+            map: verdale,
+            seed,
+            start,
+          });
+          sim.spawnsWhen((c) => holds(content, withBadge, c));
+          run(sim, DT);
+          for (const r of sim.roamers) out.add(r.species);
+        }
+      }
+      return out;
+    };
+    const before = species(false);
+    const after = species(true);
+    for (const s of starters) {
+      expect(before.has(s), s).toBe(false);
+      expect(after.has(s), s).toBe(true);
+    }
   });
 
   it('fill the area around the view on zone tiles, away from the player, deterministically', () => {

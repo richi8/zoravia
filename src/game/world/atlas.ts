@@ -18,6 +18,7 @@ import type { Party } from '@game/player';
 import { holds } from '@game/story/conditions';
 import { mapPlaces, npcBattles, npcTile, type ExploredMap, type MapPlace } from './explore';
 import type { WorldMap } from './map/world-map';
+import { openSpawns, type SpawnTest } from './overworld/sim';
 
 /** `campfire`: a fire to rest at (C40), shown once its tile is explored. */
 export type AtlasMarkerKind = NpcMark | 'town' | 'campfire';
@@ -214,10 +215,12 @@ export function atlasRegion(
 
   const seen = new Set(party.dex.seen);
   const caught = new Set(party.dex.caught);
+  const test: SpawnTest = (c) => holds(content, party, c);
   const edges = zoneEdges(m);
   const zones: AtlasZone[] = m.zones.map((z, i) => {
     const place = places.find((p) => p.key === `zone:${z.key}`);
-    const species = [...new Set(z.spawns.map((s) => s.species))];
+    // Spawns whose story condition (C42) does not hold yet are not listed.
+    const species = [...new Set(openSpawns(z, test).map((s) => s.species))];
     return {
       key: z.key,
       known: e.places.has(`zone:${z.key}`),
@@ -260,6 +263,36 @@ export function atlasRegion(
     markers,
     places: places.filter((p) => e.places.has(p.key)),
   };
+}
+
+/**
+ * Where the player has met each species (C42, the Dex's habitat): for a seen species, the
+ * zones the player has entered whose spawn table has it (only spawns that can appear now, as
+ * on the map window). Zone names in Atlas map and zone order.
+ */
+export function speciesHabitats(
+  content: GameContent,
+  party: Party,
+  explored: (mapId: string) => ExploredMap,
+): Map<string, string[]> {
+  const seen = new Set(party.dex.seen);
+  const test: SpawnTest = (c) => holds(content, party, c);
+  const out = new Map<string, string[]>();
+  for (const id of atlasMaps(content)) {
+    const m = content.maps.get(id);
+    if (!m) continue;
+    const e = explored(id);
+    for (const [key, z] of Object.entries(m.zones)) {
+      if (!e.places.has(`zone:${key}`)) continue;
+      for (const s of openSpawns(z, test)) {
+        if (!seen.has(s.species)) continue;
+        const names = out.get(s.species) ?? [];
+        if (!names.includes(z.name)) names.push(z.name);
+        out.set(s.species, names);
+      }
+    }
+  }
+  return out;
 }
 
 export function atlasProgress(content: GameContent, party: Party): AtlasProgress {

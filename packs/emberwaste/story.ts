@@ -343,6 +343,27 @@ function rematchNodes(trainer: string, ask: string, won: string): DialogueInput[
   };
 }
 
+/**
+ * A rumour (C42) said first once `when` holds, unless the dialogue's quest is under way: the
+ * townsfolk notice the region's starters out in the wild after its badge.
+ */
+function withRumour(
+  d: DialogueInput,
+  quest: string,
+  when: StoryCondition,
+  say: readonly string[],
+): DialogueInput {
+  const notBusy: StoryCondition = { not: { quest, is: 'active' } };
+  return {
+    start: 'rumour-hello',
+    nodes: {
+      ...d.nodes,
+      'rumour-hello': { branch: [{ if: { all: [when, notBusy] }, goto: 'rumour' }], goto: d.start },
+      rumour: { say: [...say], goto: d.start },
+    },
+  };
+}
+
 /** A quest giver: ask, remind, report back, thank. */
 function questGiver(
   quest: string,
@@ -642,21 +663,29 @@ const mainDialogues: Record<string, DialogueInput> = {
 };
 
 const sideDialogues: Record<string, DialogueInput> = {
-  juna: questGiver('brass-bell', 'bell-told', {
-    ask: [
-      'A Sandskink stole my brass bell! It wiggled into the sand and was gone.',
-      'They love shiny things. Can you catch one? I want to see the thief up close.',
+  juna: withRumour(
+    questGiver('brass-bell', 'bell-told', {
+      ask: [
+        'A Sandskink stole my brass bell! It wiggled into the sand and was gone.',
+        'They love shiny things. Can you catch one? I want to see the thief up close.',
+      ],
+      yes: 'I’ll catch it',
+      yesThanks: 'Yay! They swim in the sand of the Sunbaked Flats, south of town.',
+      no: 'Maybe later',
+      remind: 'Sandskinks swim in the Sunbaked Flats, south of town.',
+      report: [
+        'You caught one! Look at its little eyes. It does not look sorry at all.',
+        'Here, take these. I will buy a new bell. Maybe a less shiny one.',
+      ],
+      thanks: 'I tie my new bell on with string now. The Sandskinks can only stare.',
+    }),
+    e('brass-bell'),
+    { badge: KILN_BADGE },
+    [
+      'Something new is out on the Sunbaked Flats! A little salamander, napping on the hot stones.',
+      'Odo saw a plump cactus sprout by the Dustway, and the Redrock miners say the pebbles there have started to walk.',
     ],
-    yes: 'I’ll catch it',
-    yesThanks: 'Yay! They swim in the sand of the Sunbaked Flats, south of town.',
-    no: 'Maybe later',
-    remind: 'Sandskinks swim in the Sunbaked Flats, south of town.',
-    report: [
-      'You caught one! Look at its little eyes. It does not look sorry at all.',
-      'Here, take these. I will buy a new bell. Maybe a less shiny one.',
-    ],
-    thanks: 'I tie my new bell on with string now. The Sandskinks can only stare.',
-  }),
+  ),
   'water-carrier-odo': questGiver('mirage-spring', 'spring-told', {
     ask: [
       'My grandfather told me of a spring hidden in a ring of rocks, east of the lava river. Cool water, right in the waste!',

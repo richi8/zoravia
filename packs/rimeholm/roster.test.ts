@@ -23,6 +23,7 @@ import {
 import { loadGameContent, statBand, statTotal, TIER_LEVELS, trainerTeam } from '@game/data';
 import { createZorling, type Zorling } from '@game/progression';
 import { loadRegion } from '@game/world/map';
+import { openSpawns } from '@game/world/overworld/sim';
 import { SHIPPED_PACKS } from '@packs/index';
 import { ROUTE_TRAINERS } from './trainers';
 
@@ -34,7 +35,12 @@ const full = (s: string): string => (s.includes(':') ? s : e(s));
 
 const STARTERS = ['selkit', 'woolump', 'sparkit'];
 const zones = Object.values(map.zones);
-const wild = new Set(zones.flatMap((z) => z.spawns.map((s) => s.species)));
+/** The wild of a new game: spawns with a story condition (C42, starters after the badge) left out. */
+const wild = new Set(zones.flatMap((z) => openSpawns(z).map((s) => s.species)));
+/** The spawns that need a story condition (C42). */
+const gated = zones.flatMap((z) =>
+  z.spawns.filter((s) => s.if).map((s) => ({ zone: z, spawn: s })),
+);
 const roster = content.species.inNamespace('rimeholm');
 const trainerNpcs = content.npcs
   .values()
@@ -98,12 +104,20 @@ describe('Rimeholm roster', () => {
     expect(roster.filter((s) => s.legendary).map((s) => s.name)).toEqual(['Glacivar']);
   });
 
-  it('has three 3-stage starters (Water, Earth, Electric) that are not found in the wild', () => {
+  it('has three 3-stage starters (Water, Earth, Electric) that join the wild only after the badge', () => {
     const types = STARTERS.map((id) => {
       const line = content.evolutionLine(e(id));
       expect(line.stage, id).toBe(1);
       expect(line.members, id).toHaveLength(3);
       for (const m of line.members) expect(wild.has(m.id), m.id).toBe(false);
+      // After the badge (C42): the first stage only, in one T1 zone.
+      const later = gated.filter((g) => line.members.some((m) => m.id === g.spawn.species));
+      expect(
+        later.map((g) => g.spawn.species),
+        id,
+      ).toEqual([e(id)]);
+      expect(later[0]?.zone.tier, id).toBe('t1');
+      expect(later[0]?.spawn.if, id).toEqual({ badge: 'rimeholm:tide-badge' });
       return content.species.require(e(id)).types[0];
     });
     expect(types).toEqual(['core:water', 'core:earth', 'core:electric']);
@@ -204,7 +218,7 @@ describe('Rimeholm balance', () => {
     for (const starter of STARTERS) {
       let rate = 0;
       let weights = 0;
-      for (const sp of flats?.spawns ?? []) {
+      for (const sp of flats ? openSpawns(flats) : []) {
         for (let level = lo; level <= hi; level++) {
           const r = winRate(20, (seed) =>
             fight('wild', [make(starter, 6)], [make(sp.species, level)], seed, 'trainer'),

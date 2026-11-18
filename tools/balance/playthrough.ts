@@ -46,9 +46,9 @@ import {
   type Party,
 } from '@game/player';
 import { createZorling, type ProgressEvent } from '@game/progression';
-import { bossBattle, trainerBattle, type StoryBattle } from '@game/story';
+import { bossBattle, holds, trainerBattle, type StoryBattle } from '@game/story';
 import type { Zone } from '@game/world/map';
-import { pickSpawn } from '@game/world/overworld/sim';
+import { openSpawns, pickSpawn, type SpawnTest } from '@game/world/overworld/sim';
 
 /**
  * A story fight: a trainer (rival, trial, region boss) or a wild boss (Titan, legendary).
@@ -257,7 +257,7 @@ class Run {
     for (const species of this.setup.catches) {
       if (this.party.team.length >= 3) return;
       if (this.party.team.some((z) => this.lineOf(z.species) === this.lineOf(species))) continue;
-      const zone = this.zones.find((z) => z.spawns.some((s) => s.species === species));
+      const zone = this.zones.find((z) => this.spawns(z).some((s) => s.species === species));
       if (!zone) continue;
       for (let tries = 0; tries < 60; tries++) {
         this.restock(ZORB, 5);
@@ -278,9 +278,17 @@ class Run {
     }
   }
 
+  /** Spawn conditions (C42) against the save, as in the game. */
+  private readonly test: SpawnTest = (c) => holds(this.content, this.party, c);
+
+  /** The zone's spawns that can appear now. */
+  private spawns(zone: Zone): Zone['spawns'] {
+    return openSpawns(zone, this.test);
+  }
+
   private spawnOf(zone: Zone, species: string): { species: string; level: number } {
     for (;;) {
-      const s = pickSpawn(zone, this.rng);
+      const s = pickSpawn(zone, this.rng, this.test);
       if (s.species === species) return s;
     }
   }
@@ -378,7 +386,7 @@ class Run {
 
   private grind(): void {
     const zone = this.grindZone();
-    const s = pickSpawn(zone, this.rng);
+    const s = pickSpawn(zone, this.rng, this.test);
     this.wildBattle(s.species, s.level, false, zone.battleWeather);
   }
 
@@ -515,7 +523,7 @@ class Run {
     const onTeam = new Set(this.party.team.map((z) => z.species));
     let best: { zone: Zone; species: string; level: number } | undefined;
     for (const zone of this.zones) {
-      for (const s of zone.spawns) {
+      for (const s of this.spawns(zone)) {
         const types = cx.species.require(s.species).types;
         if (onTeam.has(s.species) || !types.some((t) => need.has(t))) continue;
         const level = (s.levels ?? zone.levels)[1];

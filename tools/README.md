@@ -110,7 +110,9 @@ All positions are tiles from the map's top-left. Rects are `{ "x", "y", "w", "h"
 
 - `zones`: fields replace the generated zone's. A new key needs `name`, `glyph`, `tier` and
   `levels`. `null` removes the zone. Levels must stay inside the tier's range (T1 3–15,
-  T2 15–30, T3 30–45, danger 45–60).
+  T2 15–30, T3 30–45, danger 45–60). A spawn may carry `"if"`, a story condition (C42),
+  e.g. `{ "species": "core:sprigling", "weight": 2, "if": { "badge": "core:grove-badge" } }`:
+  it spawns only while that holds.
 - `anchors` / `connections`: a full entry adds or replaces, `null` removes.
   A `ferry` connection may carry a `route` (C37): `[x, y]` water tiles in this map's
   coordinates (outside the map is fine, over the sea between regions), from the boat's dock at

@@ -449,6 +449,19 @@ Design stance (user, 2026-11-15): keep old-game friction. No tutorial, no object
 - **Done when:** the three Verdale plans are within about 15 wild battles and 5 wild losses of each other in `npm run balance`; the playthrough tests pass.
 - **Depends:** C39
 
+### C42 · A Dex you can finish
+- **Goal:** Catching every Zorling in one save is possible and worth chasing. Today 24 of 78 species can't be caught: every starter line except the player's own appears nowhere else (no wild spawn, no gift).
+- **Deliverables:**
+  - **Conditional spawns:** a zone spawn takes an optional `if` (a story condition, e.g. `{ badge: 'core:grove-badge' }`). Roamers only spawn from spawns whose condition holds; the check stays pure and seeded. The balance sim and the map window's per-zone lists follow the same rule. Saves are unchanged.
+  - **Starter spawns, badge-gated:** once the player holds a region's badge, all three of its starters (stage 1, the zone's levels) spawn in that region's T1 zones at a low weight (~10%), each in the zone that fits its type. Verdale after the Grove Badge (Sunny Meadow, Willow Shore, Brookside Trail), Emberwaste after the Kiln Badge, Rimeholm after the Tide Badge.
+  - **In-world rumour:** one T1 NPC per region gets a new line after the badge, hinting at the new Zorlings ("little sprouts in the meadow lately"). No marker, no quest.
+  - **Dex counts and region pages:** the Dex shows "Seen x · Caught y / total", with tabs on a key that doesn't clash with `A`/`D` paging (e.g. `Tab`): All, then one page per region (core = Verdale), each with its own counts.
+  - **Habitat:** a seen species' entry lists the zones where the player has met it (from the per-zone seen data the map window already keeps). Nothing the player hasn't found shows.
+  - **Completability test:** every species can be obtained in one save, through a wild spawn, a boss capture or evolving one of those. It runs over all shipped packs, so a future pack can't repeat the gap.
+  - `DESIGN.md` updated: the Dex goal (World/Team), conditional spawns, starter spawns per region.
+- **Done when:** the completability test passes; a gated starter never spawns before its badge and does after (tests); the Dex tabs and habitat work by keyboard; `npm run balance` for all three regions stays within C41's bounds; `npm run check` passes.
+- **Depends:** C41
+
 ---
 
 ## Later / future (not scheduled)

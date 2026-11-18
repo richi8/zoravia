@@ -595,47 +595,76 @@ const mainDialogues: Record<string, DialogueInput> = {
   },
 };
 
-const sideDialogues: Record<string, DialogueInput> = {
-  tam: {
-    start: 'hello',
+/**
+ * A rumour (C42) said first once `when` holds, unless the dialogue's quest is under way: the
+ * townsfolk notice the region's starters out in the wild after its badge.
+ */
+function withRumour(
+  d: DialogueInput,
+  quest: string,
+  when: StoryCondition,
+  say: readonly string[],
+): DialogueInput {
+  const notBusy: StoryCondition = { not: { quest, is: 'active' } };
+  return {
+    start: 'rumour-hello',
     nodes: {
-      hello: {
-        branch: [
-          { if: { quest: c('sandwich-snatcher'), is: 'done' }, goto: 'thanks' },
-          { if: { quest: c('sandwich-snatcher'), is: 'active', step: 'tell' }, goto: 'report' },
-          { if: { quest: c('sandwich-snatcher'), is: 'active' }, goto: 'remind' },
-          { if: { quest: MAIN, is: 'new' }, goto: 'rowan' },
-        ],
-        goto: 'ask',
-      },
-      rowan: {
-        say: [
-          'Elder Rowan was looking for you! He’s by the big house on the west side of the square.',
-        ],
-        goto: 'ask',
-      },
-      ask: {
-        say: [
-          'A Pipwing stole my sandwich in the meadow! Right out of my hand!',
-          'Could you catch it? I just want to see the little thief up close.',
-        ],
-        choices: [
-          { text: 'I’ll catch it', do: [{ start: c('sandwich-snatcher') }], goto: 'yay' },
-          { text: 'Maybe later' },
-        ],
-      },
-      yay: { say: ['Yay! The meadow is just south of town. Pipwings love the tall grass.'] },
-      remind: { say: ['Pipwings flutter around the Sunny Meadow, south of town.'] },
-      report: {
-        say: [
-          'That’s it! That’s the one! Look at its little crumb-covered beak.',
-          'Here, I saved these for you. Mom says potions are better than sandwiches anyway.',
-        ],
-        do: [{ set: c('sandwich-told') }],
-      },
-      thanks: { say: ['I pack two sandwiches now. One for me, one for the Pipwings!'] },
+      ...d.nodes,
+      'rumour-hello': { branch: [{ if: { all: [when, notBusy] }, goto: 'rumour' }], goto: d.start },
+      rumour: { say: [...say], goto: d.start },
     },
-  },
+  };
+}
+
+const sideDialogues: Record<string, DialogueInput> = {
+  tam: withRumour(
+    {
+      start: 'hello',
+      nodes: {
+        hello: {
+          branch: [
+            { if: { quest: c('sandwich-snatcher'), is: 'done' }, goto: 'thanks' },
+            { if: { quest: c('sandwich-snatcher'), is: 'active', step: 'tell' }, goto: 'report' },
+            { if: { quest: c('sandwich-snatcher'), is: 'active' }, goto: 'remind' },
+            { if: { quest: MAIN, is: 'new' }, goto: 'rowan' },
+          ],
+          goto: 'ask',
+        },
+        rowan: {
+          say: [
+            'Elder Rowan was looking for you! He’s by the big house on the west side of the square.',
+          ],
+          goto: 'ask',
+        },
+        ask: {
+          say: [
+            'A Pipwing stole my sandwich in the meadow! Right out of my hand!',
+            'Could you catch it? I just want to see the little thief up close.',
+          ],
+          choices: [
+            { text: 'I’ll catch it', do: [{ start: c('sandwich-snatcher') }], goto: 'yay' },
+            { text: 'Maybe later' },
+          ],
+        },
+        yay: { say: ['Yay! The meadow is just south of town. Pipwings love the tall grass.'] },
+        remind: { say: ['Pipwings flutter around the Sunny Meadow, south of town.'] },
+        report: {
+          say: [
+            'That’s it! That’s the one! Look at its little crumb-covered beak.',
+            'Here, I saved these for you. Mom says potions are better than sandwiches anyway.',
+          ],
+          do: [{ set: c('sandwich-told') }],
+        },
+        thanks: { say: ['I pack two sandwiches now. One for me, one for the Pipwings!'] },
+      },
+    },
+    c('sandwich-snatcher'),
+    { badge: GROVE_BADGE },
+    [
+      'Guess what? There are little sprouts rolling around the Sunny Meadow lately. Not Sproutles, I checked!',
+      'Mom saw a bubbly one bouncing along the Willow Shore, and Grandpa says something with a sparky tail ran up Brookside Trail.',
+    ],
+  ),
   'gardener-mo': {
     start: 'hello',
     nodes: {
