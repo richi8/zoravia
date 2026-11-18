@@ -1,6 +1,7 @@
 /**
  * Sound settings menu (C24): master, music and effects volume in 10 % steps.
- * Keyboard: W/S choose, A/D change, E steps up (wrapping to Off), Q back. Each change plays a
+ * Keyboard: W/S choose, A/D change, E steps up (wrapping to Off), Q back. Mouse: the ‹ ›
+ * arrows step down / up (C44), a click on the row is E. Each change plays a
  * short sound at the new volume. The settings screen (C33) can reuse it.
  */
 
@@ -38,6 +39,8 @@ export class VolumeMenu implements Widget<Container> {
       width: options.width ?? 170,
       items: this.items(),
       onSelect: (i) => this.change(i, 1, true),
+      valueWidth: 24,
+      onStep: (i, step) => this.change(i, step, false),
       onBack: () => options.onBack(this),
     });
   }
@@ -81,7 +84,11 @@ export class VolumeMenu implements Widget<Container> {
 
   private items(): { label: string; hint: string }[] {
     const s = audioSettings();
-    return AUDIO_CHANNELS.map((c) => ({ label: LABELS[c], hint: formatVolume(s[c]) }));
+    return AUDIO_CHANNELS.map((c) => ({
+      label: LABELS[c],
+      hint: formatVolume(s[c]),
+      stepper: true,
+    }));
   }
 
   /** Steps a volume; `wrap` goes from 100 % back to Off (E cycles). */

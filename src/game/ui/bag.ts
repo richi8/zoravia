@@ -35,8 +35,19 @@ export interface BagTab {
   readonly items: readonly BagItem[];
 }
 
+/**
+ * Where the bag was left (C44): the owner keeps one per place (field, battle) and passes it
+ * in; the panel opens there and writes every change back. By name, so it survives counts and
+ * tabs changing.
+ */
+export interface BagMemory {
+  tab?: string;
+  item?: string;
+}
+
 export interface BagOptions {
   readonly tabs: readonly BagTab[];
+  readonly memory?: BagMemory;
   readonly team: readonly (CombatantView | undefined)[];
   readonly money: number;
   readonly onUse: (item: BagItem, target: number | undefined, bag: BagPanel) => void;
@@ -72,7 +83,12 @@ export class BagPanel implements Widget<Container> {
     money.set(options.money);
     money.position.set(Math.round(W - 8 - money.width), 5);
     this.view.addChild(bg, title, money, this.dynamic);
+    const m = options.memory;
+    const tab = m?.tab === undefined ? -1 : options.tabs.findIndex((t) => t.label === m.tab);
+    if (tab >= 0) this.tab = tab;
     this.cursor = new GridCursor(this.items.length, 1, (i) => (this.items[i]?.count ?? 0) > 0);
+    const item = m?.item === undefined ? -1 : this.items.findIndex((it) => it.id === m.item);
+    if (item >= 0) this.cursor.set(item);
     this.view.eventMode = 'static';
     this.view.hitArea = new Rectangle(0, 0, W, H);
     this.build();
@@ -217,6 +233,14 @@ export class BagPanel implements Widget<Container> {
   }
 
   private build(): void {
+    const memory = this.options.memory;
+    if (memory) {
+      const tab = this.options.tabs[this.tab]?.label;
+      const item = this.selected?.id;
+      if (tab !== undefined) memory.tab = tab;
+      if (item !== undefined) memory.item = item;
+      else delete memory.item;
+    }
     for (const c of this.dynamic.removeChildren()) c.destroy({ children: true });
     const add = <T extends Container>(c: T, x = 0, y = 0): T => {
       c.position.set(Math.round(x), Math.round(y));

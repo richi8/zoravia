@@ -473,6 +473,18 @@ Design stance (user, 2026-11-15): keep old-game friction. No tutorial, no object
 - **Done when:** each of the above works in a real browser; `npm run check` passes.
 - **Depends:** C42
 
+### C44 · Mouse comfort & remembered menus
+- **Goal:** (user, 2026-11-18, ideas 1–6 after C43) The mouse is as comfortable as the keys, and menus stop resetting.
+- **Deliverables:**
+  - Shop: − / + buttons on the selected row, and the wheel, change the quantity.
+  - Settings and Sound: ‹ › arrows on each value step it either way (engine `Menu` steppers).
+  - Overworld: the cursor is a hand over people, wild Zorlings, signs, items, doors, campfires and ferry boats.
+  - The pause menu, bag (field and battle, separately) and Dex (tab, cursor and scroll per tab) open where they were left, for the session.
+  - Drag and drop: Zorlings in Storage (team ↔ box, the wheel scrolls while dragging) and Party (reorder).
+  - Holding the left button walks toward the pointer (after a short hold; a press on someone still walks up and talks).
+- **Done when:** each works in a real browser; `npm run check` passes.
+- **Depends:** C43
+
 ---
 
 ## Later / future (not scheduled)

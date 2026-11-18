@@ -5,6 +5,7 @@
 
 import { Container, Graphics, Rectangle, Sprite, type Texture } from 'pixi.js';
 import { paper, type TypeId } from '../style/tokens';
+import type { UiInput } from '@engine/ui';
 import { drawWell } from './skin';
 
 export interface MoveLine {
@@ -97,4 +98,78 @@ export class PointerQueue<K extends string> {
   clear(): void {
     this.pending = undefined;
   }
+}
+
+/** What a drag did this step (see `DragSpots`). */
+export type DragStep<S> =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'moving'; readonly from: S; readonly x: number; readonly y: number }
+  | { readonly kind: 'drop'; readonly from: S; readonly to: S | undefined };
+
+/**
+ * Drag and drop between spots (C44: storage, party). Press on a spot, move a few pixels with
+ * the button held and it is a drag; releasing drops on the spot under the pointer. A press
+ * that never moves stays a plain click (the panel's `PointerQueue` handles it). Positions are
+ * in the panel's local space (`toLocal`); `spotAt` maps one to a spot, or undefined.
+ */
+export class DragSpots<S> {
+  private start: { spot: S; x: number; y: number } | undefined;
+  private last = { x: 0, y: 0 };
+  private moving = false;
+
+  constructor(
+    private readonly spotAt: (x: number, y: number) => S | undefined,
+    private readonly canStart: (spot: S) => boolean,
+    private readonly threshold = 4,
+  ) {}
+
+  get dragging(): boolean {
+    return this.moving;
+  }
+
+  update(
+    input: UiInput,
+    toLocal: (p: { x: number; y: number }) => { x: number; y: number },
+  ): DragStep<S> {
+    const pressed = input.pointerPressed();
+    if (pressed && !this.start) {
+      const p = toLocal(pressed);
+      const spot = this.spotAt(p.x, p.y);
+      if (spot !== undefined && this.canStart(spot)) this.start = { spot, x: p.x, y: p.y };
+      this.last = p;
+      return { kind: 'none' };
+    }
+    const start = this.start;
+    if (!start) return { kind: 'none' };
+    const held = input.pointerHeld?.();
+    if (held) {
+      this.last = toLocal(held);
+      if (!this.moving) {
+        const dx = this.last.x - start.x;
+        const dy = this.last.y - start.y;
+        if (dx * dx + dy * dy >= this.threshold * this.threshold) this.moving = true;
+      }
+      return this.moving
+        ? { kind: 'moving', from: start.spot, x: this.last.x, y: this.last.y }
+        : { kind: 'none' };
+    }
+    const wasMoving = this.moving;
+    this.cancel();
+    return wasMoving
+      ? { kind: 'drop', from: start.spot, to: this.spotAt(this.last.x, this.last.y) }
+      : { kind: 'none' };
+  }
+
+  cancel(): void {
+    this.start = undefined;
+    this.moving = false;
+  }
+}
+
+/** The portrait that follows the pointer during a drag. */
+export function dragGhost(portrait: Texture): Container {
+  const c = portraitSlot(portrait, { frame: true });
+  c.alpha = 0.85;
+  c.eventMode = 'none';
+  return c;
 }

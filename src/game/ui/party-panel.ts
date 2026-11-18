@@ -6,7 +6,8 @@
  * Keyboard: W/S choose, E pick up → W/S → E put down (swap places), Q back / cancel.
  * With `onSelect` (C22b), E asks the caller instead (an options menu: reorder, evolve…),
  * which calls `hold` to start reordering. A Zorling that can evolve gets a gold mark.
- * Mouse: hover/click rows; clicking the selected row picks it up or puts it down.
+ * Mouse: hover/click rows; clicking the selected row picks it up or puts it down. Dragging a
+ * row onto another swaps them (C44).
  */
 
 import { Container, Graphics, Rectangle } from 'pixi.js';
@@ -17,7 +18,14 @@ import { keyHint } from '@game/input/key-hint';
 import { HpBar, XpBar } from './bars';
 import { drawCursor, drawPaper, drawWell } from './skin';
 import { uiText } from './text';
-import { PointerQueue, portraitSlot, SLOT, type ZorlingView } from './zorling-view';
+import {
+  DragSpots,
+  dragGhost,
+  PointerQueue,
+  portraitSlot,
+  SLOT,
+  type ZorlingView,
+} from './zorling-view';
 
 /** The hotbar actions, by party slot (their keys label the slots). */
 const HOTBAR = ['hotbar1', 'hotbar2', 'hotbar3'] as const;
@@ -47,6 +55,11 @@ export class PartyPanel implements Widget<Container> {
   private held: number | undefined;
   private focused = false;
   private readonly pointer = new PointerQueue<'row'>(() => this.focused);
+  private readonly drag = new DragSpots<number>(
+    (x, y) => this.rowAt(x, y),
+    (i) => this.team.length > 1 && !!this.team[i],
+  );
+  private ghost: Container | undefined;
 
   constructor(private readonly options: PartyOptions) {
     this.team = options.team;
@@ -84,10 +97,40 @@ export class PartyPanel implements Widget<Container> {
   blur(): void {
     this.focused = false;
     this.pointer.clear();
+    this.drag.cancel();
+    this.hideGhost();
     this.build();
   }
 
   handleInput(input: UiInput): void {
+    const d = this.drag.update(input, (p) => this.view.toLocal(p));
+    if (d.kind === 'moving') {
+      this.pointer.take();
+      const z = this.team[d.from];
+      if (z && !this.ghost) {
+        this.ghost = dragGhost(z.portrait);
+        this.view.addChild(this.ghost);
+      }
+      this.ghost?.position.set(Math.round(d.x - SLOT / 2), Math.round(d.y - SLOT / 2));
+      const over = this.rowAt(d.x, d.y);
+      if (over !== undefined && this.cursor.set(over)) {
+        uiSound('move');
+        this.build();
+      }
+      return;
+    }
+    if (d.kind === 'drop') {
+      this.hideGhost();
+      this.pointer.clear(); // the release may also have been a tap
+      if (d.to !== undefined && d.to !== d.from) {
+        uiSound('select');
+        this.team = this.options.onSwap(d.from, d.to);
+        this.held = undefined;
+        this.cursor.set(d.to);
+        this.build();
+      }
+      return;
+    }
     const p = this.pointer.take();
     if (p) {
       const was = this.cursor.index;
@@ -136,6 +179,17 @@ export class PartyPanel implements Widget<Container> {
     this.team = team;
     this.cursor.reset(team.length);
     this.build();
+  }
+
+  private rowAt(x: number, y: number): number | undefined {
+    if (x < 4 || x >= 4 + LIST_W || y < TOP) return undefined;
+    const i = Math.floor((y - TOP) / ROW_H);
+    return i < this.team.length ? i : undefined;
+  }
+
+  private hideGhost(): void {
+    this.ghost?.destroy({ children: true });
+    this.ghost = undefined;
   }
 
   private back(): void {

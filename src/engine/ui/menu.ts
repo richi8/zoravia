@@ -6,6 +6,8 @@
  * the input bindings; a click outside the menu also acts as back, via `FocusStack`).
  * Pointer events are queued and applied in `handleInput`, so all menu
  * logic still runs inside the fixed step.
+ * Steppers (C44): an item with `stepper` shows `‹ value ›` around its hint; clicking an arrow
+ * calls `onStep` with -1 / +1 (the mouse twin of A/D on a value).
  */
 
 import { Container, Graphics, Rectangle, Text, type TextStyleOptions } from 'pixi.js';
@@ -23,6 +25,8 @@ export interface MenuItem {
   readonly icon?: () => Container;
   /** Dim text right-aligned in the row (e.g. a key hint). */
   readonly hint?: string;
+  /** Draw clickable ‹ › arrows around the hint; a click calls `onStep` (C44). */
+  readonly stepper?: boolean;
 }
 
 export interface MenuOptions {
@@ -35,7 +39,17 @@ export interface MenuOptions {
   readonly onSelect: (index: number, menu: Menu) => void;
   readonly onBack?: (menu: Menu) => void;
   readonly onHighlight?: (index: number, menu: Menu) => void;
+  /** A click on a stepper arrow: -1 (‹) or +1 (›). */
+  readonly onStep?: (index: number, step: 1 | -1, menu: Menu) => void;
+  /**
+   * Least width of the value between the arrows. The slot is as wide as the widest stepper
+   * value shown, and at least this, so the arrows don't move as values change.
+   */
+  readonly valueWidth?: number;
 }
+
+/** Width of one stepper arrow's hit box. */
+const STEP_W = 10;
 
 interface Row {
   readonly view: Container;
@@ -55,6 +69,7 @@ export class Menu implements Widget<Container> {
   private focused = false;
   private pendingHover: number | undefined;
   private pendingClick: number | undefined;
+  private pendingStep: { index: number; step: 1 | -1 } | undefined;
   private cellW = 0;
   private cellH = 0;
 
@@ -124,10 +139,20 @@ export class Menu implements Widget<Container> {
     this.view.interactiveChildren = false;
     this.pendingClick = undefined;
     this.pendingHover = undefined;
+    this.pendingStep = undefined;
     this.redraw();
   }
 
   handleInput(input: UiInput): void {
+    if (this.pendingStep) {
+      const { index, step } = this.pendingStep;
+      this.pendingStep = undefined;
+      this.pendingClick = undefined;
+      this.pendingHover = undefined;
+      if (this.cursor.index !== index && this.cursor.set(index)) this.highlightChanged();
+      this.options.onStep?.(index, step, this);
+      return;
+    }
     if (this.pendingHover !== undefined) {
       if (this.cursor.set(this.pendingHover)) {
         uiSound('move');
@@ -202,9 +227,17 @@ export class Menu implements Widget<Container> {
       const icon = icons[i];
       return icon ? Math.ceil(icon.width) + 3 : 0;
     };
+    const slotW = Math.ceil(
+      Math.max(
+        this.options.valueWidth ?? 0,
+        ...hints.map((h, i) => (h && this.items[i]?.stepper ? h.width : 0)),
+      ),
+    );
+    const arrowsW = (i: number): number =>
+      this.items[i]?.stepper ? STEP_W * 2 + slotW - (hints[i]?.width ?? 0) : 0;
     const widest = Math.max(
       0,
-      ...texts.map((t, i) => t.width + iconW(i) + (hints[i] ? hints[i].width + 8 : 0)),
+      ...texts.map((t, i) => t.width + iconW(i) + (hints[i] ? hints[i].width + 8 : 0) + arrowsW(i)),
     );
     this.cellH = theme.font.lineHeight + theme.spacing.item * 2;
     const titleH = this.titleText ? Math.ceil(this.titleText.height) + theme.spacing.item : 0;
@@ -228,12 +261,35 @@ export class Menu implements Widget<Container> {
         view.addChild(icon);
       }
       const hint = hints[i];
+      const right = this.cellW - theme.spacing.item - 4;
+      const stepper = !!this.items[i]?.stepper;
       if (hint) {
-        hint.position.set(
-          Math.round(this.cellW - theme.spacing.item - 4 - hint.width),
-          Math.round((this.cellH - hint.height) / 2),
-        );
+        // A stepper's value is centered in a fixed slot between its arrows.
+        const x = stepper ? right - STEP_W - slotW + (slotW - hint.width) / 2 : right - hint.width;
+        hint.position.set(Math.round(x), Math.round((this.cellH - hint.height) / 2));
         view.addChild(hint);
+      }
+      if (hint && stepper) {
+        const arrow = (label: string, x: number, step: 1 | -1): void => {
+          const a = new Container();
+          const t = new Text({
+            text: label,
+            style: this.style(theme.colors.accent, theme.font.titleSize, '700'),
+          });
+          t.position.set(Math.round((STEP_W - t.width) / 2), 0);
+          a.addChild(t);
+          a.position.set(Math.round(x), Math.round((this.cellH - t.height) / 2));
+          a.hitArea = new Rectangle(0, -2, STEP_W, t.height + 4);
+          a.eventMode = 'static';
+          a.cursor = 'pointer';
+          a.on('pointertap', (e) => {
+            e.stopPropagation();
+            if (this.focused && e.button === 0) this.pendingStep = { index: i, step };
+          });
+          view.addChild(a);
+        };
+        arrow('‹', right - STEP_W * 2 - slotW, -1);
+        arrow('›', right - STEP_W, 1);
       }
       view.eventMode = 'static';
       view.cursor = 'pointer';

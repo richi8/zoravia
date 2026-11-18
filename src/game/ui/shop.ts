@@ -2,13 +2,14 @@
  * Shop panel: price list with owned counts, quantity picker and money.
  *
  * Keyboard: W/S item, A/D quantity, E buy, Q leave. Mouse: hover/click rows (click on the
- * selected row buys), right click / click outside = leave.
+ * selected row buys), − / + on the selected row (or the wheel) change the quantity (C44),
+ * right click / click outside = leave.
  * Items at their bag cap show "FULL" and can't be selected; quantity is limited by the cap
  * and the money left.
  */
 
 import { Container, Graphics, Rectangle } from 'pixi.js';
-import { GridCursor, type UiInput, type Widget, uiSound } from '@engine/ui';
+import { GridCursor, type UiInput, type Widget, uiSound, WheelSteps } from '@engine/ui';
 import { paper } from '../style/tokens';
 import { KeyHint, row } from './badges';
 import { keyHint, leftRightHint } from '@game/input/key-hint';
@@ -38,6 +39,8 @@ export interface ShopOptions {
 
 const ROW_H = 17;
 const TOP = 26;
+/** Size of the − / + quantity buttons. */
+const QTY_BTN = 9;
 
 export class ShopPanel implements Widget<Container> {
   readonly view = new Container({ label: 'shop' });
@@ -49,7 +52,8 @@ export class ShopPanel implements Widget<Container> {
   private items: ShopItem[];
   private qty = 1;
   private focused = false;
-  private pointer: { index: number; click: boolean } | undefined;
+  private pointer: { index: number; click: boolean; qty?: 1 | -1 } | undefined;
+  private readonly wheel = new WheelSteps();
 
   constructor(private readonly options: ShopOptions) {
     this.items = [...options.items];
@@ -117,6 +121,10 @@ export class ShopPanel implements Widget<Container> {
   handleInput(input: UiInput): void {
     const p = this.pointer;
     this.pointer = undefined;
+    if (p?.qty) {
+      this.changeQty(p.qty, false);
+      return;
+    }
     if (p) {
       const was = this.cursor.index;
       if (this.cursor.set(p.index)) {
@@ -127,6 +135,12 @@ export class ShopPanel implements Widget<Container> {
       if (p.click && was === p.index) this.buy();
       return;
     }
+    const turns = this.wheel.take(input.wheel?.() ?? 0);
+    if (turns) {
+      // Wheel up = more, like turning a dial.
+      this.changeQty(turns < 0 ? 1 : -1, false);
+      return;
+    }
     const dir = input.direction();
     if (dir === 'up' || dir === 'down') {
       if (this.cursor.move(dir)) {
@@ -135,20 +149,29 @@ export class ShopPanel implements Widget<Container> {
         this.build();
       }
     } else if (dir === 'left' || dir === 'right') {
-      const max = this.maxQty();
-      const next =
-        dir === 'right' ? (this.qty >= max ? 1 : this.qty + 1) : this.qty <= 1 ? max : this.qty - 1;
-      if (next !== this.qty) {
-        uiSound('move');
-        this.qty = next;
-        this.build();
-      }
+      this.changeQty(dir === 'right' ? 1 : -1, true);
     }
     if (input.confirmPressed()) this.buy();
     else if (input.backPressed()) {
       uiSound('back');
       this.options.onBack(this);
     }
+  }
+
+  /** One more / less; keys wrap (1 ↔ max), the mouse stops at the ends. */
+  private changeQty(step: 1 | -1, wrap: boolean): void {
+    if (!this.buyable(this.cursor.index)) return;
+    const max = this.maxQty();
+    let next = this.qty + step;
+    if (next > max) next = wrap ? 1 : max;
+    if (next < 1) next = wrap ? max : 1;
+    if (next === this.qty) {
+      uiSound('blocked');
+      return;
+    }
+    uiSound('move');
+    this.qty = next;
+    this.build();
   }
 
   /** Most of the selected item the player can buy now (≥ 1 when buyable). */
@@ -172,6 +195,24 @@ export class ShopPanel implements Widget<Container> {
       return;
     }
     this.options.onBuy(item, this.qty, this);
+  }
+
+  private qtyButton(r: Container, x: number, label: string, step: 1 | -1, on: boolean): void {
+    const b = new Container();
+    const g = new Graphics();
+    g.roundRect(0, 0, QTY_BTN, QTY_BTN, 2).fill({ color: on ? paper.title : paper.shade });
+    const t = uiText('label', label, paper.light);
+    t.position.set(Math.round((QTY_BTN - t.width) / 2), Math.round((QTY_BTN - t.height) / 2));
+    b.addChild(g, t);
+    b.position.set(x, Math.round((ROW_H - 1 - QTY_BTN) / 2));
+    b.hitArea = new Rectangle(-1, -3, QTY_BTN + 2, QTY_BTN + 6);
+    b.eventMode = 'static';
+    b.cursor = 'pointer';
+    b.on('pointertap', (e) => {
+      e.stopPropagation();
+      if (this.focused && e.button === 0) this.pointer = { index: 0, click: false, qty: step };
+    });
+    r.addChild(b);
   }
 
   private build(): void {
@@ -207,10 +248,15 @@ export class ShopPanel implements Widget<Container> {
       price.position.set(Math.round(W - 12 - price.width), 2);
       drawCoin(g, Math.round(price.x - 10), 4);
       r.addChild(g, name, own, price);
-      if (sel && this.qty > 1) {
-        const q = uiText('label', `×${this.qty}`, paper.title);
-        q.position.set(Math.round(price.x - 14 - q.width), 5);
+      if (sel && !full) {
+        // [−] ×n [+] before the coin (C44): the mouse's quantity picker.
+        const plusX = Math.round(price.x - 10 - 3 - QTY_BTN);
+        const q = uiText('label', `×${this.qty}`, this.qty > 1 ? paper.title : paper.inkDim);
+        q.position.set(Math.round(plusX - 2 - q.width), 5);
+        const minusX = Math.round(q.x - 2 - QTY_BTN);
         r.addChild(q);
+        this.qtyButton(r, minusX, '−', -1, this.qty > 1);
+        this.qtyButton(r, plusX, '+', 1, this.qty < this.maxQty());
       }
       r.hitArea = new Rectangle(0, 0, W - 8, ROW_H - 1);
       r.eventMode = 'static';

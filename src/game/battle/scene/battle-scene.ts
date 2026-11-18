@@ -44,7 +44,7 @@ import type { Action } from '@game/input/actions';
 import { xpForLevel } from '@game/progression';
 import { conditionIdOf, typeIdOf } from '@game/style/ids';
 import { conditionColors, paper, semantic, typeColors, type TypeId } from '@game/style/tokens';
-import { BagPanel, type BagItem } from '@game/ui/bag';
+import { BagPanel, type BagItem, type BagMemory } from '@game/ui/bag';
 import { BattleCaption, BattleLogPanel, BattleResultPanel, MoveBar } from '@game/ui/battle-bar';
 import { CombatantCard, Hotbar, type CombatantView, type HudTips } from '@game/ui/battle-hud';
 import { Callout, EffectsLayer, FloatNumber } from '@game/ui/callout';
@@ -100,6 +100,9 @@ import {
   type Point,
 } from './vfx';
 import { keyHint } from '@game/input/key-hint';
+
+/** Where the battle bag was left (C44), kept across battles for the session. */
+const BATTLE_BAG: BagMemory = {};
 
 /** The hotbar actions, by party slot. */
 const HOTBAR = ['hotbar1', 'hotbar2', 'hotbar3'] as const;
@@ -1276,6 +1279,7 @@ export class BattleScene implements Scene<Container> {
     const team = this.shown.sides[PLAYER].team.map((z, i) => this.viewOf(z, PLAYER, i));
     const panel = new BagPanel({
       tabs: bagTabsFor(content, this.state.bag),
+      memory: BATTLE_BAG,
       team,
       money: this.options.money ?? 0,
       onUse: (item, target) => this.useItem(panel, item, target),

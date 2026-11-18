@@ -20,7 +20,8 @@
  *   seconds of walking, and on quitting. The pause menu has a manual "Save".
  * - Mouse: click a tile to walk there along an A* path. Clicking an NPC or a wild Zorling
  *   walks next to it, faces it and talks / battles. Any direction key cancels the path. Right
- *   click opens the pause menu (C43).
+ *   click opens the pause menu (C43). Holding the button keeps walking toward the pointer,
+ *   and the cursor is a hand over what a click talks to or uses (C44).
  * - Walking into a roaming Zorling (or one catching the player) starts a wild battle with the
  *   battle transition; the world resumes after it, with the result written to the party.
  * - Terrain streams in 8×8-tile blocks; props in front hide everyone (walk behind trees),
@@ -202,6 +203,8 @@ const RAN_COOLDOWN = 4;
 const SHADOW = 0x1e3a14;
 /** Seconds of play between autosaves while something changed. */
 const AUTOSAVE_EVERY = 30;
+/** Seconds the left button is held before the player follows the pointer (C44). */
+const STEER_AFTER = 0.25;
 /** Seconds the HUD shows "Saved". */
 const SAVED_NOTE = 1.5;
 /** The help line, with the player's keys (C36e). */
@@ -234,6 +237,9 @@ interface Drawable {
 export class OverworldScene implements Scene<Container> {
   readonly id = 'overworld';
   readonly view = new Container({ label: 'world:overworld' });
+  private readonly worldSprite: Sprite;
+  /** The left button held since a click (C44): seconds held and the tile steered to. */
+  private steer: { t: number; tile: Tile | undefined } | undefined;
   readonly ui = new Container({ label: 'ui:overworld' });
   /** The whole composed world (C37), and its map. */
   readonly world: World;
@@ -360,7 +366,10 @@ export class OverworldScene implements Scene<Container> {
     this.image = ctx.createImageData(1, 1);
     this.texture = Texture.from(this.canvas);
     this.texture.source.scaleMode = 'nearest';
-    this.view.addChild(new Sprite(this.texture));
+    this.worldSprite = new Sprite(this.texture);
+    // Only for the mouse cursor (C44): clicks are read from the raw input.
+    this.worldSprite.eventMode = 'static';
+    this.view.addChild(this.worldSprite);
     this.ui.addChild(this.panel, this.place, this.help, this.money, this.layer, this.toasts.view);
     this.motion = new UiMotion(this.layer);
     this.stack = new FocusStack<Container>(this.motion, options.ui);
@@ -736,9 +745,18 @@ export class OverworldScene implements Scene<Container> {
     }
     if (this.presenceDirty && !this.inDialogue) this.syncPresence();
     if (this.openMenuKey()) return;
+    if (input.pointer.moved || this.player.moving) this.updateCursor();
     const key = input.direction(MOVE_DIRECTIONS);
     if (key) this.clearPath();
-    else if (input.rawPressed('Mouse0') && input.pointer.inside) this.clickTo(input.pointer);
+    else if (input.rawPressed('Mouse0') && input.pointer.inside) {
+      this.clickTo(input.pointer);
+      // A press on someone or something (a blocked tile) walks up to it; only open ground
+      // starts steering.
+      this.steer = this.faceAfter ? undefined : { t: 0, tile: undefined };
+    } else if (this.steer && input.rawHeld('Mouse0') && input.pointer.inside) {
+      this.steerTo(input.pointer, dt);
+    }
+    if (!input.rawHeld('Mouse0')) this.steer = undefined;
     if (input.pressed('confirm') || this.interactAfter) {
       this.interactAfter = false;
       if (this.interact(this.sim.facing())) return;
@@ -1473,6 +1491,46 @@ export class OverworldScene implements Scene<Container> {
   }
 
   // ------------------------------------------------------------ click-to-move
+
+  /**
+   * Holding the left button (C44): after a short hold the player keeps walking toward the
+   * tile under the pointer, re-pathing whenever that tile changes (the camera follows the
+   * player, so a still pointer near the edge keeps leading the way).
+   */
+  private steerTo(p: { x: number; y: number }, dt: number): void {
+    const steer = this.steer;
+    if (!steer) return;
+    steer.t += dt;
+    if (steer.t < STEER_AFTER) return;
+    const v = this.viewRect();
+    const tile = { x: Math.floor((p.x + v.x) / TILE), y: Math.floor((p.y + v.y) / TILE) };
+    if (steer.tile && steer.tile.x === tile.x && steer.tile.y === tile.y) return;
+    steer.tile = tile;
+    this.clickTo(p);
+  }
+
+  /**
+   * The mouse cursor over the world (C44): a hand over what a click talks to or uses (people,
+   * wild Zorlings, signs and items, doors, campfires, the ferry boats), the arrow elsewhere.
+   */
+  private updateCursor(): void {
+    const { pointer } = this.options.input;
+    let hand = false;
+    if (pointer.inside) {
+      const v = this.viewRect();
+      const x = Math.floor((pointer.x + v.x) / TILE);
+      const y = Math.floor((pointer.y + v.y) / TILE);
+      hand =
+        this.sim.occupant(x, y) !== undefined ||
+        this.map.doorAt(x, y) !== undefined ||
+        this.campfires.at(x, y) !== undefined ||
+        this.world.ferries.some(
+          (f) =>
+            (f.a.front.x === x && f.a.front.y === y) || (f.b.front.x === x && f.b.front.y === y),
+        );
+    }
+    this.worldSprite.cursor = hand ? 'pointer' : 'default';
+  }
 
   private clickTo(p: { x: number; y: number }): void {
     const v = this.viewRect();

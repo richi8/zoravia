@@ -4,8 +4,8 @@
  * another one to swap them, or on an empty spot to move it (deposit / withdraw).
  *
  * Keyboard: W A S D move (left of the box's first column is the team), E pick up / put down,
- * Q cancel / leave. Mouse: hover a slot, click to pick up / put down, the wheel scrolls the
- * box (C43).
+ * Q cancel / leave. Mouse: hover a slot, click to pick up / put down, or drag a Zorling onto
+ * another spot (C44); the wheel scrolls the box (C43), also while dragging.
  */
 
 import { Container, Graphics, Rectangle } from 'pixi.js';
@@ -16,7 +16,14 @@ import { keyHint, navHint } from '@game/input/key-hint';
 import { HpBar } from './bars';
 import { drawPaper, drawWell } from './skin';
 import { uiText } from './text';
-import { PointerQueue, portraitSlot, SLOT, type ZorlingView } from './zorling-view';
+import {
+  DragSpots,
+  dragGhost,
+  PointerQueue,
+  portraitSlot,
+  SLOT,
+  type ZorlingView,
+} from './zorling-view';
 
 export type StorageSpot = { readonly area: 'team' | 'storage'; readonly index: number };
 
@@ -56,6 +63,11 @@ export class StoragePanel implements Widget<Container> {
   private message = '';
   private readonly pointer = new PointerQueue<'team' | 'storage'>(() => this.focused);
   private readonly wheel = new WheelSteps();
+  private readonly drag = new DragSpots<StorageSpot>(
+    (x, y) => this.spotAt(x, y),
+    (s) => !!this.zorlingAt(s),
+  );
+  private ghost: Container | undefined;
 
   constructor(private readonly options: StorageOptions) {
     this.team = options.team;
@@ -91,6 +103,8 @@ export class StoragePanel implements Widget<Container> {
   blur(): void {
     this.focused = false;
     this.pointer.clear();
+    this.drag.cancel();
+    this.hideGhost();
     this.build();
   }
 
@@ -100,6 +114,26 @@ export class StoragePanel implements Widget<Container> {
   }
 
   handleInput(input: UiInput): void {
+    const d = this.drag.update(input, (p) => this.view.toLocal(p));
+    if (d.kind === 'moving') {
+      const rows = this.wheel.take(input.wheel?.() ?? 0);
+      if (rows) this.scrollBy(rows);
+      this.showGhost(d.from, d.x, d.y);
+      this.pointer.take(); // hovers move the cursor already through `go` below
+      const over = this.spotAt(d.x, d.y);
+      if (over && (over.area !== this.at.area || over.index !== this.at.index)) this.go(over);
+      return;
+    }
+    if (d.kind === 'drop') {
+      this.hideGhost();
+      this.pointer.clear(); // the release may also have been a tap
+      if (d.to && (d.to.area !== d.from.area || d.to.index !== d.from.index)) {
+        this.held = d.from;
+        this.at = d.to;
+        this.confirm();
+      }
+      return;
+    }
     const p = this.pointer.take();
     if (p) {
       const spot = { area: p.kind, index: p.index };
@@ -213,6 +247,36 @@ export class StoragePanel implements Widget<Container> {
       this.message = 'Your team needs at least one Zorling.';
     }
     this.build();
+  }
+
+  /** The spot at a local point (only box rows that show). */
+  private spotAt(x: number, y: number): StorageSpot | undefined {
+    const step = SLOT + GAP;
+    const r = Math.floor((y - TOP) / step);
+    const inY = y >= TOP && (y - TOP) % step < SLOT;
+    if (!inY) return undefined;
+    if (x >= TEAM_X && x < TEAM_X + SLOT && r >= 0 && r < 3) return { area: 'team', index: r };
+    const c = Math.floor((x - BOX_X) / step);
+    if (x < BOX_X || (x - BOX_X) % step >= SLOT || c >= COLS || r < 0 || r >= ROWS) {
+      return undefined;
+    }
+    const index = (this.scroll + r) * COLS + c;
+    return index < this.cells ? { area: 'storage', index } : undefined;
+  }
+
+  private showGhost(from: StorageSpot, x: number, y: number): void {
+    const z = this.zorlingAt(from);
+    if (!z) return;
+    if (!this.ghost) {
+      this.ghost = dragGhost(z.portrait);
+      this.view.addChild(this.ghost);
+    }
+    this.ghost.position.set(Math.round(x - SLOT / 2), Math.round(y - SLOT / 2));
+  }
+
+  private hideGhost(): void {
+    this.ghost?.destroy({ children: true });
+    this.ghost = undefined;
   }
 
   private back(): void {

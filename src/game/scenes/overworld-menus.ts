@@ -40,8 +40,8 @@ import {
   type Zorling,
 } from '@game/progression';
 import { styleTypes, typeIdOf } from '@game/style/ids';
-import { BagPanel, type BagItem, type BagTab } from '@game/ui/bag';
-import { DexPanel, type DexRow, type DexTab } from '@game/ui/dex-panel';
+import { BagPanel, type BagItem, type BagMemory, type BagTab } from '@game/ui/bag';
+import { DexPanel, type DexMemory, type DexRow, type DexTab } from '@game/ui/dex-panel';
 import { MapWindow, type GroupId, type MapWindowMarker } from '@game/ui/map-window';
 import { formatMoney } from '@game/ui/panels';
 import { PartyPanel } from '@game/ui/party-panel';
@@ -103,6 +103,10 @@ export class OverworldMenus {
   private readonly maps = new Map<string, { key: string; texture: Texture }>();
   /** Move offers and evolutions after battles and from the party screen (C22b). */
   readonly levelUp: LevelUpFlow;
+  /** Where the pause menu, bag and Dex were left (C44); they open there again. */
+  private pauseIndex = 0;
+  private readonly bagMemory: BagMemory = {};
+  private readonly dexMemory: DexMemory = { tab: 0, kept: [] };
 
   /** Quest state when the log was last opened (or the visit began): newer ones show "New". */
   private readonly questsSeen = new Map<string, string>();
@@ -203,12 +207,21 @@ export class OverworldMenus {
       ['Settings', '', () => this.openSettings()],
       ['Quit to title', '', () => this.host.quit()],
     ];
-    this.menu(
+    const m = this.menu(
       'Menu',
       entries.map(([label, hint]) => ({ label, ...(hint ? { hint } : {}) })),
-      (i) => entries[i]?.[2](),
+      (i) => {
+        this.pauseIndex = i;
+        entries[i]?.[2]();
+      },
       140,
+      (menu) => {
+        this.pauseIndex = menu.index;
+        this.close(menu);
+      },
     );
+    m.cursor.set(Math.min(this.pauseIndex, entries.length - 1));
+    m.focus();
   }
 
   private openSettings(): void {
@@ -285,6 +298,7 @@ export class OverworldMenus {
     const party = this.host.party;
     const panel: BagPanel = new BagPanel({
       tabs: fieldTabs(content, party),
+      memory: this.bagMemory,
       team: party.team.map((z) => ({
         name: displayName(content, z),
         level: z.level,
@@ -351,6 +365,7 @@ export class OverworldMenus {
     }));
     const panel = new DexPanel({
       tabs,
+      memory: this.dexMemory,
       sprite: (species) => this.speciesArt(species),
       pressed: (action) => this.host.pressed(action),
       onBack: (p) => this.close(p),

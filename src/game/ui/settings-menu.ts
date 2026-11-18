@@ -4,7 +4,7 @@
  * (key rebinding). Values apply at once and are stored on the device (`@game/settings`).
  *
  * Keyboard: W/S choose, A/D change a value, E changes it too (or opens Sound / Controls),
- * Q back. Each row has a short explanation under the menu.
+ * Q back. Mouse: click a row (like E), or its ‹ › arrows to step a value either way (C44). Each row has a short explanation under the menu.
  */
 
 import { Container, Graphics } from 'pixi.js';
@@ -123,6 +123,8 @@ export class SettingsMenu implements SizedWidget {
       onSelect: (i) => this.select(i),
       onBack: () => options.onBack(this),
       onHighlight: (i) => this.showHelp(i),
+      valueWidth: 32,
+      onStep: (i, step) => this.step(i, step),
     });
     this.view.addChild(this.helpBg, this.help, this.menu.view);
     this.showHelp(0);
@@ -156,15 +158,20 @@ export class SettingsMenu implements SizedWidget {
   handleInput(input: UiInput): void {
     const dir = input.direction();
     if (dir === 'left' || dir === 'right') {
-      const row = this.rows[this.menu.index];
-      if (row?.change) {
-        row.change(dir === 'right' ? 1 : -1);
-        uiSound('move');
-        this.refresh();
-      } else uiSound('blocked');
+      this.step(this.menu.index, dir === 'right' ? 1 : -1);
       return;
     }
     this.menu.handleInput(input);
+  }
+
+  /** A/D, or a click on the row's ‹ › (C44). */
+  private step(i: number, step: 1 | -1): void {
+    const row = this.rows[i];
+    if (row?.change) {
+      row.change(step);
+      uiSound('move');
+      this.refresh();
+    } else uiSound('blocked');
   }
 
   private select(i: number): void {
@@ -178,7 +185,9 @@ export class SettingsMenu implements SizedWidget {
 
   private items(): MenuItem[] {
     const s = gameSettings();
-    return this.rows.map((r) => ({ label: r.label, hint: r.value ? r.value(s) : '›' }));
+    return this.rows.map((r) =>
+      r.value ? { label: r.label, hint: r.value(s), stepper: true } : { label: r.label, hint: '›' },
+    );
   }
 
   private refresh(): void {

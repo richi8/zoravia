@@ -35,8 +35,18 @@ export interface DexTab {
   readonly rows: readonly DexRow[];
 }
 
+/**
+ * Where the Dex was left (C44): the tab and each tab's cursor and scroll. The owner keeps it
+ * and passes it in; the panel opens there and writes every change back.
+ */
+export interface DexMemory {
+  tab: number;
+  kept: { index: number; scroll: number }[];
+}
+
 export interface DexOptions {
   readonly tabs: readonly DexTab[];
+  readonly memory?: DexMemory;
   /** 64×64 sprite of a seen species (made on demand). */
   readonly sprite: (species: string) => Texture | undefined;
   /** `zoom` (Z / Tab) this step: the next tab. */
@@ -74,8 +84,15 @@ export class DexPanel implements Widget<Container> {
     const title = uiText('label', 'Dex', paper.title);
     title.position.set(7, 6);
     this.view.addChild(bg, title, this.dynamic);
-    this.kept = options.tabs.map(() => ({ index: 0, scroll: 0 }));
+    const m = options.memory;
+    this.kept = options.tabs.map((_, i) => ({ ...(m?.kept[i] ?? { index: 0, scroll: 0 }) }));
+    if (m && m.tab >= 0 && m.tab < options.tabs.length) this.tab = m.tab;
     this.cursor = new GridCursor(this.rows.length, 1);
+    const k = this.kept[this.tab];
+    if (k) {
+      this.cursor.set(Math.min(k.index, Math.max(0, this.rows.length - 1)));
+      this.scroll = Math.max(0, Math.min(k.scroll, this.rows.length - VISIBLE));
+    }
     this.view.eventMode = 'static';
     this.view.hitArea = new Rectangle(0, 0, W, H);
     this.build();
@@ -191,6 +208,12 @@ export class DexPanel implements Widget<Container> {
   }
 
   private build(): void {
+    const memory = this.options.memory;
+    if (memory) {
+      this.kept[this.tab] = { index: this.cursor.index, scroll: this.scroll };
+      memory.tab = this.tab;
+      memory.kept = this.kept.map((k) => ({ ...k }));
+    }
     for (const c of this.dynamic.removeChildren()) c.destroy({ children: true });
     const add = <T extends Container>(c: T, x = 0, y = 0): T => {
       c.position.set(Math.round(x), Math.round(y));
